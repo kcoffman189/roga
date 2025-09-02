@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 /**
  * Very light client-side streak demo.
@@ -87,10 +88,11 @@ export default function StreaksPage() {
           </button>
         </div>
 
-        <a href="/" className="text-sm text-blue-700 underline">
-          ← Back to Home
-        </a>
+        <Link href="/" className="text-sm text-blue-700 underline">
+           ← Back to Home
+        </Link>
 
+ 
         <p className="text-xs text-neutral-400">Local-only demo • no account required</p>
       </div>
     </main>

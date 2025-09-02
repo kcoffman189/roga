@@ -27,11 +27,14 @@ export default function GamePage() {
 
       const data = await res.json();
       setAnswer(data.answer ?? "(no answer returned)");
-    } catch (err: any) {
-      setError(err?.message || "Failed to reach API");
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : typeof err === "string" ? err : "Failed to reach API";
+      setError(msg);
     } finally {
       setLoading(false);
     }
+
   }
 
   return (
