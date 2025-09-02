@@ -6,6 +6,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+# Exact production domains
+ALLOWED_ORIGINS = [
+    "https://roga.me",
+    "https://www.roga.me",
+]
+
 # --- CORS (allow local dev + production site) ---
 app.add_middleware(
     CORSMiddleware,
@@ -15,8 +21,10 @@ app.add_middleware(
         "https://roga.me",
         "https://www.roga.me",
     ],
+    # Allow any *.vercel.app (preview + prod deployments)
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["POST", "OPTIONS"],
     allow_headers=["*"],
 )
 # -----------------------------------------------
