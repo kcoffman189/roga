@@ -6,6 +6,7 @@ export default function GamePage() {
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.roga.me";
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -14,7 +15,7 @@ export default function GamePage() {
     setAnswer("");
 
     try {
-      const res = await fetch("https://api.roga.me/ask", {
+      const res = await fetch('${API_BASE}/ask', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_question: question }),
