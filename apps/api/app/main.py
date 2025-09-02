@@ -2,8 +2,24 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import os
 from openai import OpenAI
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+# --- CORS (allow local dev + production site) ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://roga.me",
+        "https://www.roga.me",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# -----------------------------------------------
 
 # Load env vars from Fly secrets
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
