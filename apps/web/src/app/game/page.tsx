@@ -69,13 +69,15 @@ export default function GamePage() {
         body: JSON.stringify({ user_question: userQuestion }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'Request failed');
+      const data: { answer?: string; error?: string } = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Request failed');      
 
       setFeedback(data?.answer || 'No feedback returned.');
-    } catch (e: any) {
-      setFeedback(e?.message || 'Failed to fetch');
-    } finally {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch';
+      setFeedback(message);
+  }
+ finally {
       setIsLoading(false);
     }
   }, [current, userQuestion]);
