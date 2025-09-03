@@ -1,0 +1,27 @@
+[
+  {
+    "id": 1,
+    "title": "Joining a new project",
+    "prompt": "You’re joining a new project and have 5 minutes with the team lead. What single question would surface the biggest unknown or risk?"
+  },
+  {
+    "id": 2,
+    "title": "Community board meeting",
+    "prompt": "At a local community board meeting, a controversial new policy is introduced. What question would help uncover the root concerns behind the opposition?"
+  },
+  {
+    "id": 3,
+    "title": "Classroom discussion",
+    "prompt": "A teacher asks the class to reflect on a recent novel, but most students are quiet. What question could spark genuine discussion?"
+  },
+  {
+    "id": 4,
+    "title": "New manager",
+    "prompt": "You’ve just been assigned a new manager who leads very differently than your last. What question would help you quickly adapt to their expectations?"
+  },
+  {
+    "id": 5,
+    "title": "Team deadline pressure",
+    "prompt": "Your team is behind on a major deadline. What question could uncover the main obstacle slowing progress?"
+  }
+]
