@@ -1,71 +1,141 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import scenarios from "@/data/scenarios.json";
+import { useEffect, useState, useCallback } from 'react';
+import scenariosData from '@/data/scenarios.json';
+
+type Scenario = {
+  id: number;
+  title: string;
+  prompt: string;
+};
+
+// (Optional) stable “daily” index so all users see the same first scenario each day.
+// You can keep this, or switch to a simple random if you prefer.
+function pickDailyIndex(len: number): number {
+  const d = new Date();
+  const seed = Number(`${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`);
+  // Simple deterministic hash -> 0..len-1
+  let h = 2166136261 ^ seed;
+  h = Math.imul(h ^ (h >>> 13), 16777619);
+  h ^= h >>> 16;
+  return Math.abs(h) % len;
+}
 
 export default function GamePage() {
-  // Pick 5 random scenarios for the day
-  const dailyScenarios = scenarios
-    .sort(() => 0.5 - Math.random())
-    .slice(0, 5);
+  const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [idx, setIdx] = useState<number | null>(null); // the ONLY place that controls which scenario shows
+  const [userQuestion, setUserQuestion] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [index, setIndex] = useState(0);
-  const [userQuestion, setUserQuestion] = useState("");
-  const [feedback, setFeedback] = useState("");
+  // Load scenarios once
+  useEffect(() => {
+    // If you’re importing the JSON (as above), you can just set it directly:
+    setScenarios(scenariosData as Scenario[]);
 
-  const scenario = dailyScenarios[index];
+    // Lock initial index:
+    const stored = localStorage.getItem('roga_current_idx');
+    if (stored) {
+      setIdx(parseInt(stored, 10));
+    } else {
+      const initial = pickDailyIndex((scenariosData as Scenario[]).length);
+      setIdx(initial);
+      localStorage.setItem('roga_current_idx', String(initial));
+    }
+  }, []);
 
-  const handleSubmit = async () => {
+  const current = idx !== null && scenarios.length > 0 ? scenarios[idx] : null;
+
+  const shuffle = useCallback(() => {
+    if (scenarios.length < 2 || idx === null) return;
+    // Pick a different index than the current one
+    const next = (idx + 1 + Math.floor(Math.random() * (scenarios.length - 1))) % scenarios.length;
+    setIdx(next);
+    localStorage.setItem('roga_current_idx', String(next));
+    setUserQuestion('');
+    setFeedback('');
+  }, [idx, scenarios.length]);
+
+  const submit = useCallback(async () => {
+    if (!current) return;
+    setIsLoading(true);
+    setFeedback('');
+
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ask`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const apiBase = process.env.NEXT_PUBLIC_API_URL;
+      const res = await fetch(`${apiBase}/ask`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_question: userQuestion }),
       });
-      const data = await response.json();
-      setFeedback(data.answer);
-    } catch (err) {
-      setFeedback("Error: Could not fetch feedback.");
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Request failed');
+
+      setFeedback(data?.answer || 'No feedback returned.');
+    } catch (e: any) {
+      setFeedback(e?.message || 'Failed to fetch');
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [current, userQuestion]);
+
+  if (!current) {
+    return (
+      <div className="mx-auto max-w-3xl p-6">
+        <p className="text-gray-500">Loading scenarios…</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Quick Challenge</h1>
-      <p className="mb-4">{scenario.prompt}</p>
+    <div className="mx-auto max-w-3xl p-6">
+      <h1 className="text-3xl font-semibold mb-6">Quick Challenge</h1>
+
+      <div className="mb-4 text-gray-600">
+        <p className="font-medium">{current.title}</p>
+        <p className="mt-1">{current.prompt}</p>
+      </div>
 
       <textarea
+        className="w-full border rounded p-3 mb-3"
+        rows={6}
+        placeholder="Type your question…"
         value={userQuestion}
         onChange={(e) => setUserQuestion(e.target.value)}
-        placeholder="Type your question here..."
-        className="w-full p-2 border rounded mb-4"
       />
 
-      <div className="flex gap-4">
+      <div className="flex gap-3 mb-4">
         <button
-          onClick={handleSubmit}
-          className="px-4 py-2 bg-blue-600 text-white rounded"
+          className="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-60"
+          onClick={submit}
+          disabled={isLoading || !userQuestion.trim()}
         >
-          Submit
+          {isLoading ? 'Scoring…' : 'Submit'}
         </button>
+
         <button
+          className="px-4 py-2 rounded border"
           onClick={() => {
-            setUserQuestion("");
-            setFeedback("");
-            setIndex((index + 1) % dailyScenarios.length);
+            setUserQuestion('');
+            setFeedback('');
           }}
-          className="px-4 py-2 bg-gray-200 rounded"
         >
-          Next Scenario
+          Reset
+        </button>
+
+        <button className="px-4 py-2 rounded border" onClick={shuffle}>
+          Shuffle scenario
         </button>
       </div>
 
       {feedback && (
-        <div className="mt-6 p-4 border rounded bg-gray-50">
-          <strong>Feedback:</strong>
-          <p>{feedback}</p>
+        <div className="rounded border p-4 bg-red-50 text-red-700">
+          {feedback}
         </div>
       )}
+
+      <p className="mt-6 text-xs text-gray-500">MVP • v0 • powered by gpt-4o-mini</p>
     </div>
   );
 }
