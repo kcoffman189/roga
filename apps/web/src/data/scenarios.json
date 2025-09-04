@@ -1,27 +1,27 @@
 [
   {
-    "id": 1,
-    "title": "Joining a new project",
-    "prompt": "You’re joining a new project and have 5 minutes with the team lead. What single question would surface the biggest unknown or risk?"
+    "id": 6,
+    "title": "Lunch choice",
+    "prompt": "A friend says, 'Let’s get something different for lunch today.' What question could help you find out what they really want to eat?"
   },
   {
-    "id": 2,
-    "title": "Community board meeting",
-    "prompt": "At a local community board meeting, a controversial new policy is introduced. What question would help uncover the root concerns behind the opposition?"
+    "id": 7,
+    "title": "Class instructions",
+    "prompt": "A teacher gives directions for a project, but you’re not sure what’s expected. What clarifying question could you ask?"
   },
   {
-    "id": 3,
-    "title": "Classroom discussion",
-    "prompt": "A teacher asks the class to reflect on a recent novel, but most students are quiet. What question could spark genuine discussion?"
+    "id": 8,
+    "title": "Missed detail",
+    "prompt": "Someone tells a funny story but skips over the part you don’t understand. What simple follow-up question could you ask?"
   },
   {
-    "id": 4,
-    "title": "New manager",
-    "prompt": "You’ve just been assigned a new manager who leads very differently than your last. What question would help you quickly adapt to their expectations?"
+    "id": 9,
+    "title": "New neighbor",
+    "prompt": "A new neighbor moves in and says, 'This neighborhood feels so different from where I used to live.' What open question could you ask to learn more?"
   },
   {
-    "id": 5,
-    "title": "Team deadline pressure",
-    "prompt": "Your team is behind on a major deadline. What question could uncover the main obstacle slowing progress?"
+    "id": 10,
+    "title": "Helping out",
+    "prompt": "A teammate says, 'I’m struggling to finish my part of the project.' What question could help you understand how to support them?"
   }
 ]
