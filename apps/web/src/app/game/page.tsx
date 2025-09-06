@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import scenariosData from '@/data/scenarios.json';
+import scenariosData from '../../data/scenarios.json';
+import ScoreCard, { RogaFeedback } from '../../components/ScoreCard';
 
 type Scenario = {
   id: number;
@@ -9,31 +10,56 @@ type Scenario = {
   prompt: string;
 };
 
-// (Optional) stable “daily” index so all users see the same first scenario each day.
-// You can keep this, or switch to a simple random if you prefer.
+// ---------- utils ----------
 function pickDailyIndex(len: number): number {
   const d = new Date();
-  const seed = Number(`${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`);
-  // Simple deterministic hash -> 0..len-1
+  const seed = Number(
+    `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`
+  );
   let h = 2166136261 ^ seed;
   h = Math.imul(h ^ (h >>> 13), 16777619);
   h ^= h >>> 16;
   return Math.abs(h) % len;
 }
 
+// Map API -> UI with local fallbacks so the card still renders nicely
+function normalizeFeedback(
+  api: any,
+  fallback: { scenarioTitle: string; scenarioText: string; question: string }
+): RogaFeedback {
+  return {
+    scenario: {
+      title: api?.scenario?.title ?? fallback.scenarioTitle ?? "Today’s Scenario",
+      text: api?.scenario?.text ?? api?.scenarioText ?? fallback.scenarioText ?? "",
+    },
+    question: api?.question ?? api?.userQuestion ?? fallback.question ?? "",
+    score: Math.round(api?.score ?? api?.total ?? 0),
+    rubric: (api?.rubric ?? api?.dimensions ?? []).map((r: any) => ({
+      key: (r.key ?? r.name ?? 'clarity').toLowerCase(),
+      label: r.label ?? r.name ?? 'Clarity',
+      status: (r.status ?? r.level ?? 'warn') as 'good' | 'warn' | 'bad',
+      note: r.note ?? r.comment ?? '',
+    })),
+    proTip: api?.proTip ?? api?.tip ?? '',
+    suggestedUpgrade: api?.suggestedUpgrade ?? api?.upgrade ?? '',
+    badge: api?.badge
+      ? { name: api.badge.name, label: api.badge.label ?? api.badge.name }
+      : undefined,
+  };
+}
+
+// ---------- page ----------
 export default function GamePage() {
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
-  const [idx, setIdx] = useState<number | null>(null); // the ONLY place that controls which scenario shows
+  const [idx, setIdx] = useState<number | null>(null);
   const [userQuestion, setUserQuestion] = useState('');
-  const [feedback, setFeedback] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [feedback, setFeedback] = useState<RogaFeedback | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load scenarios once
+  // load scenarios + select “daily” index once
   useEffect(() => {
-    // If you’re importing the JSON (as above), you can just set it directly:
     setScenarios(scenariosData as Scenario[]);
-
-    // Lock initial index:
     const stored = localStorage.getItem('roga_current_idx');
     if (stored) {
       setIdx(parseInt(stored, 10));
@@ -48,37 +74,52 @@ export default function GamePage() {
 
   const shuffle = useCallback(() => {
     if (scenarios.length < 2 || idx === null) return;
-    // Pick a different index than the current one
     const next = (idx + 1 + Math.floor(Math.random() * (scenarios.length - 1))) % scenarios.length;
     setIdx(next);
     localStorage.setItem('roga_current_idx', String(next));
     setUserQuestion('');
-    setFeedback('');
+    setFeedback(null);
+    setError(null);
   }, [idx, scenarios.length]);
 
   const submit = useCallback(async () => {
     if (!current) return;
-    setIsLoading(true);
-    setFeedback('');
+    setLoading(true);
+    setError(null);
 
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL;
-      const res = await fetch(`${apiBase}/ask`, {
+      // Proxy via Next.js API route -> /api/ask
+      const res = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_question: userQuestion }),
+        body: JSON.stringify({
+          user_question: userQuestion, // legacy keys (FastAPI)
+          question: userQuestion,      // new keys (forward-compat)
+          scenario_id: current.id,
+          scenarioId: current.id,
+        }),
       });
 
-      const data: { answer?: string; error?: string } = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'Request failed');      
+      console.log('Response status:', res.status);
+      const text = await res.text();
+      console.log('Raw response:', text);
 
-      setFeedback(data?.answer || 'No feedback returned.');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch';
-      setFeedback(message);
-  }
- finally {
-      setIsLoading(false);
+      if (!res.ok) throw new Error(text || 'Request failed');
+
+      const api = JSON.parse(text);
+
+      setFeedback(
+        normalizeFeedback(api, {
+          scenarioTitle: current.title,
+          scenarioText: current.prompt,
+          question: userQuestion,
+        })
+      );
+    } catch (e: any) {
+      setError(e?.message ?? 'Request failed');
+      setFeedback(null);
+    } finally {
+      setLoading(false);
     }
   }, [current, userQuestion]);
 
@@ -94,47 +135,66 @@ export default function GamePage() {
     <div className="mx-auto max-w-3xl p-6">
       <h1 className="text-3xl font-semibold mb-6">Quick Challenge</h1>
 
-      <div className="mb-4 text-gray-600">
-        <p className="font-medium">{current.title}</p>
-        <p className="mt-1">{current.prompt}</p>
-      </div>
+      {feedback ? (
+        <>
+          <ScoreCard data={feedback} />
+          <div className="mt-6 flex gap-3">
+            <button
+              className="px-4 py-2 rounded border"
+              onClick={() => {
+                setFeedback(null);
+                setUserQuestion('');
+                setError(null);
+              }}
+            >
+              Ask again
+            </button>
+            <button className="px-4 py-2 rounded border" onClick={shuffle}>
+              Next scenario
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="mb-4 text-gray-600">
+            <p className="font-medium">{current.title}</p>
+            <p className="mt-1">{current.prompt}</p>
+          </div>
 
-      <textarea
-        className="w-full border rounded p-3 mb-3"
-        rows={6}
-        placeholder="Type your question…"
-        value={userQuestion}
-        onChange={(e) => setUserQuestion(e.target.value)}
-      />
+          <textarea
+            className="w-full border rounded p-3 mb-3"
+            rows={6}
+            placeholder="Type your question…"
+            value={userQuestion}
+            onChange={(e) => setUserQuestion(e.target.value)}
+          />
 
-      <div className="flex gap-3 mb-4">
-        <button
-          className="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-60"
-          onClick={submit}
-          disabled={isLoading || !userQuestion.trim()}
-        >
-          {isLoading ? 'Scoring…' : 'Submit'}
-        </button>
+          <div className="flex gap-3 mb-2">
+            <button
+              className="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-60"
+              onClick={submit}
+              disabled={loading || !userQuestion.trim()}
+            >
+              {loading ? 'Scoring…' : 'Submit'}
+            </button>
 
-        <button
-          className="px-4 py-2 rounded border"
-          onClick={() => {
-            setUserQuestion('');
-            setFeedback('');
-          }}
-        >
-          Reset
-        </button>
+            <button
+              className="px-4 py-2 rounded border"
+              onClick={() => {
+                setUserQuestion('');
+                setError(null);
+              }}
+            >
+              Reset
+            </button>
 
-        <button className="px-4 py-2 rounded border" onClick={shuffle}>
-          Shuffle scenario
-        </button>
-      </div>
+            <button className="px-4 py-2 rounded border" onClick={shuffle}>
+              Shuffle scenario
+            </button>
+          </div>
 
-      {feedback && (
-        <div className="rounded border p-4 bg-red-50 text-red-700">
-          {feedback}
-        </div>
+          {error && <div className="rounded border p-3 bg-red-50 text-red-700">{error}</div>}
+        </>
       )}
 
       <p className="mt-6 text-xs text-gray-500">MVP • v0 • powered by gpt-4o-mini</p>
