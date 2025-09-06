@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import scenariosData from '@/data/scenarios.json';
 import ScoreCard, { RogaFeedback } from '@/components/ScoreCard';
 
-/* ---------- Types ---------- */
+/* ───────────────────────── Types ───────────────────────── */
 
 type Scenario = {
   id: number;
@@ -12,9 +12,9 @@ type Scenario = {
   prompt: string;
 };
 
-/* ---------- Helpers ---------- */
+/* ──────────────────────── Helpers ──────────────────────── */
 
-// Stable “daily” index so all users see the same start each day (deterministic, not random)
+// Deterministic “daily” index (so everyone sees the same first scenario each day)
 function pickDailyIndex(len: number): number {
   const d = new Date();
   const seed = Number(
@@ -28,11 +28,16 @@ function pickDailyIndex(len: number): number {
   return Math.abs(h) % len;
 }
 
-// Map API -> UI with local fallbacks so the card still renders nicely
+/**
+ * Normalize ANY backend payload into the ScoreCard shape.
+ * Works with both our “new” (question/rubric/score) and “legacy” (userQuestion/dimensions/total)
+ * responses, and falls back to the current scenario text when needed.
+ */
 function normalizeFeedback(
   api: any,
   fallback: { scenarioTitle: string; scenarioText: string; question: string },
 ): RogaFeedback {
+  // Score
   const score =
     typeof api?.score === 'number'
       ? Math.round(api.score)
@@ -40,16 +45,16 @@ function normalizeFeedback(
       ? Math.round(api.total)
       : 0;
 
-  const rawRubric = api?.rubric ?? api?.dimensions ?? [];
-  const rubric = Array.isArray(rawRubric)
-    ? rawRubric.map((r: any) => ({
-        key: String(r?.key ?? r?.name ?? 'clarity').toLowerCase(),
-        label: r?.label ?? r?.name ?? 'Clarity',
-        status: (r?.status ?? r?.level ?? 'warn') as 'good' | 'warn' | 'bad',
-        note: r?.note ?? r?.comment ?? '',
-      }))
-    : [];
+  // Rubric array (supports rubric[] OR dimensions[])
+  const raw = Array.isArray(api?.rubric) ? api.rubric : Array.isArray(api?.dimensions) ? api.dimensions : [];
+  const rubric = raw.map((r: any) => ({
+    key: String(r?.key ?? r?.name ?? 'clarity').toLowerCase(),
+    label: r?.label ?? r?.name ?? 'Clarity',
+    status: (r?.status ?? r?.level ?? 'warn') as 'good' | 'warn' | 'bad',
+    note: r?.note ?? r?.comment ?? '',
+  }));
 
+  // Root fields with safe fallbacks
   return {
     scenario: {
       title:
@@ -74,20 +79,19 @@ function normalizeFeedback(
   };
 }
 
-/* ---------- Page Component ---------- */
+/* ─────────────────────── Page Component ─────────────────────── */
 
 export default function GamePage() {
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
-  const [idx, setIdx] = useState<number | null>(null); // controls which scenario shows
+  const [idx, setIdx] = useState<number | null>(null);
   const [userQuestion, setUserQuestion] = useState('');
   const [feedback, setFeedback] = useState<RogaFeedback | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load scenarios & lock initial scenario index
+  // Load scenarios & lock initial index once
   useEffect(() => {
     setScenarios(scenariosData as Scenario[]);
-
     const stored = typeof window !== 'undefined' ? localStorage.getItem('roga_current_idx') : null;
     if (stored) {
       setIdx(parseInt(stored, 10));
@@ -114,7 +118,11 @@ export default function GamePage() {
     setError(null);
   }, [idx, scenarios.length]);
 
-  /* ---------- Fixed submit() ---------- */
+  /**
+   * Only call our own Next.js proxy (/api/ask) to avoid CORS/mixed content.
+   * Always set feedback using normalizeFeedback so the card renders
+   * even if the backend omits optional fields.
+   */
   const submit = useCallback(async () => {
     if (!current) return;
     setLoading(true);
@@ -122,27 +130,27 @@ export default function GamePage() {
     setFeedback(null);
 
     try {
-      // Always go through our Next.js API proxy to avoid CORS/mixed-content issues
       const res = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // Send both legacy + new fields for compatibility with any backend shape
         body: JSON.stringify({
-          // Send both legacy and new fields so either backend shape works
           user_question: userQuestion, // legacy
-          question: userQuestion, // new
-          scenario_id: current.id, // legacy
-          scenarioId: current.id, // new
+          question: userQuestion,      // new
+          scenario_id: current.id,     // legacy
+          scenarioId: current.id,      // new
         }),
         cache: 'no-store',
       });
 
+      // Parse JSON *once* and branch on status after
       const api = await res.json();
 
       if (!res.ok) {
         throw new Error(api?.detail || api?.error || res.statusText || 'Request failed');
       }
 
-      // ✅ Normalize the API response into our ScoreCard shape
+      // ✅ Always set a normalized object so the ScoreCard can render
       setFeedback(
         normalizeFeedback(api, {
           scenarioTitle: current.title,
@@ -158,7 +166,7 @@ export default function GamePage() {
     }
   }, [current, userQuestion]);
 
-  /* ---------- UI ---------- */
+  /* ─────────────────────────── UI ─────────────────────────── */
 
   if (!current) {
     return (
@@ -216,7 +224,6 @@ export default function GamePage() {
         </div>
       )}
 
-      {/* When we have feedback, show the ScoreCard */}
       {feedback && <ScoreCard data={feedback} />}
 
       {!feedback && !error && (
