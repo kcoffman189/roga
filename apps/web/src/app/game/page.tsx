@@ -37,7 +37,6 @@ function normalizeFeedback(
   api: any,
   fallback: { scenarioTitle: string; scenarioText: string; question: string },
 ): RogaFeedback {
-  // Score
   const score =
     typeof api?.score === 'number'
       ? Math.round(api.score)
@@ -45,16 +44,19 @@ function normalizeFeedback(
       ? Math.round(api.total)
       : 0;
 
-  // Rubric array (supports rubric[] OR dimensions[])
-  const raw = Array.isArray(api?.rubric) ? api.rubric : Array.isArray(api?.dimensions) ? api.dimensions : [];
-  const rubric = raw.map((r: any) => ({
+  const rawRubric = Array.isArray(api?.rubric)
+    ? api.rubric
+    : Array.isArray(api?.dimensions)
+    ? api.dimensions
+    : [];
+
+  const rubric = rawRubric.map((r: any) => ({
     key: String(r?.key ?? r?.name ?? 'clarity').toLowerCase(),
     label: r?.label ?? r?.name ?? 'Clarity',
     status: (r?.status ?? r?.level ?? 'warn') as 'good' | 'warn' | 'bad',
     note: r?.note ?? r?.comment ?? '',
   }));
 
-  // Root fields with safe fallbacks
   return {
     scenario: {
       title:
@@ -71,13 +73,21 @@ function normalizeFeedback(
     question: api?.question ?? api?.userQuestion ?? fallback.question ?? '',
     score,
     rubric,
-    proTip: api?.proTip ?? api?.tip ?? '',
-    suggestedUpgrade: api?.suggestedUpgrade ?? api?.upgrade ?? '',
+    proTip: api?.proTip ?? api?.tip ?? 'No pro tip provided.',
+    suggestedUpgrade:
+    api?.suggestedUpgrade ??
+    api?.upgrade ??
+    'Try refining your question to be more specific.',
+
     badge: api?.badge
-      ? { name: api.badge.name, label: api.badge.label ?? api.badge.name }
+      ? {
+          name: api.badge.name ?? 'default',
+          label: api.badge.label ?? api.badge.name ?? 'Badge',
+        }
       : undefined,
   };
 }
+
 
 /* ─────────────────────── Page Component ─────────────────────── */
 
@@ -124,47 +134,48 @@ export default function GamePage() {
    * even if the backend omits optional fields.
    */
   const submit = useCallback(async () => {
-    if (!current) return;
-    setLoading(true);
-    setError(null);
-    setFeedback(null);
+  if (!current) return;
+  setLoading(true);
+  setError(null);
+  setFeedback(null);
 
-    try {
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // Send both legacy + new fields for compatibility with any backend shape
-        body: JSON.stringify({
-          user_question: userQuestion, // legacy
-          question: userQuestion,      // new
-          scenario_id: current.id,     // legacy
-          scenarioId: current.id,      // new
-        }),
-        cache: 'no-store',
-      });
+  try {
+    const res = await fetch('/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_question: userQuestion,
+        question: userQuestion,
+        scenario_id: current.id,
+        scenarioId: current.id,
+      }),
+      cache: 'no-store',
+    });
 
-      // Parse JSON *once* and branch on status after
-      const api = await res.json();
+    const api = await res.json();
+    console.log("🔍 API raw response:", api); // <-- Debug output
 
-      if (!res.ok) {
-        throw new Error(api?.detail || api?.error || res.statusText || 'Request failed');
-      }
-
-      // ✅ Always set a normalized object so the ScoreCard can render
-      setFeedback(
-        normalizeFeedback(api, {
-          scenarioTitle: current.title,
-          scenarioText: current.prompt,
-          question: userQuestion,
-        }),
-      );
-    } catch (err: any) {
-      setError(err?.message ?? 'Request failed');
-      setFeedback(null);
-    } finally {
-      setLoading(false);
+    if (!res.ok) {
+      throw new Error(api?.detail || api?.error || res.statusText || 'Request failed');
     }
-  }, [current, userQuestion]);
+
+    const normalized = normalizeFeedback(api, {
+      scenarioTitle: current.title,
+      scenarioText: current.prompt,
+      question: userQuestion,
+    });
+
+    console.log("✅ Normalized feedback:", normalized); // <-- Debug output
+
+    setFeedback(normalized);
+  } catch (err: any) {
+    setError(err?.message ?? 'Request failed');
+    setFeedback(null);
+  } finally {
+    setLoading(false);
+  }
+}, [current, userQuestion]);
+
 
   /* ─────────────────────────── UI ─────────────────────────── */
 
