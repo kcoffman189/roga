@@ -1,101 +1,83 @@
-// apps/web/src/app/api/ask/route.ts
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE = process.env.FLY_API_URL ?? 'https://roga-api.fly.dev';
+type AskBody = {
+  question?: string;
+  user_question?: string;   // legacy
+  userQuestion?: string;    // possible legacy
+  scenarioId?: number;
+  scenario_id?: number;     // legacy
+  scenarioID?: number;      // defensive
+};
 
-function json(data: any, init?: number | ResponseInit) {
-  const base: ResponseInit = typeof init === 'number' ? { status: init } : (init ?? {});
-  return new Response(JSON.stringify(data), {
-    ...base,
-    headers: {
-      'content-type': 'application/json; charset=utf-8',
-      ...(base.headers ?? {}),
-    },
-  });
-}
+type ApiRubricItem = {
+  key: 'clarity' | 'depth' | 'insight' | 'openness';
+  label: string;
+  status: 'good' | 'warn' | 'bad';
+  note: string;
+};
 
-// Allow preflight and browser POSTs
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      'access-control-allow-origin': '*',
-      'access-control-allow-methods': 'POST, OPTIONS',
-      'access-control-allow-headers': 'content-type',
-      'access-control-max-age': '600',
-    },
-  });
-}
+type ApiBadge = { name: string; label?: string };
 
-// Main POST handler
+export type AskApiResponse = {
+  scenario: { title: string; text: string };
+  question: string;
+  score: number;
+  rubric: ApiRubricItem[];
+  proTip?: string;
+  suggestedUpgrade?: string;
+  badge?: ApiBadge;
+};
+
+// POST /api/ask
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json().catch(() => ({}));
+    const body = (await req.json().catch(() => ({}))) as AskBody;
+
     // Accept both legacy and new keys
     const question =
-      body?.question ??
-      body?.user_question ??
-      body?.userQuestion ??
-      '';
+      body.question ?? body.user_question ?? body.userQuestion ?? '';
     const scenarioId =
-      body?.scenarioId ??
-      body?.scenario_id ??
-      body?.scenarioID ??
-      1;
+      body.scenarioId ?? body.scenario_id ?? body.scenarioID ?? 1;
 
     if (!question || typeof question !== 'string') {
-      return json({ error: 'Missing "question"' }, 400);
-    }
-
-    // Proxy to Fly backend
-    const upstream = await fetch(`${API_BASE}/ask`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ question, scenarioId }),
-      // Vercel edge/serverless tolerates default agent
-      // keep simple to avoid TLS issues
-    });
-
-    // Pass through non-OKs so UI can surface errors
-    const text = await upstream.text();
-    let data: any = null;
-    try { data = JSON.parse(text); } catch { /* keep text */ }
-
-    if (!upstream.ok) {
-      return json(
-        { error: data?.error ?? text ?? `Upstream ${upstream.status}` },
-        upstream.status,
+      return NextResponse.json(
+        { error: 'Missing "question"' },
+        { status: 400 }
       );
     }
 
-    // Ensure UI-friendly shape (scenario, question, score, rubric, proTip, suggestedUpgrade, badge)
-    if (data && typeof data === 'object') {
-      // Tolerate alternate backend keys
-      const normalized = {
-        scenario: {
-          title: data?.scenario?.title ?? "Today’s Scenario",
-          text:  data?.scenario?.text  ?? data?.scenarioText ?? '',
-        },
-        question:          data?.question ?? data?.userQuestion ?? question,
-        score:             Math.round(data?.score ?? data?.total ?? 0),
-        rubric: (data?.rubric ?? data?.dimensions ?? []).map((r: any) => ({
-          key:    String(r?.key ?? r?.name ?? 'clarity').toLowerCase(),
-          label:  r?.label ?? r?.name ?? 'Clarity',
-          status: (r?.status ?? r?.level ?? 'warn') as 'good' | 'warn' | 'bad',
-          note:   r?.note ?? r?.comment ?? '',
-        })),
-        proTip:            data?.proTip ?? data?.tip ?? '',
-        suggestedUpgrade:  data?.suggestedUpgrade ?? data?.upgrade ?? '',
-        badge: data?.badge
-          ? { name: data.badge.name, label: data.badge.label ?? data.badge.name }
-          : undefined,
-      };
-      return json(normalized, 200);
+    // Forward to the FastAPI backend
+    const apiBase =
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.API_URL ||
+      'https://roga-api.fly.dev';
+
+    const res = await fetch(`${apiBase}/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question,
+        scenarioId,
+      }),
+    });
+
+    if (!res.ok) {
+      let err = 'Request failed';
+      try {
+        const j = (await res.json()) as { error?: string };
+        if (j?.error) err = j.error;
+      } catch {
+        // ignore
+      }
+      return NextResponse.json({ error: err }, { status: res.status });
     }
 
-    // If upstream returned non-JSON OK
-    return json({ error: 'Invalid upstream payload', raw: text }, 502);
-  } catch (err: any) {
-    return json({ error: err?.message ?? 'Server error' }, 500);
+    const data = (await res.json()) as AskApiResponse;
+    return NextResponse.json(data, { status: 200 });
+  } catch (e) {
+    return NextResponse.json(
+      { error: 'Server error' },
+      { status: 500 }
+    );
   }
 }

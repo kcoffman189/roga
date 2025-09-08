@@ -1,88 +1,102 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import ScoreCard, { RogaFeedback } from '@/components/ScoreCard';
+import { useCallback, useEffect, useState } from 'react';
 import scenariosData from '@/data/scenarios.json';
+import ScoreCard from '@/components/ScoreCard';
 
-/* ----------------------------- Types & helpers ----------------------------- */
+// Types shared with the API
+type RubricStatus = 'good' | 'warn' | 'bad';
+type RubricKey = 'clarity' | 'depth' | 'insight' | 'openness';
 
-type Scenario = {
-  id: number;
-  title: string;
-  prompt: string;
+type ApiRubricItem = {
+  key: RubricKey;
+  label: string;
+  status: RubricStatus;
+  note: string;
 };
 
-/** Deterministic daily index so all users see the same “first” scenario each day. */
+type ApiBadge = { name: string; label?: string };
+
+type AskApiResponse = {
+  scenario: { title: string; text: string };
+  question: string;
+  score: number;
+  rubric: ApiRubricItem[];
+  proTip?: string;
+  suggestedUpgrade?: string;
+  badge?: ApiBadge;
+};
+
+// UI model used by <ScoreCard />
+export type RogaFeedback = {
+  scenario: { title: string; text: string };
+  question: string;
+  score: number;
+  rubric: { key: RubricKey; label: string; status: RubricStatus; note: string }[];
+  proTip?: string;
+  suggestedUpgrade?: string;
+  badge?: { name: string; label?: string };
+};
+
+type Scenario = { id: number; title: string; prompt: string };
+
+// Deterministic “daily” index
 function pickDailyIndex(len: number): number {
   const d = new Date();
   const seed = Number(
     `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(
-      d.getUTCDate(),
-    ).padStart(2, '0')}`,
+      d.getUTCDate()
+    ).padStart(2, '0')}`
   );
-  // Simple hash -> 0..len-1
   let h = 2166136261 ^ seed;
   h = Math.imul(h ^ (h >>> 13), 16777619);
   h ^= h >>> 16;
-  return Math.abs(h) % Math.max(len, 1);
+  return Math.abs(h) % len;
 }
 
-/** Map API -> UI with safe fallbacks so the card always renders cleanly. */
+// Map API -> UI
 function normalizeFeedback(
-  api: any,
-  fallback: { scenarioTitle: string; scenarioText: string; question: string },
+  api: AskApiResponse,
+  fallback: { scenarioTitle: string; scenarioText: string; question: string }
 ): RogaFeedback {
   return {
     scenario: {
       title:
         api?.scenario?.title ??
-        // a few possible variants we’ve seen:
-        api?.scenarioTitle ??
+        fallback.scenarioTitle ??
         "Today’s Scenario",
       text:
         api?.scenario?.text ??
-        api?.scenarioText ??
         fallback.scenarioText ??
         '',
     },
-    question: api?.question ?? api?.userQuestion ?? fallback.question ?? '',
-    score: Math.round(api?.score ?? api?.total ?? 0),
-    rubric: (api?.rubric ?? api?.dimensions ?? []).map((r: any) => ({
-      key: String(r?.key ?? r?.name ?? 'clarity').toLowerCase(),
-      label: r?.label ?? r?.name ?? 'Clarity',
-      status: (r?.status ?? r?.level ?? 'warn') as 'good' | 'warn' | 'bad',
-      note: r?.note ?? r?.comment ?? '',
+    question: api?.question ?? fallback.question ?? '',
+    score: Math.round(api?.score ?? 0),
+    rubric: (api?.rubric ?? []).map((r) => ({
+      key: (r.key ?? 'clarity') as RubricKey,
+      label: r.label ?? 'Clarity',
+      status: (r.status ?? 'warn') as RubricStatus,
+      note: r.note ?? '',
     })),
-    proTip: api?.proTip ?? api?.tip ?? 'No pro tip provided.',
-    suggestedUpgrade:
-      api?.suggestedUpgrade ??
-      api?.upgrade ??
-      'Try refining your question to be more specific.',
-    badge: api?.badge
-      ? { name: api.badge.name, label: api.badge.label ?? api.badge.name }
-      : undefined,
+    proTip: api?.proTip ?? '',
+    suggestedUpgrade: api?.suggestedUpgrade ?? '',
+    badge: api?.badge ? { name: api.badge.name, label: api.badge.label } : undefined,
   };
 }
 
-/* --------------------------------- Page UI -------------------------------- */
-
 export default function GamePage() {
-  // scenario source
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [idx, setIdx] = useState<number | null>(null);
-
-  // user interaction
   const [userQuestion, setUserQuestion] = useState('');
   const [feedback, setFeedback] = useState<RogaFeedback | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-
-  // load scenarios and establish a stable index
+  // Load scenarios & initial index
   useEffect(() => {
     setScenarios(scenariosData as Scenario[]);
     const stored = localStorage.getItem('roga_current_idx');
-    if (stored != null) {
+    if (stored) {
       setIdx(parseInt(stored, 10));
     } else {
       const initial = pickDailyIndex((scenariosData as Scenario[]).length);
@@ -91,14 +105,14 @@ export default function GamePage() {
     }
   }, []);
 
-  const current = useMemo(
-    () => (idx != null && scenarios.length ? scenarios[idx] : null),
-    [idx, scenarios],
-  );
+  const current =
+    idx !== null && scenarios.length > 0 ? scenarios[idx] : null;
 
   const shuffle = useCallback(() => {
-    if (scenarios.length < 2 || idx == null) return;
-    const next = (idx + 1) % scenarios.length;
+    if (scenarios.length < 2 || idx === null) return;
+    const next =
+      (idx + 1 + Math.floor(Math.random() * (scenarios.length - 1))) %
+      scenarios.length;
     setIdx(next);
     localStorage.setItem('roga_current_idx', String(next));
     setUserQuestion('');
@@ -106,54 +120,57 @@ export default function GamePage() {
     setError(null);
   }, [idx, scenarios.length]);
 
-  /** Submit via Next.js API proxy to avoid CORS/mixed-content issues. */
   const submit = useCallback(async () => {
-  if (!current) return;
+    if (!current) return;
 
-  setLoading(true);
-  setError(null);
-  setFeedback(null);
+    setLoading(true);
+    setError(null);
+    setFeedback(null);
 
-  try {
-    const res = await fetch('/api/ask', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        question: userQuestion,      // new
-        user_question: userQuestion, // legacy
-        scenarioId: current.id,      // new
-        scenario_id: current.id,     // legacy
-      }),
-    });
+    try {
+      const res = await fetch('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: userQuestion,      // new
+          user_question: userQuestion, // legacy
+          scenarioId: current.id,      // new
+          scenario_id: current.id,     // legacy
+        }),
+      });
 
-    if (!res.ok) {
-      let message = 'Request failed';
-      try {
-        const e = await res.json();
-        if (e?.error) message = e.error;
-      } catch {}
-      throw new Error(message);
+      if (!res.ok) {
+        let message = 'Request failed';
+        try {
+          const e = (await res.json()) as { error?: string };
+          if (e?.error) message = e.error;
+        } catch {
+          // ignore
+        }
+        throw new Error(message);
+      }
+
+      const api = (await res.json()) as AskApiResponse;
+
+      if (api && (typeof api.score === 'number' || Array.isArray(api.rubric))) {
+        setFeedback(
+          normalizeFeedback(api, {
+            scenarioTitle: current.title,
+            scenarioText: current.prompt,
+            question: userQuestion,
+          })
+        );
+      } else {
+        setError('No structured feedback returned.');
+      }
+    } catch (e: unknown) {
+      const message =
+        e instanceof Error ? e.message : 'Failed to fetch';
+      setError(message);
+    } finally {
+      setLoading(false);
     }
-
-    const api = await res.json();
-
-    // ✅ Treat structured JSON as success
-    if (api && (typeof api.score === 'number' || Array.isArray(api.rubric))) {
-      setFeedback(normalizeFeedback(api));
-    } else {
-      setError('No structured feedback returned.');
-    }
-  } catch (e: any) {
-    setError(e?.message ?? 'Failed to fetch');
-  } finally {
-    setLoading(false);
-  }
   }, [current, userQuestion]);
-
-
-
-
-  /* --------------------------------- Render -------------------------------- */
 
   if (!current) {
     return (
@@ -163,48 +180,18 @@ export default function GamePage() {
     );
   }
 
-  // If we have feedback, show the polished card
-  if (feedback) {
-    return (
-      <div className="mx-auto max-w-3xl p-6">
-        <h1 className="text-3xl font-semibold mb-6">Quick Challenge</h1>
-
-        <ScoreCard data={feedback} />
-
-        <div className="mt-6 flex gap-3">
-          <button
-            className="px-4 py-2 rounded border"
-            onClick={() => {
-              setFeedback(null);
-              setUserQuestion('');
-              setError(null);
-            }}
-          >
-            Ask again
-          </button>
-          <button className="px-4 py-2 rounded border" onClick={shuffle}>
-            Next scenario
-          </button>
-        </div>
-
-        <p className="mt-6 text-xs text-gray-500">MVP • v0 • powered by gpt-4o-mini</p>
-      </div>
-    );
-  }
-
-  // Otherwise show the input form
   return (
     <div className="mx-auto max-w-3xl p-6">
       <h1 className="text-3xl font-semibold mb-6">Quick Challenge</h1>
 
-      <div className="mb-4 text-gray-700">
+      <div className="mb-4 text-gray-600">
         <p className="font-medium">{current.title}</p>
         <p className="mt-1">{current.prompt}</p>
       </div>
 
       <textarea
         className="w-full border rounded p-3 mb-3"
-        rows={8}
+        rows={6}
         placeholder="Type your question…"
         value={userQuestion}
         onChange={(e) => setUserQuestion(e.target.value)}
@@ -235,21 +222,11 @@ export default function GamePage() {
         </button>
       </div>
 
-      {feedback && (
-      <div className="mt-6">
-      <ScoreCard feedback={feedback} />
-      </div>
-      )}
+      {feedback && <ScoreCard feedback={feedback} />}
 
       {error && (
-      <div className="mt-4 rounded border border-red-200 bg-red-50 p-4 text-red-700">
-      {error}
-      </div>
-      )}
-
-      {!error && (
-        <div className="rounded border p-4 bg-rose-50 text-rose-700">
-          No feedback returned.
+        <div className="mt-4 rounded border border-red-200 bg-red-50 p-4 text-red-700">
+          {error}
         </div>
       )}
 
