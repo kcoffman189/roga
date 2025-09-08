@@ -13,9 +13,9 @@ export type RogaFeedback = {
   question: string;
   score: number;
   rubric: RubricItem[];
-  proTip: string;
-  suggestedUpgrade: string;
-  badge?: { name: string; label: string };
+  proTip?: string;        // Make optional
+  suggestedUpgrade?: string; // Make optional
+  badge?: { name: string; label?: string }; // label should also be optional
 };
 
 const glyph: Record<RubricItem["status"], string> = {
@@ -61,13 +61,13 @@ export default function ScoreCard({ data }: { data: RogaFeedback }) {
 
       <div className="mt-5 rounded-xl border border-yellow-200 bg-white p-4">
         <div className="text-sm font-semibold">Pro Tip</div>
-        <p className="text-sm text-zinc-800">{data.proTip}</p>
+        <p className="text-sm text-zinc-800">{data.proTip || 'No tip available'}</p>
       </div>
 
       <div className="mt-3 rounded-xl border border-indigo-200 bg-white p-4">
         <div className="text-sm font-semibold">⭐ Suggested Upgrade</div>
-        <p className="mt-1 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-zinc-800">
-          {data.suggestedUpgrade}
+          <p className="mt-1 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-zinc-800">
+         {data.suggestedUpgrade || 'No upgrade suggestion available'}
         </p>
       </div>
 
