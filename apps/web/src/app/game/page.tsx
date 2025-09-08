@@ -112,6 +112,8 @@ export default function GamePage() {
 
   setLoading(true);
   setError(null);
+  setFeedback(null);
+
   try {
     const res = await fetch('/api/ask', {
       method: 'POST',
@@ -135,14 +137,8 @@ export default function GamePage() {
 
     const api = await res.json();
 
-    // Treat structured JSON as success (don’t rely on legacy "answer")
-    if (
-      api &&
-      (typeof api.score === 'number' ||
-        Array.isArray(api.rubric) ||
-        api.proTip ||
-        api.suggestedUpgrade)
-    ) {
+    // ✅ Treat structured JSON as success
+    if (api && (typeof api.score === 'number' || Array.isArray(api.rubric))) {
       setFeedback(normalizeFeedback(api));
     } else {
       setError('No structured feedback returned.');
@@ -152,7 +148,8 @@ export default function GamePage() {
   } finally {
     setLoading(false);
   }
-}, [current, userQuestion]);
+  }, [current, userQuestion]);
+
 
 
 
