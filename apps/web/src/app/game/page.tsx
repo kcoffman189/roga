@@ -74,8 +74,9 @@ export default function GamePage() {
   // user interaction
   const [userQuestion, setUserQuestion] = useState('');
   const [feedback, setFeedback] = useState<RogaFeedback | null>(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
 
   // load scenarios and establish a stable index
   useEffect(() => {
@@ -106,40 +107,35 @@ export default function GamePage() {
   }, [idx, scenarios.length]);
 
   /** Submit via Next.js API proxy to avoid CORS/mixed-content issues. */
-// REPLACE your submit function with this
-const submit = useCallback(async () => {
+  const submit = useCallback(async () => {
   if (!current) return;
 
   setLoading(true);
   setError(null);
   try {
-    // call our Next.js proxy so we avoid CORS/mixed-content issues in prod
     const res = await fetch('/api/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        // accept both legacy and new keys on the server
-        question: userQuestion,
-        user_question: userQuestion,
-        scenarioId: current.id,
-        scenario_id: current.id,
+        question: userQuestion,      // new
+        user_question: userQuestion, // legacy
+        scenarioId: current.id,      // new
+        scenario_id: current.id,     // legacy
       }),
     });
 
-    // if server sends structured error, surface it
     if (!res.ok) {
-      let text = 'Request failed';
+      let message = 'Request failed';
       try {
-        const err = await res.json();
-        if (err?.error) text = err.error;
-      } catch { /* ignore */ }
-      throw new Error(text);
+        const e = await res.json();
+        if (e?.error) message = e.error;
+      } catch {}
+      throw new Error(message);
     }
 
     const api = await res.json();
 
-    // ✅ Treat the presence of score/rubric/etc. as success,
-    // not a legacy "answer" field.
+    // Treat structured JSON as success (don’t rely on legacy "answer")
     if (
       api &&
       (typeof api.score === 'number' ||
@@ -147,9 +143,8 @@ const submit = useCallback(async () => {
         api.proTip ||
         api.suggestedUpgrade)
     ) {
-      setFeedback(normalizeFeedback(api));   // <-- key line
+      setFeedback(normalizeFeedback(api));
     } else {
-      // Fall back to defensive error so the user sees something meaningful
       setError('No structured feedback returned.');
     }
   } catch (e: any) {
@@ -158,6 +153,7 @@ const submit = useCallback(async () => {
     setLoading(false);
   }
 }, [current, userQuestion]);
+
 
 
   /* --------------------------------- Render -------------------------------- */
@@ -230,6 +226,7 @@ const submit = useCallback(async () => {
           className="px-4 py-2 rounded border"
           onClick={() => {
             setUserQuestion('');
+            setFeedback(null);
             setError(null);
           }}
         >
@@ -241,7 +238,17 @@ const submit = useCallback(async () => {
         </button>
       </div>
 
-      {error && <div className="rounded border p-4 bg-red-50 text-red-700">{error}</div>}
+      {feedback && (
+      <div className="mt-6">
+      <ScoreCard feedback={feedback} />
+      </div>
+      )}
+
+      {error && (
+      <div className="mt-4 rounded border border-red-200 bg-red-50 p-4 text-red-700">
+      {error}
+      </div>
+      )}
 
       {!error && (
         <div className="rounded border p-4 bg-rose-50 text-rose-700">
