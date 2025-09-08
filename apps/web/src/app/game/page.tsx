@@ -106,49 +106,59 @@ export default function GamePage() {
   }, [idx, scenarios.length]);
 
   /** Submit via Next.js API proxy to avoid CORS/mixed-content issues. */
-  const submit = useCallback(async () => {
-    if (!current) return;
-    setLoading(true);
-    setError(null);
-    setFeedback(null);
+// REPLACE your submit function with this
+const submit = useCallback(async () => {
+  if (!current) return;
 
-    try {
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          // include both legacy and new keys; backend can accept either
-          user_question: userQuestion,
-          question: userQuestion,
-          scenario_id: current.id,
-          scenarioId: current.id,
-        }),
-        cache: 'no-store',
-      });
-
-      const api = await res.json();
-      // Helpful diagnostics (safe to leave; remove if you prefer quieter logs)
-      console.log('🔍 API raw response:', api);
-
-      if (!res.ok) {
-        throw new Error(api?.detail || api?.error || res.statusText || 'Request failed');
-      }
-
-      const normalized = normalizeFeedback(api, {
-        scenarioTitle: current.title,
-        scenarioText: current.prompt,
+  setLoading(true);
+  setError(null);
+  try {
+    // call our Next.js proxy so we avoid CORS/mixed-content issues in prod
+    const res = await fetch('/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        // accept both legacy and new keys on the server
         question: userQuestion,
-      });
+        user_question: userQuestion,
+        scenarioId: current.id,
+        scenario_id: current.id,
+      }),
+    });
 
-      console.log('✅ Normalized feedback:', normalized);
-      setFeedback(normalized);
-    } catch (err: any) {
-      setError(err?.message ?? 'Request failed');
-      setFeedback(null);
-    } finally {
-      setLoading(false);
+    // if server sends structured error, surface it
+    if (!res.ok) {
+      let text = 'Request failed';
+      try {
+        const err = await res.json();
+        if (err?.error) text = err.error;
+      } catch { /* ignore */ }
+      throw new Error(text);
     }
-  }, [current, userQuestion]);
+
+    const api = await res.json();
+
+    // ✅ Treat the presence of score/rubric/etc. as success,
+    // not a legacy "answer" field.
+    if (
+      api &&
+      (typeof api.score === 'number' ||
+        Array.isArray(api.rubric) ||
+        api.proTip ||
+        api.suggestedUpgrade)
+    ) {
+      setFeedback(normalizeFeedback(api));   // <-- key line
+    } else {
+      // Fall back to defensive error so the user sees something meaningful
+      setError('No structured feedback returned.');
+    }
+  } catch (e: any) {
+    setError(e?.message ?? 'Failed to fetch');
+  } finally {
+    setLoading(false);
+  }
+}, [current, userQuestion]);
+
 
   /* --------------------------------- Render -------------------------------- */
 
