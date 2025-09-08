@@ -40,7 +40,7 @@ export type RogaFeedback = {
 
 type Scenario = { id: number; title: string; prompt: string };
 
-// Deterministic “daily” index
+// Deterministic "daily" index
 function pickDailyIndex(len: number): number {
   const d = new Date();
   const seed = Number(
@@ -54,34 +54,36 @@ function pickDailyIndex(len: number): number {
   return Math.abs(h) % len;
 }
 
-// Map API -> UI
+// Map API -> UI with improved validation
 function normalizeFeedback(
   api: AskApiResponse,
   fallback: { scenarioTitle: string; scenarioText: string; question: string }
 ): RogaFeedback {
-  return {
+  console.log('Normalizing feedback:', api);
+  
+  const normalized = {
     scenario: {
-      title:
-        api?.scenario?.title ??
-        fallback.scenarioTitle ??
-        "Today’s Scenario",
-      text:
-        api?.scenario?.text ??
-        fallback.scenarioText ??
-        '',
+      title: api?.scenario?.title || fallback.scenarioTitle || "Today's Scenario",
+      text: api?.scenario?.text || fallback.scenarioText || '',
     },
-    question: api?.question ?? fallback.question ?? '',
-    score: Math.round(api?.score ?? 0),
-    rubric: (api?.rubric ?? []).map((r) => ({
-      key: (r.key ?? 'clarity') as RubricKey,
-      label: r.label ?? 'Clarity',
-      status: (r.status ?? 'warn') as RubricStatus,
-      note: r.note ?? '',
-    })),
-    proTip: api?.proTip ?? '',
-    suggestedUpgrade: api?.suggestedUpgrade ?? '',
-    badge: api?.badge ? { name: api.badge.name, label: api.badge.label } : undefined,
+    question: api?.question || fallback.question || '',
+    score: typeof api?.score === 'number' ? Math.round(api.score) : 0,
+    rubric: Array.isArray(api?.rubric) ? api.rubric.map((r) => ({
+      key: (r?.key || 'clarity') as RubricKey,
+      label: r?.label || 'Clarity',
+      status: (r?.status || 'warn') as RubricStatus,
+      note: r?.note || '',
+    })) : [],
+    proTip: api?.proTip || '',
+    suggestedUpgrade: api?.suggestedUpgrade || '',
+    badge: api?.badge ? { 
+      name: api.badge.name || '', 
+      label: api.badge.label 
+    } : undefined,
   };
+
+  console.log('Normalized result:', normalized);
+  return normalized;
 }
 
 export default function GamePage() {
@@ -94,25 +96,31 @@ export default function GamePage() {
 
   // Load scenarios & initial index
   useEffect(() => {
-    setScenarios(scenariosData as Scenario[]);
+    const scenarioList = scenariosData as Scenario[];
+    setScenarios(scenarioList);
+    
     const stored = localStorage.getItem('roga_current_idx');
     if (stored) {
-      setIdx(parseInt(stored, 10));
+      const storedIdx = parseInt(stored, 10);
+      if (storedIdx >= 0 && storedIdx < scenarioList.length) {
+        setIdx(storedIdx);
+      } else {
+        const initial = pickDailyIndex(scenarioList.length);
+        setIdx(initial);
+        localStorage.setItem('roga_current_idx', String(initial));
+      }
     } else {
-      const initial = pickDailyIndex((scenariosData as Scenario[]).length);
+      const initial = pickDailyIndex(scenarioList.length);
       setIdx(initial);
       localStorage.setItem('roga_current_idx', String(initial));
     }
   }, []);
 
-  const current =
-    idx !== null && scenarios.length > 0 ? scenarios[idx] : null;
+  const current = idx !== null && scenarios.length > 0 ? scenarios[idx] : null;
 
   const shuffle = useCallback(() => {
     if (scenarios.length < 2 || idx === null) return;
-    const next =
-      (idx + 1 + Math.floor(Math.random() * (scenarios.length - 1))) %
-      scenarios.length;
+    const next = (idx + 1 + Math.floor(Math.random() * (scenarios.length - 1))) % scenarios.length;
     setIdx(next);
     localStorage.setItem('roga_current_idx', String(next));
     setUserQuestion('');
@@ -121,56 +129,111 @@ export default function GamePage() {
   }, [idx, scenarios.length]);
 
   const submit = useCallback(async () => {
-    if (!current) return;
+    if (!current) {
+      setError('No scenario selected');
+      return;
+    }
+
+    if (!userQuestion.trim()) {
+      setError('Please enter a question');
+      return;
+    }
 
     setLoading(true);
     setError(null);
     setFeedback(null);
 
+    console.log('=== SUBMIT DEBUG START ===');
+    console.log('Current scenario:', current);
+    console.log('User question:', userQuestion);
+
     try {
+      const requestBody = {
+        question: userQuestion,
+        user_question: userQuestion, // legacy support
+        scenarioId: current.id,
+        scenario_id: current.id, // legacy support
+      };
+
+      console.log('Request body:', requestBody);
+
       const res = await fetch('/api/ask', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question: userQuestion,      // new
-          user_question: userQuestion, // legacy
-          scenarioId: current.id,      // new
-          scenario_id: current.id,     // legacy
-        }),
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
       });
 
+      console.log('Response status:', res.status);
+      console.log('Response headers:', Object.fromEntries(res.headers.entries()));
+
       if (!res.ok) {
-        let message = 'Request failed';
+        let message = `Request failed with status ${res.status}`;
         try {
-          const e = (await res.json()) as { error?: string };
-          if (e?.error) message = e.error;
-        } catch {
-          // ignore
+          const errorData = await res.json();
+          console.log('Error response data:', errorData);
+          if (errorData?.error) {
+            message = errorData.error;
+          }
+        } catch (parseError) {
+          console.log('Could not parse error response:', parseError);
+          const textResponse = await res.text();
+          console.log('Error response text:', textResponse);
         }
         throw new Error(message);
       }
 
-      const api = (await res.json()) as AskApiResponse;
+      const responseText = await res.text();
+      console.log('Raw response text:', responseText);
 
-      if (api && (typeof api.score === 'number' || Array.isArray(api.rubric))) {
-        setFeedback(
-          normalizeFeedback(api, {
-            scenarioTitle: current.title,
-            scenarioText: current.prompt,
-            question: userQuestion,
-          })
-        );
-      } else {
-        setError('No structured feedback returned.');
+      let api: AskApiResponse;
+      try {
+        api = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        throw new Error('Invalid JSON response from server');
       }
+
+      console.log('Parsed API response:', api);
+      console.log('API response type checks:');
+      console.log('- api exists:', !!api);
+      console.log('- score type:', typeof api?.score);
+      console.log('- score value:', api?.score);
+      console.log('- rubric is array:', Array.isArray(api?.rubric));
+      console.log('- rubric length:', api?.rubric?.length);
+
+      // Simplified validation - just check if we have the essential data
+      if (!api) {
+        throw new Error('No response data received');
+      }
+
+      // Create normalized feedback regardless of validation
+      const normalizedFeedback = normalizeFeedback(api, {
+        scenarioTitle: current.title,
+        scenarioText: current.prompt,
+        question: userQuestion,
+      });
+
+      console.log('About to set feedback:', normalizedFeedback);
+      setFeedback(normalizedFeedback);
+      console.log('Feedback state should be set');
+
     } catch (e: unknown) {
-      const message =
-        e instanceof Error ? e.message : 'Failed to fetch';
-      setError(message);
+      console.error('Submit error:', e);
+      const message = e instanceof Error ? e.message : 'An unexpected error occurred';
+      setError(`Error: ${message}`);
     } finally {
       setLoading(false);
+      console.log('=== SUBMIT DEBUG END ===');
     }
   }, [current, userQuestion]);
+
+  // Debug feedback state changes
+  useEffect(() => {
+    console.log('Feedback state changed:', feedback);
+  }, [feedback]);
 
   if (!current) {
     return (
@@ -222,11 +285,24 @@ export default function GamePage() {
         </button>
       </div>
 
-      {feedback && <ScoreCard feedback={feedback} />}
+      {/* Debug info */}
+      <div className="mb-4 text-xs text-gray-400">
+        <p>Debug: Feedback state = {feedback ? 'SET' : 'NULL'}</p>
+        <p>Debug: Error state = {error || 'NONE'}</p>
+        <p>Debug: Loading = {loading ? 'TRUE' : 'FALSE'}</p>
+      </div>
+
+      {feedback && (
+        <div>
+          <p className="text-sm text-green-600 mb-2">✓ Feedback received and rendering ScoreCard</p>
+          <ScoreCard data={feedback} />
+        </div>
+      )}
 
       {error && (
         <div className="mt-4 rounded border border-red-200 bg-red-50 p-4 text-red-700">
-          {error}
+          <p className="font-medium">Error Details:</p>
+          <p>{error}</p>
         </div>
       )}
 
