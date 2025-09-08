@@ -75,7 +75,7 @@ function normalizeFeedback(
       note: r?.note || '',
     })) : [],
     proTip: api?.proTip || '',
-    suggestedUpgrade: api?.suggestedUpgrade || '',
+    suggestedUpgrade: api?.suggestedUpgrade || undefined,
     badge: api?.badge ? { 
       name: api.badge.name || '', 
       label: api.badge.label 
