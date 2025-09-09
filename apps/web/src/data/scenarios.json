@@ -2,12 +2,12 @@
   {
     "id": 6,
     "title": "Lunch choice",
-    "prompt": "A friend says, 'Let’s get something different for lunch today.' What question could help you find out what they really want to eat?"
+    "prompt": "Your friend says, 'Let’s get something different for lunch today,' but doesn’t say what they’re craving. Another friend looks uncertain, clearly wanting to say something but holding back. What question could you ask to uncover what they’re actually in the mood for?"
   },
   {
     "id": 7,
     "title": "Class instructions",
-    "prompt": "A teacher gives directions for a project, but you’re not sure what’s expected. What clarifying question could you ask?"
+    "prompt": "Your teacher explains a project, but you’re still not sure what to do. The teacher is about to move on to the next part of class. What question could you ask to make the directions clearer before it’s too late?"
   },
   {
     "id": 8,
