@@ -254,6 +254,12 @@ export default function GamePage() {
         <p className="mt-1">{current.prompt}</p>
       </div>
 
+      {/* --- SMOKE TEST START --- */}
+    <div className="bg-teal text-white rounded-2xl shadow-card px-4 py-3 mt-6">
+      Brand token test: teal/rounded-2xl/shadow-card
+    </div>
+    {/* --- SMOKE TEST END --- */}
+    
       <textarea
         className="w-full border rounded p-3 mb-3"
         rows={6}
