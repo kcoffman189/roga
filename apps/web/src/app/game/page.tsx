@@ -153,6 +153,8 @@ export default function GamePage() {
         user_question: userQuestion, // legacy support
         scenarioId: current.id,
         scenario_id: current.id, // legacy support
+        scenarioTitle: current.title,
+        scenarioText: current.prompt
       };
 
       console.log('Request body:', requestBody);
