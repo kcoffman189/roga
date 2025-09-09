@@ -23,5 +23,11 @@
     "id": 10,
     "title": "Helping out",
     "prompt": "A teammate says, 'I’m struggling to finish my part of the project.' What question could help you understand how to support them?"
+  },
+  {
+  "id": 11,
+  "title": "Group Science Project",
+  "prompt": "Your teacher assigns a big science project to your group. Everyone is sitting in awkward silence, waiting for someone else to speak. A couple of people look uneasy, and one person is flipping through the assignment sheet without saying anything. What question could you ask to break the ice and get things moving?"
   }
+
 ]
