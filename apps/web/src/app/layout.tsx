@@ -1,48 +1,23 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+// apps/web/src/app/layout.tsx
 import "./globals.css";
+import type { Metadata } from "next";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata = {
+export const metadata: Metadata = {
   title: "Roga — The art of asking",
-  description: "Train your Question Intelligence.",
-  icons: {
-    icon: "/brand/roga-32.png",        // generated favicon
-    apple: "/apple-touch-icon.png"
-  },
-  manifest: "/site.webmanifest",
+  description: "Duolingo for Question Intelligence.",
+  icons: { icon: "/favicon.ico" },        // <-- favicon in /public
   openGraph: {
     title: "Roga — The art of asking",
     description: "Train your Question Intelligence.",
-    images: ["/brand/og.png"],        // optional social card export
+    images: ["/brand/og.png"],            // <-- optional, if present
   },
-  twitter: {
-    card: "summary_large_image",
-    images: ["/brand/og.png"],
-  }
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
+      {/* bg + text colors come from globals.css */}
+      <body>{children}</body>
     </html>
   );
 }

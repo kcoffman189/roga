@@ -1,26 +1,26 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+:root{
+  --roga-teal:#00BFA6;
+  --roga-coral:#FF6F61;
+  --roga-violet:#7B61FF;
+  --roga-coal:#2E2E2E;
+  --roga-fog:#F5F5F5;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* Global brand look */
+html, body { background: var(--roga-fog); color: var(--roga-coal); }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* Utility hooks (you can expand later) */
+.heading { font-weight: 700; } /* Poppins will be added in Step 3 fonts */
+.copy    { }
+.tagline { color: #2E2E2E; }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+/* Primitives */
+.btn        { @apply inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold transition-colors; }
+.btn-primary{ @apply bg-teal text-white hover:bg-violet; }
+.btn-ghost  { @apply bg-white text-coal border border-black/10 hover:bg-fog; }
+.card       { @apply bg-white rounded-2xl shadow-card p-6; }
+.badge      { @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold bg-coral text-white; }
