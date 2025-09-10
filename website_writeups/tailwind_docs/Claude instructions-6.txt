@@ -1,0 +1,23 @@
+## Instructions for Claude Code - Roga.me Website Updates
+
+### SINGLE FOCUS: Change Text Colors to White
+
+**ONLY make this change - do not modify anything else:**
+
+1. **Change the "roga" text in the top left corner to white color**
+   - Apply `color: white;` or `color: #ffffff;` to the roga logo text
+
+2. **Change "The art of asking" headline to white color**
+   - Apply `color: white;` or `color: #ffffff;` to this text
+
+3. **Change "Sharpen your Question Intelligence with daily challenges and deep practice." subtitle to white color**
+   - Apply `color: white;` or `color: #ffffff;` to this text
+
+**Do not change:**
+- Font sizes
+- Positioning
+- Card sizes
+- Button spacing
+- Any other styling
+
+**Goal**: Make these three text elements clearly visible as white text against the teal background.

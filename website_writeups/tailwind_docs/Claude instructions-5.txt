@@ -1,0 +1,34 @@
+## Instructions for Claude Code - Roga.me Website Updates
+
+### 1. Logo Text Size and Color Fix
+- **Triple the font size** of the "roga" text in the upper left corner (this appears to not have been applied yet)
+- Change the "roga" text color to **white** (ensure this is actually implemented)
+- Keep the Georgia serif font
+
+### 2. Logo Position Adjustment
+- **Move the entire Roga logo and "roga" text slightly down and to the right**
+- Increase the top and left margins/padding by an additional 10-15px from current position
+
+### 3. Feature Cards Size Reduction
+- **Reduce the overall size of all three feature cards by one-third (33%)**
+- Maintain the tall/skinny proportions (1.25 times taller than wide)
+- Keep the horizontal side-by-side layout
+- Preserve spacing between cards
+
+### 4. Hero Text Color Fix
+Ensure **white text color** is applied to:
+- **"The art of asking"** headline
+- **"Sharpen your Question Intelligence with daily challenges and deep practice."** subtitle
+Both text elements should be clearly white against the teal background
+
+### 5. Button Spacing Fix
+- **Add margin/spacing between the "Start Daily Challenge" and "Deep Practice" buttons**
+- Buttons should not be touching each other
+- Suggest 15-20px horizontal gap between the buttons
+- Ensure both buttons remain centered as a group
+
+### 6. Verification Checklist
+- Confirm "roga" text is significantly larger and white
+- Confirm all hero section text is white and readable
+- Confirm cards are noticeably smaller but still properly proportioned
+- Confirm buttons have clear separation between them
