@@ -19,8 +19,44 @@ html, body { background: var(--roga-fog); color: var(--roga-coal); }
 .tagline { color: #2E2E2E; }
 
 /* Primitives */
-.btn        { @apply inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold transition-colors; }
-.btn-primary{ @apply bg-teal text-white hover:bg-violet; }
-.btn-ghost  { @apply bg-white text-coal border border-black/10 hover:bg-fog; }
-.card       { @apply bg-white rounded-2xl shadow-card p-6; }
-.badge      { @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold bg-coral text-white; }
+.btn        { 
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center; 
+  padding: 0.75rem 1.25rem; 
+  border-radius: 12px; 
+  font-weight: 600; 
+  transition: background-color 0.2s ease, color 0.2s ease; 
+}
+.btn-primary{ 
+  background-color: var(--roga-teal); 
+  color: white; 
+}
+.btn-primary:hover { 
+  background-color: var(--roga-violet); 
+}
+.btn-ghost  { 
+  background-color: white; 
+  color: var(--roga-coal); 
+  border: 1px solid rgba(0,0,0,0.1); 
+}
+.btn-ghost:hover { 
+  background-color: var(--roga-fog); 
+}
+.card       { 
+  background-color: white; 
+  border-radius: 16px; 
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06); 
+  padding: 1.5rem; 
+}
+.badge      { 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 0.5rem; 
+  border-radius: 9999px; 
+  padding: 0.25rem 0.75rem; 
+  font-size: 0.875rem; 
+  font-weight: 600; 
+  background-color: var(--roga-coral); 
+  color: white; 
+}
