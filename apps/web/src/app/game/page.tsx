@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import scenariosData from '@/data/scenarios.json';
 import ScoreCard from '@/components/ScoreCard';
 
@@ -247,7 +248,12 @@ export default function GamePage() {
 
   return (
     <div className="mx-auto max-w-3xl p-6">
-      <h1 className="text-3xl heading mb-6">Quick Challenge</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl heading">Quick Challenge</h1>
+        <Link href="/" className="btn btn-ghost">
+          ← Back to Home
+        </Link>
+      </div>
 
       <div className="card mb-6">
         <div className="flex items-start gap-3">
