@@ -2,7 +2,6 @@ import BrandMark from "@/components/ui/BrandMark";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
-import Link from "next/link";
 
 export default function Home() {
   return (
@@ -18,9 +17,7 @@ export default function Home() {
           Sharpen your Question Intelligence with daily challenges and deep practice.
         </p>
         <div className="flex justify-center gap-4">
-          <Link href="/game">
-            <Button>Start Daily Challenge</Button>
-          </Link>
+          <Button>Start Daily Challenge</Button>
           <Button variant="ghost">Learn More</Button>
         </div>
       </section>
@@ -28,20 +25,17 @@ export default function Home() {
       {/* FEATURES */}
       <section className="max-w-5xl mx-auto mt-16 grid gap-6 md:grid-cols-3">
         <Card>
-          <div className="text-4xl mb-4">⏱️</div>
           <h3 className="heading text-xl mb-2">Daily Challenge</h3>
           <p className="copy">2–3 minute scenarios with fast feedback.</p>
           <div className="mt-4"><Badge>+10 Insight XP</Badge></div>
         </Card>
 
         <Card>
-          <div className="text-4xl mb-4">💬</div>
           <h3 className="heading text-xl mb-2">Deep Practice</h3>
           <p className="copy">10–15 minute multi-round roleplay with a session summary.</p>
         </Card>
 
         <Card>
-          <div className="text-4xl mb-4">🏆</div>
           <h3 className="heading text-xl mb-2">Streaks & Badges</h3>
           <p className="copy">Keep your curiosity going with streaks and collectibles.</p>
         </Card>
@@ -50,11 +44,7 @@ export default function Home() {
       {/* FOOTER */}
       <footer className="max-w-5xl mx-auto mt-16 py-8 text-center text-sm text-coal/70">
         Roga trains Question Intelligence — the art of asking better questions.
-        <div className="mt-2">
-          <a href="#" className="hover:text-coal">Privacy</a> • 
-          <a href="#" className="hover:text-coal"> Terms</a> • 
-          <a href="#" className="hover:text-coal"> Contact</a>
-        </div>
+        <div className="mt-2">Privacy • Terms • Contact</div>
       </footer>
     </main>
   );

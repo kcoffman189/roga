@@ -1,15 +1,19 @@
-﻿/** @type {import('tailwindcss').Config} */
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./src/**/*.{js,ts,jsx,tsx}"],
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
+    "./pages/**/*.{js,ts,jsx,tsx}",
+  ],
   theme: {
     extend: {
       colors: {
-        teal: "#00BFA6",   // Primary
-        coral: "#FF6F61",  // CTA / badges
+        teal:   "#00BFA6", // Primary
+        coral:  "#FF6F61", // CTA / badges
         violet: "#7B61FF", // Highlights
-        coal: "#2E2E2E",   // Text
-        fog: "#F5F5F5",    // Surfaces
-        white: "#FFFFFF",
+        coal:   "#2E2E2E", // Text
+        fog:    "#F5F5F5", // Surfaces
+        white:  "#FFFFFF",
       },
       borderRadius: {
         xl: "12px",

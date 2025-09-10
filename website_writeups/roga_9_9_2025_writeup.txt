@@ -1,0 +1,154 @@
+📝 Roga Project — Branding & Tailwind Handover Document
+
+Date: September 9, 2025
+Owner: CTO (handover to engineering team)
+
+1. Current Status
+Application
+
+Frontend (Vercel, Next.js)
+
+Running at https://roga.me
+.
+
+Root Directory correctly set to apps/web in Vercel.
+
+Build command: npm run build.
+
+Tailwind/PostCSS configs present but CSS is not being compiled in production (plain HTML view).
+
+Global CSS (globals.css) imported into layout.tsx.
+
+Backend (Fly.io, FastAPI)
+
+Live at https://roga-api.fly.dev
+.
+
+Dynamic scoring endpoint (/score) integrated with ChatGPT API.
+
+Last deploy attempt hit builder timeout (deadline_exceeded).
+
+Backend functionality otherwise unchanged since last good deploy.
+
+Styling/Branding
+
+Roga brand tokens (colors, radii, shadows, fonts) defined in Tailwind config.
+
+globals.css includes @tailwind directives, brand CSS vars, and utility class mappings (.btn-primary, .card, .badge).
+
+Assets: Favicon and logos stored in apps/web/public/brand/ and apps/web/public/favicon.ico.
+
+Current production site not styled (Tailwind build not running on Vercel).
+
+2. File & Folder Structure (Key Parts)
+/roga
+  ├─ apps/
+  │   ├─ api/                # FastAPI backend (Fly.io)
+  │   │   └─ app/main.py
+  │   └─ web/                # Next.js frontend (Vercel)
+  │       ├─ public/
+  │       │   ├─ favicon.ico
+  │       │   └─ brand/
+  │       │       ├─ roga-logo.png
+  │       │       ├─ roga-logo.svg (optional)
+  │       │       └─ og.png (social preview)
+  │       ├─ src/
+  │       │   └─ app/
+  │       │       │   ├─ layout.tsx       # Imports globals.css
+  │       │       │   ├─ globals.css      # Tailwind + brand tokens
+  │       │       │   ├─ page.tsx         # Homepage
+  │       │       │   └─ game/page.tsx    # Scenario game
+  │       │   └─ components/
+  │       │       │   └─ BrandMark.tsx
+  │       ├─ postcss.config.js            # Tailwind + Autoprefixer
+  │       ├─ tailwind.config.js           # Brand tokens & extensions
+  │       └─ package.json                 # Needs Tailwind deps installed
+  ├─ deploy-roga.ps1                      # Deployment helper script
+  └─ goto-roga.ps1                        # Local helper (git status)
+
+3. Updates Made
+
+Fixed frontend/backend integration for dynamic scoring (score, rubric, pro tip, suggested upgrade, badge).
+
+Added branding assets (logos, favicons, OG image).
+
+Introduced Tailwind theme config with brand colors, radius, shadows, fonts.
+
+Added global styles (globals.css) with @tailwind directives and custom utility classes (.btn-primary, .badge, etc.).
+
+Configured Vercel project settings → Root Directory set to apps/web, proper build command.
+
+Attempted multiple redeploys, but Tailwind CSS not being compiled in production.
+
+4. Known Issues
+
+Frontend (Vercel)
+
+Styles are missing in production → Tailwind/PostCSS not running.
+
+/_next/static/chunks/*.css does not include Tailwind utilities (--tw-, .text-4xl, etc.).
+
+Most likely cause: tailwindcss, postcss, and autoprefixer devDependencies missing in apps/web/package.json (Vercel builds each package independently).
+
+Backend (Fly.io)
+
+Last deploy attempt failed with deadline_exceeded (builder timeout).
+
+Service is still available but may be slightly behind latest code.
+
+Favicon
+
+favicon.ico is in place, but browser tab icon not updating due to caching.
+
+5. Next Steps (Team To-Do)
+Frontend
+
+Install Tailwind/PostCSS dependencies in apps/web
+
+cd apps/web
+npm install -D tailwindcss postcss autoprefixer
+cd ../..
+git add apps/web/package.json apps/web/package-lock.json
+git commit -m "apps/web: add Tailwind/PostCSS dev deps"
+git push origin main
+
+
+Verify Vercel build logs
+
+Look for tailwindcss, postcss, autoprefixer in dependency tree.
+
+Ensure no warnings like Unknown at rule @tailwind.
+
+Redeploy → After successful build, check CSS chunk for --tw- utilities.
+
+Clean up diagnostic code (if any test outline rules were added).
+
+Backend
+
+Retry Fly.io deploy with:
+
+flyctl deploy --app roga-api --remote-only
+# or fallback
+flyctl deploy --app roga-api --local-only
+
+
+Confirm endpoint health at https://roga-api.fly.dev/score
+.
+
+General
+
+After Tailwind is working, move to Step 3 (Fonts) → integrate Poppins, Inter, Merriweather via next/font/google.
+
+Add production monitoring (Vercel analytics, Fly logs, Sentry optional).
+
+Add small visual version marker in footer (Brand v1) so it’s obvious when changes are live.
+
+6. Handoff Notes
+
+All prior fixes (dynamic scoring, ScoreCard integration, backend API wiring) are working end-to-end.
+
+The main blocker is frontend styling not compiling in Vercel. Focus first on dev dependencies + verifying build logs.
+
+Backend Fly.io issues are secondary; they don’t affect styling.
+
+✅ Once Tailwind is compiling, the site will show the new Roga brand look (Fog background, Coal text, Teal buttons, Violet hover, Coral badges, rounded cards).

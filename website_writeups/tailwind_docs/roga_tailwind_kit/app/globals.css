@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Brand CSS variables */
+:root{
+  --roga-teal:#00BFA6;
+  --roga-coral:#FF6F61;
+  --roga-violet:#7B61FF;
+  --roga-coal:#2E2E2E;
+  --roga-fog:#F5F5F5;
+}
+
+html, body { @apply bg-fog text-coal; }
+
+/* Typography */
+h1,h2,h3 { @apply text-coal; }
+.heading { @apply font-display font-bold; }
+.copy    { @apply font-sans; }
+.tagline { @apply font-serif text-lg text-coal/80; }
+
+/* Links + focus */
+a { @apply text-violet underline-offset-2 hover:underline; }
+:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(123,97,255,0.35); border-radius: 6px; }
+
+/* UI primitives */
+.btn        { @apply inline-flex items-center justify-center px-5 py-3 rounded-2xl font-semibold transition-colors; }
+.btn-primary{ @apply bg-teal text-white hover:bg-violet; }
+.btn-ghost  { @apply bg-white text-coal border border-black/10 hover:bg-fog; }
+.card       { @apply bg-white rounded-2xl shadow-card p-6; }
+.badge      { @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold bg-coral text-white; }

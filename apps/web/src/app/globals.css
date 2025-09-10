@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Brand CSS variables */
 :root{
   --roga-teal:#00BFA6;
   --roga-coral:#FF6F61;
@@ -10,53 +11,80 @@
   --roga-fog:#F5F5F5;
 }
 
-/* Global brand look */
-html, body { background: var(--roga-fog); color: var(--roga-coal); }
+html, body { 
+  background-color: #F5F5F5; 
+  color: #2E2E2E; 
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
 
-/* Utility hooks (you can expand later) */
-.heading { font-weight: 700; } /* Poppins will be added in Step 3 fonts */
-.copy    { }
-.tagline { color: #2E2E2E; }
+/* Typography */
+h1,h2,h3 { color: #2E2E2E; }
+.heading { 
+  font-family: var(--font-poppins), system-ui, sans-serif; 
+  font-weight: 700; 
+}
+.copy { 
+  font-family: var(--font-inter), system-ui, sans-serif; 
+}
+.tagline { 
+  font-family: var(--font-merriweather), Georgia, serif; 
+  font-size: 1.125rem; 
+  color: rgba(46, 46, 46, 0.8); 
+}
 
-/* Primitives */
-.btn        { 
-  display: inline-flex; 
-  align-items: center; 
-  justify-content: center; 
-  padding: 0.75rem 1.25rem; 
-  border-radius: 12px; 
-  font-weight: 600; 
-  transition: background-color 0.2s ease, color 0.2s ease; 
+/* Links + focus */
+a { 
+  color: #7B61FF; 
+  text-underline-offset: 2px; 
 }
-.btn-primary{ 
-  background-color: var(--roga-teal); 
-  color: white; 
+a:hover { 
+  text-decoration: underline; 
 }
-.btn-primary:hover { 
-  background-color: var(--roga-violet); 
+:focus-visible { 
+  outline: none; 
+  box-shadow: 0 0 0 3px rgba(123,97,255,0.35); 
+  border-radius: 6px; 
 }
-.btn-ghost  { 
-  background-color: white; 
-  color: var(--roga-coal); 
-  border: 1px solid rgba(0,0,0,0.1); 
+
+/* UI primitives */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.25rem;
+  border-radius: 16px;
+  font-weight: 600;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
-.btn-ghost:hover { 
-  background-color: var(--roga-fog); 
+.btn-primary {
+  background-color: #00BFA6;
+  color: white;
 }
-.card       { 
-  background-color: white; 
-  border-radius: 16px; 
-  box-shadow: 0 8px 20px rgba(0,0,0,0.06); 
-  padding: 1.5rem; 
+.btn-primary:hover {
+  background-color: #7B61FF;
 }
-.badge      { 
-  display: inline-flex; 
-  align-items: center; 
-  gap: 0.5rem; 
-  border-radius: 9999px; 
-  padding: 0.25rem 0.75rem; 
-  font-size: 0.875rem; 
-  font-weight: 600; 
-  background-color: var(--roga-coral); 
-  color: white; 
+.btn-ghost {
+  background-color: white;
+  color: #2E2E2E;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+.btn-ghost:hover {
+  background-color: #F5F5F5;
+}
+.card {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  padding: 1.5rem;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background-color: #FF6F61;
+  color: white;
 }
