@@ -1,0 +1,38 @@
+## Instructions for Claude Code - Roga.me Website Updates
+
+### 1. Logo Typography Updates
+- **Triple the current font size** of the "roga" text in the upper left corner
+- Change the "roga" text color to **white**
+- Ensure it maintains the Georgia serif font
+
+### 2. Feature Cards Dimension Changes
+- Resize the three feature cards to be **1.25 times taller than they are wide** 
+- Transform from current wide/short format to **tall/skinny format**
+- This creates vertical space for future icon placement in each card
+- Maintain the horizontal side-by-side layout
+- Keep spacing between cards
+
+### 3. Main Headline Typography
+- **Increase the font size** of "The art of asking" (suggest making it larger/more prominent)
+- Change text color to **white**
+- Apply **Georgia serif font**: `font-family: 'Georgia', serif;`
+
+### 4. Subtitle Typography  
+- Apply **Georgia serif font** to "Sharpen your Question Intelligence with daily challenges and deep practice."
+- Change text color to **white**
+
+### 5. Button Updates
+- **Remove the black border/outline** from the "Start Daily Challenge" button
+- **Change the "Learn More" button text** to say **"Deep Practice"**
+- **Add spacing/margin between** the "Start Daily Challenge" and "Deep Practice" buttons (suggest 15-20px gap)
+
+### 6. Footer Typography
+- Apply **Georgia serif font** to the footer text: "Roga trains Question Intelligence — the art of asking better questions."
+- Keep this text in the white/cream footer section
+
+### 7. Font Consistency Check
+Ensure Georgia serif font is now applied to:
+- "roga" logo
+- "The art of asking" headline  
+- "Sharpen your Question Intelligence..." subtitle
+- Footer tagline text

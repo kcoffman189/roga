@@ -1,0 +1,46 @@
+Final Refinement Instructions for Claude Code
+1. Fix Feature Cards Layout
+Current Issue: The three feature cards (Daily Challenge, Deep Practice, Streaks & Badges) are missing from the current design
+Fix Needed:
+
+Add the three white/cream colored cards in a horizontal row below the hero section
+Cards should be positioned in the teal background area, not in the white section
+Each card needs its colored icon (orange timer, purple chat bubble, red trophy)
+Cards should have proper spacing between them and rounded corners
+
+2. Reorganize Content Structure
+Current Issue: The individual sections are scattered in the white area
+Fix Needed:
+
+Move all three feature cards up into the teal section
+Remove the individual "Daily Challenge" section that's currently in the white area
+The teal section should contain: Logo, Hero text, Buttons, AND the three feature cards
+
+3. Adjust Section Heights
+Current Issue: Too much white space, teal section ends too early
+Fix Needed:
+
+Extend the teal background to accommodate the three feature cards
+The teal section should take up about 80-85% of the viewport
+Reduce the white footer section to just contain the tagline and footer links
+
+4. Complete the Card Content
+Missing Elements:
+
+Add the colorful icons to each card (orange clock/timer, purple speech bubble, red trophy)
+Ensure each card has the proper title and description text
+Cards should be evenly spaced in a row
+
+5. Footer Content Placement
+Current Issue: Footer elements are missing
+Add to white section:
+
+"Roga trains Question Intelligence — the art of asking better questions." (left-aligned)
+"Privacy Terms Contact" links (right-aligned)
+
+6. Remove Duplicate Content
+
+Remove the standalone "Daily Challenge" section currently in the white area
+Remove any other individual feature sections that aren't part of the card layout
+
+Key Point: The main difference is that ALL content except the footer should be in the teal section - the three feature cards should sit within the teal background, not below it in white space.

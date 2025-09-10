@@ -1,0 +1,33 @@
+## Instructions for Claude Code - Roga.me Website Updates
+
+### 1. Logo Font and Styling Updates
+- Change the "roga" logo font to **Georgia serif**: `font-family: 'Georgia', serif;`
+- **Double the current size** of both the logo icon and "roga" text in the upper left
+- Add **padding/margin** to the logo container to create space from the absolute upper left corner of the screen (suggest 20-30px from top and left edges)
+
+### 2. Logo Positioning
+- Ensure the enlarged logo maintains proper spacing from screen edges
+- Logo should not touch the very corner - add appropriate margin/padding for breathing room
+
+### 3. Feature Cards Layout Fix
+**Critical**: The three feature cards (Daily Challenge, Deep Practice, Streaks & Badges) must be arranged **horizontally in a row, side by side**
+- **NOT stacked vertically** 
+- Use flexbox or CSS Grid to create a horizontal row layout
+- Add **spacing/gaps between the cards** (suggest 20-30px gap)
+- Cards should be evenly distributed across the width
+- All three cards should be visible side-by-side on desktop screens
+
+### 4. Typography Color Updates
+Ensure the following text elements use **white font color**:
+- **"roga"** logo text (upper left)
+- **"The art of asking"** (main headline)  
+- **"Sharpen your Question Intelligence with daily challenges and deep practice."** (subtitle text)
+
+All of these text elements should have high contrast against the teal background.
+
+### 5. Layout Verification
+- Confirm the three cards are positioned at the bottom of the teal section
+- Ensure cards maintain their white/cream background with colored icons
+- Verify proper responsive behavior for the horizontal card layout
+
+**Priority Focus**: Fix the card layout from vertical stacking to horizontal side-by-side arrangement with proper spacing between cards.
