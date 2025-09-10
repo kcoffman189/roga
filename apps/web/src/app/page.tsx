@@ -11,15 +11,15 @@ export default function Home() {
         {/* Logo positioned further down and right with massive font size */}
         <div className="absolute top-14 left-14 flex items-center gap-4">
           <BrandMark size={80} />
-          <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '6rem'}}>roga</span>
+          <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '6rem', color: 'white'}}>roga</span>
         </div>
         
         {/* Centered hero content */}
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8 max-w-4xl mx-auto">
-          <h1 className="text-white text-7xl md:text-8xl lg:text-9xl leading-tight" style={{fontFamily: 'Georgia, serif'}}>
+          <h1 className="text-white text-7xl md:text-8xl lg:text-9xl leading-tight" style={{fontFamily: 'Georgia, serif', color: 'white'}}>
             The art of asking
           </h1>
-          <p className="text-white text-xl md:text-2xl max-w-3xl mx-auto" style={{fontFamily: 'Georgia, serif'}}>
+          <p className="text-white text-xl md:text-2xl max-w-3xl mx-auto" style={{fontFamily: 'Georgia, serif', color: 'white'}}>
             Sharpen your Question Intelligence with daily challenges and deep practice.
           </p>
           <div className="flex justify-center gap-6 mt-12" style={{gap: '20px'}}>
