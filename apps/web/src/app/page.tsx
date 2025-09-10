@@ -1,59 +1,79 @@
 import BrandMark from "@/components/ui/BrandMark";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-import Badge from "@/components/ui/Badge";
 import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="px-6 py-12">
-      {/* HERO */}
-      <section className="max-w-5xl mx-auto text-center space-y-5">
-        <div className="inline-flex items-center gap-3">
-          <BrandMark size={56} />
-          <h1 className="heading text-3xl md:text-4xl">Roga</h1>
+    <main className="min-h-screen">
+      {/* TEAL HERO SECTION - 70% viewport */}
+      <section className="min-h-[70vh] relative" style={{backgroundColor: '#20B2AA'}}>
+        {/* Logo in top-left corner */}
+        <div className="absolute top-6 left-6 flex items-center gap-2">
+          <BrandMark size={40} />
+          <span className="heading text-white text-xl">roga</span>
         </div>
-        <p className="tagline">The art of asking.</p>
-        <p className="copy max-w-2xl mx-auto">
-          Sharpen your Question Intelligence with daily challenges and deep practice.
-        </p>
-        <div className="flex justify-center gap-4">
-          <Link href="/game">
-            <Button>Start Daily Challenge</Button>
-          </Link>
-          <Button variant="ghost">Learn More</Button>
+        
+        {/* Centered hero content */}
+        <div className="flex items-center justify-center min-h-[70vh] px-6">
+          <div className="text-center space-y-8 max-w-4xl">
+            <h1 className="heading text-white text-6xl md:text-7xl lg:text-8xl leading-tight">
+              The art of asking
+            </h1>
+            <p className="text-white/90 text-xl md:text-2xl max-w-3xl mx-auto">
+              Sharpen your Question Intelligence with daily challenges and deep practice.
+            </p>
+            <div className="flex justify-center gap-6 mt-12">
+              <Link href="/game">
+                <Button className="text-lg px-8 py-4">Start Daily Challenge</Button>
+              </Link>
+              <Button 
+                variant="ghost" 
+                className="text-lg px-8 py-4 bg-transparent border-2 border-white text-white hover:bg-white hover:text-teal-600"
+              >
+                Learn More
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* FEATURES */}
-      <section className="max-w-5xl mx-auto mt-16 grid gap-6 md:grid-cols-3">
-        <Card>
-          <div className="text-4xl mb-4">⏱️</div>
-          <h3 className="heading text-xl mb-2">Daily Challenge</h3>
-          <p className="copy">2–3 minute scenarios with fast feedback.</p>
-          <div className="mt-4"><Badge>+10 Insight XP</Badge></div>
-        </Card>
+      {/* WHITE FEATURE CARDS SECTION */}
+      <section className="bg-white py-16 px-6">
+        <div className="max-w-6xl mx-auto grid gap-8 md:grid-cols-3">
+          <Card className="text-center py-8">
+            <div className="text-6xl mb-6" style={{color: '#FF8C00'}}>⏱️</div>
+            <h3 className="heading text-2xl mb-4">Daily Challenge</h3>
+            <p className="copy text-lg">2-3 minute scenarios with fast feedback</p>
+          </Card>
 
-        <Card>
-          <div className="text-4xl mb-4">💬</div>
-          <h3 className="heading text-xl mb-2">Deep Practice</h3>
-          <p className="copy">10–15 minute multi-round roleplay with a session summary.</p>
-        </Card>
+          <Card className="text-center py-8">
+            <div className="text-6xl mb-6" style={{color: '#8A2BE2'}}>💬</div>
+            <h3 className="heading text-2xl mb-4">Deep Practice</h3>
+            <p className="copy text-lg">10-15 minute multi-round roleplay</p>
+          </Card>
 
-        <Card>
-          <div className="text-4xl mb-4">🏆</div>
-          <h3 className="heading text-xl mb-2">Streaks & Badges</h3>
-          <p className="copy">Keep your curiosity going with streaks and collectibles.</p>
-        </Card>
+          <Card className="text-center py-8">
+            <div className="text-6xl mb-6" style={{color: '#DC143C'}}>🏆</div>
+            <h3 className="heading text-2xl mb-4">Streaks & Badges</h3>
+            <p className="copy text-lg">Keep your curiosity going</p>
+          </Card>
+        </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="max-w-5xl mx-auto mt-16 py-8 text-center text-sm text-coal/70">
-        Roga trains Question Intelligence — the art of asking better questions.
-        <div className="mt-2">
-          <a href="#" className="hover:text-coal">Privacy</a> • 
-          <a href="#" className="hover:text-coal"> Terms</a> • 
-          <a href="#" className="hover:text-coal"> Contact</a>
+      {/* WHITE FOOTER SECTION */}
+      <footer className="bg-white py-12 px-6 border-t border-gray-100">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">
+          <div className="text-center md:text-left mb-6 md:mb-0">
+            <p className="text-lg text-gray-700">
+              Roga trains Question Intelligence — the art of asking better questions.
+            </p>
+          </div>
+          <div className="flex gap-6 text-sm">
+            <a href="#" className="text-gray-600 hover:text-gray-900">Privacy</a>
+            <a href="#" className="text-gray-600 hover:text-gray-900">Terms</a>
+            <a href="#" className="text-gray-600 hover:text-gray-900">Contact</a>
+          </div>
         </div>
       </footer>
     </main>

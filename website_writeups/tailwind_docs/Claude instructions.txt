@@ -1,0 +1,53 @@
+## Instructions for Roga.me Website Redesign
+
+**Transform the current layout from a minimal white design to a vibrant teal-themed hero section with card-based feature presentation.**
+
+### 1. Background and Color Scheme Changes
+- Change the main background from light gray/white to a vibrant teal/turquoise color (#20B2AA or similar)
+- The hero section should have this teal background covering the top 70% of the viewport
+- Add a white/cream section at the bottom for footer content
+
+### 2. Logo and Header Positioning
+- Move the Roga logo to the top-left corner instead of center
+- Keep the question mark icon in a rounded square format
+- Logo should be white text on the teal background
+
+### 3. Hero Content Layout
+- Center-align all hero text content
+- Make "The art of asking" much larger (approximately 3-4x current size) and white
+- Keep the subtitle "Sharpen your Question Intelligence..." but make it white and slightly smaller
+- Maintain the two buttons ("Start Daily Challenge" and "Learn More") but ensure they're properly styled with rounded corners
+- The "Learn More" button should be outlined/transparent with white border
+
+### 4. Feature Cards Redesign
+- Transform the current left-aligned list format into three horizontal cards
+- Cards should be white/cream colored with rounded corners
+- Arrange cards in a row: Daily Challenge, Deep Practice, Streaks & Badges
+- Each card should contain:
+  - A colorful icon at the top (orange timer for Daily Challenge, purple chat bubble for Deep Practice, red trophy for Streaks & Badges)
+  - Bold title text
+  - Description text below
+
+### 5. Card Content Updates
+- Daily Challenge: "2-3 minute scenarios with fast feedback" 
+- Deep Practice: "10-15 minute multi-round roleplay"
+- Streaks & Badges: "Keep your curiosity going"
+- Remove the "+10 Insight XP" badge from the current design
+
+### 6. Footer Section
+- Add a white/cream section at the bottom
+- Include the tagline: "Roga trains Question Intelligence — the art of asking better questions"
+- Add footer links: Privacy, Terms, Contact (right-aligned)
+
+### 7. Spacing and Layout
+- Increase vertical spacing between sections
+- Ensure the hero section takes up significant viewport height
+- Cards should have generous padding and spacing between them
+- Overall layout should feel more spacious and visually impactful
+
+### 8. Typography
+- Use larger, bolder fonts throughout
+- Ensure good contrast between white text and teal background
+- Maintain readability while making the design more visually striking
+
+**The goal is to transform from a minimal, list-based layout to a bold, card-based design with a strong teal hero section that immediately captures attention.**
