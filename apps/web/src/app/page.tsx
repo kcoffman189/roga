@@ -8,10 +8,10 @@ export default function Home() {
     <main className="min-h-screen">
       {/* TEAL SECTION - 80-85% viewport with all content */}
       <section className="min-h-[85vh] relative px-6 py-6" style={{backgroundColor: '#20B2AA'}}>
-        {/* Logo in top-left corner with tripled font size */}
-        <div className="absolute top-8 left-8 flex items-center gap-4">
+        {/* Logo positioned further down and right with massive font size */}
+        <div className="absolute top-14 left-14 flex items-center gap-4">
           <BrandMark size={80} />
-          <span className="text-white text-8xl" style={{fontFamily: 'Georgia, serif'}}>roga</span>
+          <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '6rem'}}>roga</span>
         </div>
         
         {/* Centered hero content */}
@@ -22,7 +22,7 @@ export default function Home() {
           <p className="text-white text-xl md:text-2xl max-w-3xl mx-auto" style={{fontFamily: 'Georgia, serif'}}>
             Sharpen your Question Intelligence with daily challenges and deep practice.
           </p>
-          <div className="flex justify-center gap-8 mt-12">
+          <div className="flex justify-center gap-6 mt-12" style={{gap: '20px'}}>
             <Link href="/game">
               <Button className="text-lg px-8 py-4 border-0">Start Daily Challenge</Button>
             </Link>
@@ -35,25 +35,25 @@ export default function Home() {
           </div>
         </div>
 
-        {/* FEATURE CARDS HORIZONTAL ROW - TALL/SKINNY FORMAT */}
-        <div className="max-w-6xl mx-auto mt-16">
-          <div className="flex flex-row gap-8 justify-center items-stretch">
-            <Card className="text-center py-12 px-6 flex-1 max-w-xs" style={{minHeight: '320px'}}>
-              <div className="text-6xl mb-6" style={{color: '#FF8C00'}}>⏱️</div>
-              <h3 className="heading text-2xl mb-4">Daily Challenge</h3>
-              <p className="copy text-lg">2-3 minute scenarios with fast feedback</p>
+        {/* FEATURE CARDS - REDUCED SIZE BY 33% */}
+        <div className="max-w-4xl mx-auto mt-16">
+          <div className="flex flex-row gap-6 justify-center items-stretch">
+            <Card className="text-center py-8 px-4 flex-1 max-w-48" style={{minHeight: '215px'}}>
+              <div className="text-4xl mb-4" style={{color: '#FF8C00'}}>⏱️</div>
+              <h3 className="heading text-lg mb-3">Daily Challenge</h3>
+              <p className="copy text-sm">2-3 minute scenarios with fast feedback</p>
             </Card>
 
-            <Card className="text-center py-12 px-6 flex-1 max-w-xs" style={{minHeight: '320px'}}>
-              <div className="text-6xl mb-6" style={{color: '#8A2BE2'}}>💬</div>
-              <h3 className="heading text-2xl mb-4">Deep Practice</h3>
-              <p className="copy text-lg">10-15 minute multi-round roleplay</p>
+            <Card className="text-center py-8 px-4 flex-1 max-w-48" style={{minHeight: '215px'}}>
+              <div className="text-4xl mb-4" style={{color: '#8A2BE2'}}>💬</div>
+              <h3 className="heading text-lg mb-3">Deep Practice</h3>
+              <p className="copy text-sm">10-15 minute multi-round roleplay</p>
             </Card>
 
-            <Card className="text-center py-12 px-6 flex-1 max-w-xs" style={{minHeight: '320px'}}>
-              <div className="text-6xl mb-6" style={{color: '#DC143C'}}>🏆</div>
-              <h3 className="heading text-2xl mb-4">Streaks & Badges</h3>
-              <p className="copy text-lg">Keep your curiosity going</p>
+            <Card className="text-center py-8 px-4 flex-1 max-w-48" style={{minHeight: '215px'}}>
+              <div className="text-4xl mb-4" style={{color: '#DC143C'}}>🏆</div>
+              <h3 className="heading text-lg mb-3">Streaks & Badges</h3>
+              <p className="copy text-sm">Keep your curiosity going</p>
             </Card>
           </div>
         </div>
