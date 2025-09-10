@@ -35,22 +35,22 @@ export default function Home() {
           </div>
         </div>
 
-        {/* FEATURE CARDS - REDUCED SIZE BY 33% */}
+        {/* FEATURE CARDS - 50% NARROWER WITH FOG BACKGROUND */}
         <div className="max-w-4xl mx-auto mt-16">
           <div className="flex flex-row gap-6 justify-center items-stretch">
-            <Card className="text-center py-8 px-4 flex-1 max-w-48" style={{minHeight: '215px'}}>
+            <Card className="text-center py-8 px-4 flex-1 max-w-24" style={{minHeight: '215px', backgroundColor: '#F5F5F5'}}>
               <div className="text-4xl mb-4" style={{color: '#FF8C00'}}>⏱️</div>
               <h3 className="heading text-lg mb-3">Daily Challenge</h3>
               <p className="copy text-sm">2-3 minute scenarios with fast feedback</p>
             </Card>
 
-            <Card className="text-center py-8 px-4 flex-1 max-w-48" style={{minHeight: '215px'}}>
+            <Card className="text-center py-8 px-4 flex-1 max-w-24" style={{minHeight: '215px', backgroundColor: '#F5F5F5'}}>
               <div className="text-4xl mb-4" style={{color: '#8A2BE2'}}>💬</div>
               <h3 className="heading text-lg mb-3">Deep Practice</h3>
               <p className="copy text-sm">10-15 minute multi-round roleplay</p>
             </Card>
 
-            <Card className="text-center py-8 px-4 flex-1 max-w-48" style={{minHeight: '215px'}}>
+            <Card className="text-center py-8 px-4 flex-1 max-w-24" style={{minHeight: '215px', backgroundColor: '#F5F5F5'}}>
               <div className="text-4xl mb-4" style={{color: '#DC143C'}}>🏆</div>
               <h3 className="heading text-lg mb-3">Streaks & Badges</h3>
               <p className="copy text-sm">Keep your curiosity going</p>
