@@ -6,8 +6,8 @@ import Link from "next/link";
 export default function Home() {
   return (
     <main className="min-h-screen">
-      {/* TEAL HERO SECTION - 70% viewport */}
-      <section className="min-h-[70vh] relative" style={{backgroundColor: '#20B2AA'}}>
+      {/* TEAL SECTION - 80-85% viewport with all content */}
+      <section className="min-h-[85vh] relative px-6 py-6" style={{backgroundColor: '#20B2AA'}}>
         {/* Logo in top-left corner */}
         <div className="absolute top-6 left-6 flex items-center gap-2">
           <BrandMark size={40} />
@@ -15,32 +15,28 @@ export default function Home() {
         </div>
         
         {/* Centered hero content */}
-        <div className="flex items-center justify-center min-h-[70vh] px-6">
-          <div className="text-center space-y-8 max-w-4xl">
-            <h1 className="heading text-white text-6xl md:text-7xl lg:text-8xl leading-tight">
-              The art of asking
-            </h1>
-            <p className="text-white/90 text-xl md:text-2xl max-w-3xl mx-auto">
-              Sharpen your Question Intelligence with daily challenges and deep practice.
-            </p>
-            <div className="flex justify-center gap-6 mt-12">
-              <Link href="/game">
-                <Button className="text-lg px-8 py-4">Start Daily Challenge</Button>
-              </Link>
-              <Button 
-                variant="ghost" 
-                className="text-lg px-8 py-4 bg-transparent border-2 border-white text-white hover:bg-white hover:text-teal-600"
-              >
-                Learn More
-              </Button>
-            </div>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8 max-w-4xl mx-auto">
+          <h1 className="heading text-white text-6xl md:text-7xl lg:text-8xl leading-tight">
+            The art of asking
+          </h1>
+          <p className="text-white/90 text-xl md:text-2xl max-w-3xl mx-auto">
+            Sharpen your Question Intelligence with daily challenges and deep practice.
+          </p>
+          <div className="flex justify-center gap-6 mt-12">
+            <Link href="/game">
+              <Button className="text-lg px-8 py-4">Start Daily Challenge</Button>
+            </Link>
+            <Button 
+              variant="ghost" 
+              className="text-lg px-8 py-4 bg-transparent border-2 border-white text-white hover:bg-white hover:text-teal-600"
+            >
+              Learn More
+            </Button>
           </div>
         </div>
-      </section>
 
-      {/* WHITE FEATURE CARDS SECTION */}
-      <section className="bg-white py-16 px-6">
-        <div className="max-w-6xl mx-auto grid gap-8 md:grid-cols-3">
+        {/* FEATURE CARDS WITHIN TEAL SECTION */}
+        <div className="max-w-6xl mx-auto mt-16 grid gap-8 md:grid-cols-3">
           <Card className="text-center py-8">
             <div className="text-6xl mb-6" style={{color: '#FF8C00'}}>⏱️</div>
             <h3 className="heading text-2xl mb-4">Daily Challenge</h3>
@@ -61,10 +57,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* WHITE FOOTER SECTION */}
-      <footer className="bg-white py-12 px-6 border-t border-gray-100">
+      {/* MINIMAL WHITE FOOTER SECTION */}
+      <footer className="bg-white py-8 px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">
-          <div className="text-center md:text-left mb-6 md:mb-0">
+          <div className="text-center md:text-left mb-4 md:mb-0">
             <p className="text-lg text-gray-700">
               Roga trains Question Intelligence — the art of asking better questions.
             </p>
