@@ -26,25 +26,25 @@ const glyph: Record<RubricItem["status"], string> = {
 
 export default function ScoreCard({ data }: { data: RogaFeedback }) {
   return (
-    <div className="mx-auto max-w-md md:max-w-2xl rounded-2xl border border-zinc-200 bg-amber-50 p-5 shadow-sm">
+    <div className="card mx-auto max-w-md md:max-w-2xl">
       <div className="flex items-start gap-3">
         <div className="text-2xl">🌎</div>
         <div>
-          <h2 className="text-lg font-semibold">Today’s Scenario</h2>
-          <p className="mt-1 text-zinc-700">{data.scenario.text}</p>
+          <h2 className="text-lg heading">Today&apos;s Scenario</h2>
+          <p className="mt-1 copy">{data.scenario.text}</p>
         </div>
       </div>
 
       <div className="mt-6">
-        <h3 className="text-lg font-semibold">What do you ask?</h3>
-        <div className="mt-2 rounded-xl border border-zinc-300 bg-white p-3 text-zinc-800">
+        <h3 className="text-lg heading">What do you ask?</h3>
+        <div className="card mt-2 !p-3 text-sm">
           {data.question}
         </div>
       </div>
 
       <div className="mt-6 flex items-baseline justify-between">
-        <h3 className="text-lg font-semibold">Your Score</h3>
-        <div className="text-2xl font-bold">{data.score}/100</div>
+        <h3 className="text-lg heading">Your Score</h3>
+        <div className="text-2xl heading" style={{color: 'var(--roga-teal)'}}>{data.score}/100</div>
       </div>
 
       <ul className="mt-2 space-y-2">
@@ -53,28 +53,28 @@ export default function ScoreCard({ data }: { data: RogaFeedback }) {
             <span className="text-xl leading-6">{glyph[r.status]}</span>
             <div>
               <div className="font-medium">{r.label}</div>
-              <div className="text-sm text-zinc-700">{r.note}</div>
+              <div className="text-sm copy">{r.note}</div>
             </div>
           </li>
         ))}
       </ul>
 
-      <div className="mt-5 rounded-xl border border-yellow-200 bg-white p-4">
-        <div className="text-sm font-semibold">Pro Tip</div>
-        <p className="text-sm text-zinc-800">{data.proTip || 'No tip available'}</p>
+      <div className="card mt-5 !p-4 border-l-4" style={{borderLeftColor: 'var(--roga-violet)'}}>
+        <div className="text-sm heading">💡 Pro Tip</div>
+        <p className="text-sm copy mt-1">{data.proTip || 'No tip available'}</p>
       </div>
 
-      <div className="mt-3 rounded-xl border border-indigo-200 bg-white p-4">
-        <div className="text-sm font-semibold">⭐ Suggested Upgrade</div>
-          <p className="mt-1 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-zinc-800">
-         {data.suggestedUpgrade || 'No upgrade suggestion available'}
+      <div className="card mt-3 !p-4 border-l-4" style={{borderLeftColor: 'var(--roga-teal)'}}>
+        <div className="text-sm heading">⭐ Suggested Upgrade</div>
+        <p className="mt-2 card !p-3 text-sm copy" style={{backgroundColor: 'var(--roga-fog)'}}>
+          {data.suggestedUpgrade || 'No upgrade suggestion available'}
         </p>
       </div>
 
       {data.badge && (
-        <div className="mt-5 flex items-center gap-3">
-          <div className="text-3xl">🏅</div>
-          <div className="text-lg font-semibold">{data.badge.label} unlocked</div>
+        <div className="badge mt-5 !text-base !px-4 !py-2">
+          <div className="text-2xl">🏅</div>
+          <div>{data.badge.label} unlocked</div>
         </div>
       )}
     </div>

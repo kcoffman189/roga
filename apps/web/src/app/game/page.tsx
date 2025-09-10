@@ -247,21 +247,20 @@ export default function GamePage() {
 
   return (
     <div className="mx-auto max-w-3xl p-6">
-      <h1 className="text-3xl font-semibold mb-6">Quick Challenge</h1>
+      <h1 className="text-3xl heading mb-6">Quick Challenge</h1>
 
-      <div className="mb-4 text-gray-600">
-        <p className="font-medium">{current.title}</p>
-        <p className="mt-1">{current.prompt}</p>
+      <div className="card mb-6">
+        <div className="flex items-start gap-3">
+          <div className="text-2xl">🎯</div>
+          <div>
+            <p className="heading text-lg">{current.title}</p>
+            <p className="mt-1 copy">{current.prompt}</p>
+          </div>
+        </div>
       </div>
-
-      {/* --- SMOKE TEST START --- */}
-    <div className="bg-teal text-white rounded-2xl shadow-card px-4 py-3 mt-6">
-      Brand token test: teal/rounded-2xl/shadow-card
-    </div>
-    {/* --- SMOKE TEST END --- */}
     
       <textarea
-        className="w-full border rounded p-3 mb-3"
+        className="w-full border-2 border-gray-200 rounded-xl p-4 mb-4 focus:border-teal focus:outline-none transition-colors"
         rows={6}
         placeholder="Type your question…"
         value={userQuestion}
@@ -270,15 +269,15 @@ export default function GamePage() {
 
       <div className="flex gap-3 mb-4">
         <button
-          className="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-60"
+          className="btn btn-primary disabled:opacity-60"
           onClick={submit}
           disabled={loading || !userQuestion.trim()}
         >
-          {loading ? 'Scoring…' : 'Submit'}
+          {loading ? 'Scoring…' : 'Submit Question'}
         </button>
 
         <button
-          className="px-4 py-2 rounded border"
+          className="btn btn-ghost"
           onClick={() => {
             setUserQuestion('');
             setFeedback(null);
@@ -288,8 +287,8 @@ export default function GamePage() {
           Reset
         </button>
 
-        <button className="px-4 py-2 rounded border" onClick={shuffle}>
-          Shuffle scenario
+        <button className="btn btn-ghost" onClick={shuffle}>
+          New Scenario
         </button>
       </div>
 
@@ -308,9 +307,9 @@ export default function GamePage() {
       )}
 
       {error && (
-        <div className="mt-4 rounded border border-red-200 bg-red-50 p-4 text-red-700">
-          <p className="font-medium">Error Details:</p>
-          <p>{error}</p>
+        <div className="card mt-4 border-l-4" style={{borderLeftColor: 'var(--roga-coral)', backgroundColor: 'rgba(255,111,97,0.05)'}}>
+          <p className="heading text-sm" style={{color: 'var(--roga-coral)'}}>Error:</p>
+          <p className="copy text-sm mt-1">{error}</p>
         </div>
       )}
 
