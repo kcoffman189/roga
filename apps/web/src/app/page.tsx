@@ -8,10 +8,10 @@ export default function Home() {
     <main className="min-h-screen">
       {/* TEAL SECTION - 80-85% viewport with all content */}
       <section className="min-h-[85vh] relative px-6 py-6" style={{backgroundColor: '#20B2AA'}}>
-        {/* Logo in top-left corner */}
-        <div className="absolute top-6 left-6 flex items-center gap-2">
-          <BrandMark size={40} />
-          <span className="heading text-white text-xl">roga</span>
+        {/* Logo in top-left corner with proper spacing and Georgia font */}
+        <div className="absolute top-8 left-8 flex items-center gap-3">
+          <BrandMark size={80} />
+          <span className="text-white text-3xl" style={{fontFamily: 'Georgia, serif'}}>roga</span>
         </div>
         
         {/* Centered hero content */}
@@ -19,7 +19,7 @@ export default function Home() {
           <h1 className="heading text-white text-6xl md:text-7xl lg:text-8xl leading-tight">
             The art of asking
           </h1>
-          <p className="text-white/90 text-xl md:text-2xl max-w-3xl mx-auto">
+          <p className="text-white text-xl md:text-2xl max-w-3xl mx-auto">
             Sharpen your Question Intelligence with daily challenges and deep practice.
           </p>
           <div className="flex justify-center gap-6 mt-12">
@@ -35,25 +35,27 @@ export default function Home() {
           </div>
         </div>
 
-        {/* FEATURE CARDS WITHIN TEAL SECTION */}
-        <div className="max-w-6xl mx-auto mt-16 grid gap-8 md:grid-cols-3">
-          <Card className="text-center py-8">
-            <div className="text-6xl mb-6" style={{color: '#FF8C00'}}>⏱️</div>
-            <h3 className="heading text-2xl mb-4">Daily Challenge</h3>
-            <p className="copy text-lg">2-3 minute scenarios with fast feedback</p>
-          </Card>
+        {/* FEATURE CARDS HORIZONTAL ROW */}
+        <div className="max-w-6xl mx-auto mt-16">
+          <div className="flex flex-row gap-8 justify-center items-stretch">
+            <Card className="text-center py-8 flex-1 max-w-sm">
+              <div className="text-6xl mb-6" style={{color: '#FF8C00'}}>⏱️</div>
+              <h3 className="heading text-2xl mb-4">Daily Challenge</h3>
+              <p className="copy text-lg">2-3 minute scenarios with fast feedback</p>
+            </Card>
 
-          <Card className="text-center py-8">
-            <div className="text-6xl mb-6" style={{color: '#8A2BE2'}}>💬</div>
-            <h3 className="heading text-2xl mb-4">Deep Practice</h3>
-            <p className="copy text-lg">10-15 minute multi-round roleplay</p>
-          </Card>
+            <Card className="text-center py-8 flex-1 max-w-sm">
+              <div className="text-6xl mb-6" style={{color: '#8A2BE2'}}>💬</div>
+              <h3 className="heading text-2xl mb-4">Deep Practice</h3>
+              <p className="copy text-lg">10-15 minute multi-round roleplay</p>
+            </Card>
 
-          <Card className="text-center py-8">
-            <div className="text-6xl mb-6" style={{color: '#DC143C'}}>🏆</div>
-            <h3 className="heading text-2xl mb-4">Streaks & Badges</h3>
-            <p className="copy text-lg">Keep your curiosity going</p>
-          </Card>
+            <Card className="text-center py-8 flex-1 max-w-sm">
+              <div className="text-6xl mb-6" style={{color: '#DC143C'}}>🏆</div>
+              <h3 className="heading text-2xl mb-4">Streaks & Badges</h3>
+              <p className="copy text-lg">Keep your curiosity going</p>
+            </Card>
+          </div>
         </div>
       </section>
 
