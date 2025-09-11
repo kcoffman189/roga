@@ -75,8 +75,8 @@ export default function Home() {
             </p>
           </div>
           <div className="flex text-sm" style={{gap: '10px'}}>
-            <a href="#" style={{color: 'black'}} className="hover:text-gray-700">Privacy</a>
-            <a href="#" style={{color: 'black'}} className="hover:text-gray-700">Terms</a>
+            <Link href="/privacy" style={{color: 'black'}} className="hover:text-gray-700">Privacy</Link>
+            <Link href="/terms" style={{color: 'black'}} className="hover:text-gray-700">Terms</Link>
             <a href="#" style={{color: 'black'}} className="hover:text-gray-700">Contact</a>
           </div>
         </div>
