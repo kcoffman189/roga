@@ -69,7 +69,10 @@ export default function DailyChallengePage() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentScenario, setCurrentScenario] = useState<Scenario>(scenarios[0]);
+  const [currentScenario, setCurrentScenario] = useState<Scenario>(() => {
+    // Start with a random scenario
+    return scenarios[Math.floor(Math.random() * scenarios.length)];
+  });
 
   const onSubmit = async () => {
     if (!question.trim()) return;
