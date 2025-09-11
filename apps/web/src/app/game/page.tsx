@@ -4,6 +4,7 @@
 import { useState } from "react";
 import BrandMark from "@/components/ui/BrandMark";
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import Link from "next/link";
 
 export default function DailyChallengePage() {
@@ -55,10 +56,10 @@ export default function DailyChallengePage() {
       </div>
 
       {/* CONTENT */}
-      <div className="max-w-3xl mx-auto px-6">
+      <div className="max-w-2xl mx-auto px-12">
         {/* Scenario Card */}
-        <section className="bg-white rounded-2xl shadow-card p-6">
-          <div className="flex items-center gap-3 mb-2">
+        <Card className="p-8">
+          <div className="flex items-center justify-center gap-3 mb-2">
             <span className="text-coral text-2xl leading-none">🎯</span>
             <h2 className="font-display font-bold text-xl">Class Instructions</h2>
           </div>
@@ -103,7 +104,7 @@ export default function DailyChallengePage() {
               New Scenario
             </Button>
           </div>
-        </section>
+        </Card>
 
         {/* Feedback Card (shown after submit) */}
         {showFeedback && (
