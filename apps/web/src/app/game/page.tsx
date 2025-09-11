@@ -46,7 +46,7 @@ export default function DailyChallengePage() {
             </Button>
           </Link>
         </div>
-        <div className="h-160" style={{height: '125px'}}></div>
+        <div className="h-160" style={{height: '135px'}}></div>
       </header>
 
       {/* TITLE */}
