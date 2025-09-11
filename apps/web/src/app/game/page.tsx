@@ -81,7 +81,7 @@ export default function DailyChallengePage() {
           />
 
           {/* Actions */}
-          <div className="mt-6 flex flex-wrap justify-center gap-4">
+          <div className="mt-6 flex flex-wrap justify-center" style={{gap: '20px'}}>
             <Button
               onClick={onSubmit}
               className="text-lg px-8 py-4 border-0"
