@@ -42,7 +42,7 @@ const scenarios: Scenario[] = [
     id: 2,
     title: "Team Meeting",
     text: "Your manager mentions a new initiative in passing during a busy team meeting. You think it might affect your current project, but you're not certain. What question could you ask to understand the impact?",
-    icon: "/brand/team_icon.svg"
+    icon: "/brand/team_icon_icon.svg"
   },
   {
     id: 3,
@@ -54,7 +54,7 @@ const scenarios: Scenario[] = [
     id: 4,
     title: "Project Deadline",
     text: "Your team lead says the deadline is 'tight but doable' for an important project. You want to understand what resources or support might be needed. What question would help clarify the situation?",
-    icon: "/brand/project_icon.svg"
+    icon: "/brand/project_deadline_icon.svg"
   },
   {
     id: 5,
