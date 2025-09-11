@@ -57,7 +57,7 @@ export default function DailyChallengePage() {
       </div>
 
       {/* CONTENT */}
-      <div className="flex gap-8" style={{marginLeft: '65px'}}>
+      <div className="flex justify-between" style={{marginLeft: '65px', marginRight: '65px'}}>
         {/* Left Column - Scenario Card */}
         <div>
           <Card className="p-6" style={{width: '600px'}}>
@@ -110,9 +110,9 @@ export default function DailyChallengePage() {
         </div>
 
         {/* Right Column - Feedback Section */}
-        <div style={{width: '500px'}}>
+        <div>
           {showFeedback && (
-            <Card className="p-6">
+            <Card className="p-6" style={{width: '600px'}}>
               <h3 className="font-bold text-violet mb-4 text-center">Your Feedback</h3>
               
               {/* Score */}
