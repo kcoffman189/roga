@@ -56,7 +56,7 @@ export default function DailyChallengePage() {
       </div>
 
       {/* CONTENT */}
-      <div className="mx-auto" style={{width: '300px'}}>
+      <div className="mx-auto" style={{width: '600px'}}>
         {/* Scenario Card */}
         <Card className="p-6">
           <div className="flex items-center justify-center gap-3 mb-2">
