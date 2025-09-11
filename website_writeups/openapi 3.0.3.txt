@@ -1,0 +1,206 @@
+openapi: 3.0.3
+info:
+  title: Roga Scoring API
+  version: "1.0"
+  description: |
+    Returns AI-powered scoring and feedback for a user's question in a given scenario.
+    The frontend typically calls the Next.js proxy `/api/ask`, which forwards to the backend `/score`.
+
+servers:
+  - url: https://roga-api.fly.dev
+    description: FastAPI (production)
+  - url: /api
+    description: Next.js API routes (frontend proxy; e.g., POST /api/ask)
+
+paths:
+  /score:
+    post:
+      summary: Score a user question and return structured feedback
+      description: |
+        Back-end endpoint. Accepts scenario context + user question; returns score, rubric,
+        a dynamic pro tip, a suggested upgrade, and an optional badge.
+      operationId: scoreQuestion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/ScoreRequest'
+                - $ref: '#/components/schemas/LegacyScoreRequest'
+            examples:
+              minimal:
+                value:
+                  question: "What constraints could block success here?"
+                  scenarioTitle: "Kickoff"
+                  scenarioText: "You're planning a launch with a tight timeline."
+              full:
+                value:
+                  question: "How would this decision impact onboarding time and retention after 90 days?"
+                  scenarioId: 12
+                  scenarioTitle: "Customer Success Pilot"
+                  scenarioText: "We’re testing a pilot with 25 users next month."
+      responses:
+        "200":
+          description: Scored successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoreResponse'
+              examples:
+                ok:
+                  value:
+                    scenario: { title: "Kickoff", text: "You're planning a launch with a tight timeline." }
+                    question: "What constraints could block success here?"
+                    score: 86
+                    rubric:
+                      - { key: clarity,  label: "Clarity",  status: good, note: "Specific and scoped." }
+                      - { key: depth,    label: "Depth",    status: warn, note: "Probe tradeoffs." }
+                      - { key: insight,  label: "Insight",  status: good, note: "Non-obvious angle." }
+                      - { key: openness, label: "Openness", status: good, note: "Invites more info." }
+                    proTip: "Anchor on a constraint class (time/budget/risk) to focus answers."
+                    suggestedUpgrade: "Which 1–2 constraints (time, budget, risk) are most likely to block success, and why?"
+                    badge: { name: "Insight Spark", label: "Shows promising perspective" }
+        "400":
+          description: Bad request (missing or invalid fields)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                missingQuestion: { value: { detail: "Missing question" } }
+        "500":
+          description: Server error (model call failed, etc.)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                modelError: { value: { detail: "Scoring failed: upstream error" } }
+
+  /ask:
+    post:
+      summary: Frontend proxy to /score
+      description: |
+        Next.js API route. Accepts the same payload shape and forwards to `POST https://roga-api.fly.dev/score`.
+        Returns the backend response verbatim.
+      operationId: proxyAsk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/ScoreRequest'
+                - $ref: '#/components/schemas/LegacyScoreRequest'
+      responses:
+        "200":
+          description: Proxied successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoreResponse'
+        "4XX":
+          description: Forwarded client error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        "5XX":
+          description: Forwarded server error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+components:
+  schemas:
+    ScoreRequest:
+      type: object
+      properties:
+        question:
+          type: string
+          description: User's question to be scored.
+        scenarioId:
+          type: integer
+          nullable: true
+        scenarioTitle:
+          type: string
+          nullable: true
+        scenarioText:
+          type: string
+          nullable: true
+      required: [question]
+      additionalProperties: false
+
+    LegacyScoreRequest:
+      type: object
+      description: Backwards-compatibility with earlier clients
+      properties:
+        user_question:
+          type: string
+        scenario_id:
+          type: integer
+          nullable: true
+      required: [user_question]
+      additionalProperties: true
+
+    RubricItem:
+      type: object
+      properties:
+        key:
+          type: string
+          enum: [clarity, depth, insight, openness]
+        label:
+          type: string
+        status:
+          type: string
+          enum: [good, warn, bad]
+        note:
+          type: string
+      required: [key, label, status, note]
+      additionalProperties: false
+
+    Badge:
+      type: object
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+      additionalProperties: false
+
+    ScoreResponse:
+      type: object
+      properties:
+        scenario:
+          type: object
+          properties:
+            title: { type: string }
+            text:  { type: string }
+          required: [title]
+        question:
+          type: string
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        rubric:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items:
+            $ref: '#/components/schemas/RubricItem'
+        proTip:
+          type: string
+          nullable: true
+        suggestedUpgrade:
+          type: string
+          nullable: true
+        badge:
+          $ref: '#/components/schemas/Badge'
+      required: [scenario, question, score, rubric]
+      additionalProperties: false
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+      required: [detail]

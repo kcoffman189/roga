@@ -8,26 +8,100 @@ import Card from "@/components/ui/Card";
 import Link from "next/link";
 import Image from "next/image";
 
+interface FeedbackData {
+  score: number;
+  rubric: {
+    key: string;
+    label: string;
+    status: 'good' | 'warn' | 'bad';
+    note: string;
+  }[];
+  proTip?: string;
+  suggestedUpgrade?: string;
+  badge?: {
+    name: string;
+    label: string;
+  };
+}
+
 export default function DailyChallengePage() {
   const [question, setQuestion] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
+  const [feedback, setFeedback] = useState<FeedbackData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // mock handler — wire to your API later
   const onSubmit = async () => {
     if (!question.trim()) return;
-    // TODO: call your evaluation endpoint
-    setShowFeedback(true);
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: question,
+          scenarioTitle: "Class Instructions",
+          scenarioText: "Your teacher explains a project, but you're still not sure what to do. The teacher is about to move on to the next part of class. What question could you ask to make the directions clearer before it's too late?"
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setFeedback({
+          score: data.score,
+          rubric: data.rubric,
+          proTip: data.proTip,
+          suggestedUpgrade: data.suggestedUpgrade,
+          badge: data.badge
+        });
+        setShowFeedback(true);
+      } else {
+        console.error('Failed to get feedback');
+        // Show hardcoded feedback as fallback
+        setFeedback({
+          score: 85,
+          rubric: [
+            { key: 'clarity', label: 'Clarity', status: 'good', note: 'Specific and scoped.' },
+            { key: 'depth', label: 'Depth', status: 'warn', note: 'Could probe deeper.' },
+            { key: 'insight', label: 'Insight', status: 'good', note: 'Shows good perspective.' },
+            { key: 'openness', label: 'Openness', status: 'good', note: 'Invites more info.' }
+          ],
+          proTip: 'Try being more specific to get clearer directions from your teacher.'
+        });
+        setShowFeedback(true);
+      }
+    } catch (error) {
+      console.error('Error calling API:', error);
+      // Show hardcoded feedback as fallback
+      setFeedback({
+        score: 85,
+        rubric: [
+          { key: 'clarity', label: 'Clarity', status: 'good', note: 'Specific and scoped.' },
+          { key: 'depth', label: 'Depth', status: 'warn', note: 'Could probe deeper.' },
+          { key: 'insight', label: 'Insight', status: 'good', note: 'Shows good perspective.' },
+          { key: 'openness', label: 'Openness', status: 'good', note: 'Invites more info.' }
+        ],
+        proTip: 'Try being more specific to get clearer directions from your teacher.'
+      });
+      setShowFeedback(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const onReset = () => {
     setQuestion("");
     setShowFeedback(false);
+    setFeedback(null);
   };
 
   const onNewScenario = () => {
     // TODO: fetch new scenario from backend
     setQuestion("");
     setShowFeedback(false);
+    setFeedback(null);
   };
 
   return (
@@ -87,9 +161,10 @@ export default function DailyChallengePage() {
             <div className="mt-6 flex flex-wrap justify-center" style={{gap: '20px'}}>
               <Button
                 onClick={onSubmit}
+                disabled={isLoading || !question.trim()}
                 className="text-lg px-8 py-4 border-0"
               >
-                Submit Question
+                {isLoading ? "Getting Feedback..." : "Submit Question"}
               </Button>
               <Button
                 onClick={onReset}
@@ -117,61 +192,79 @@ export default function DailyChallengePage() {
               
               {/* Score */}
               <div className="text-center mb-6">
-                <div className="text-4xl font-bold text-teal mb-2">85</div>
+                <div className="text-4xl font-bold text-teal mb-2">{feedback?.score || 0}</div>
                 <div className="text-sm text-gray-600">Overall Score</div>
               </div>
 
               {/* Feedback Text */}
-              <div className="mb-6">
-                <h4 className="font-semibold mb-2">Feedback:</h4>
-                <p className="text-coal/80 text-sm leading-relaxed">
-                  Great start! Your question shows good awareness of the situation. Try making it more specific to get clearer directions from your teacher.
-                </p>
-              </div>
+              {feedback?.suggestedUpgrade && (
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-2">Suggested Improvement:</h4>
+                  <p className="text-coal/80 text-sm leading-relaxed">
+                    {feedback.suggestedUpgrade}
+                  </p>
+                </div>
+              )}
 
               {/* Skills Breakdown */}
               <div className="mb-6">
                 <h4 className="font-semibold mb-3">Skills Assessment:</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Clarity</span>
-                    <div className="flex gap-1">
-                      <div className="w-3 h-3 rounded-full bg-teal"></div>
-                      <div className="w-3 h-3 rounded-full bg-teal"></div>
-                      <div className="w-3 h-3 rounded-full bg-teal"></div>
-                      <div className="w-3 h-3 rounded-full bg-gray-200"></div>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Relevance</span>
-                    <div className="flex gap-1">
-                      <div className="w-3 h-3 rounded-full bg-violet"></div>
-                      <div className="w-3 h-3 rounded-full bg-violet"></div>
-                      <div className="w-3 h-3 rounded-full bg-violet"></div>
-                      <div className="w-3 h-3 rounded-full bg-violet"></div>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Empathy</span>
-                    <div className="flex gap-1">
-                      <div className="w-3 h-3 rounded-full bg-coral"></div>
-                      <div className="w-3 h-3 rounded-full bg-coral"></div>
-                      <div className="w-3 h-3 rounded-full bg-gray-200"></div>
-                      <div className="w-3 h-3 rounded-full bg-gray-200"></div>
-                    </div>
-                  </div>
+                <div className="space-y-3">
+                  {feedback?.rubric.map((item) => {
+                    const getStatusColor = (status: string) => {
+                      switch (status) {
+                        case 'good': return 'bg-teal';
+                        case 'warn': return 'bg-yellow-500';
+                        case 'bad': return 'bg-red-500';
+                        default: return 'bg-gray-200';
+                      }
+                    };
+                    
+                    const getStatusDots = (status: string) => {
+                      const filled = status === 'good' ? 4 : status === 'warn' ? 2 : 1;
+                      return Array.from({ length: 4 }, (_, i) => (
+                        <div 
+                          key={i} 
+                          className={`w-3 h-3 rounded-full ${i < filled ? getStatusColor(status) : 'bg-gray-200'}`}
+                        ></div>
+                      ));
+                    };
+
+                    return (
+                      <div key={item.key}>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">{item.label}</span>
+                          <div className="flex gap-1">
+                            {getStatusDots(item.status)}
+                          </div>
+                        </div>
+                        <p className="text-xs text-coal/70 mt-1">{item.note}</p>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Pro Tip */}
-              <div className="bg-fog rounded-lg p-4">
-                <h5 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                  <span>💡</span> Pro Tip:
-                </h5>
-                <p className="text-xs text-coal/70">
-                  Try asking &quot;What specific steps should I focus on first?&quot; to get more actionable guidance.
-                </p>
-              </div>
+              {feedback?.proTip && (
+                <div className="bg-fog rounded-lg p-4">
+                  <h5 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                    <span>💡</span> Pro Tip:
+                  </h5>
+                  <p className="text-xs text-coal/70">
+                    {feedback.proTip}
+                  </p>
+                </div>
+              )}
+              
+              {/* Badge */}
+              {feedback?.badge && (
+                <div className="mt-4 text-center">
+                  <div className="inline-flex items-center gap-2 bg-violet/10 text-violet px-4 py-2 rounded-full text-sm font-medium">
+                    🏆 {feedback.badge.name}: {feedback.badge.label}
+                  </div>
+                </div>
+              )}
             </Card>
           )}
         </div>

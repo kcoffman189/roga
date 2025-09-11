@@ -1,0 +1,44 @@
+Privacy Policy – Roga
+Effective Date: 9/11/2025
+Roga (“we,” “our,” or “us”) values your privacy. This Privacy Policy explains how we collect, use, and protect your information when you use our Service.
+
+1. Information We Collect
+* Account Information: Name, email, and login credentials.
+* User Content: Questions, responses, and interactions submitted by you.
+* Usage Data: Device information, IP address, browser type, and usage activity.
+* Cookies & Tracking: We use cookies and analytics tools to improve the Service.
+
+2. How We Use Information
+* To provide, maintain, and improve the Service.
+* To analyze usage patterns and enhance Question Intelligence (QI) frameworks.
+* To develop aggregated, anonymized datasets for benchmarking and research.
+* For security, legal compliance, and fraud prevention.
+
+3. Sharing of Information
+We do not sell your personal information. We may share information:
+* With service providers assisting in operations (hosting, analytics, security).
+* As required by law, regulation, or legal process.
+* In connection with a merger, acquisition, or sale of assets.
+
+4. Data Ownership
+* You retain ownership of your original User Content.
+* By contributing, you grant Roga rights to use and incorporate User Content into the Service.
+* Aggregated/anonymized data is solely owned by Roga.
+
+5. Security
+We use reasonable technical and organizational measures to protect data. However, no system is 100% secure.
+
+6. Your Choices
+* You may access or delete your account at any time.
+* You may opt out of cookies via browser settings.
+* Contact us for data access or deletion requests.
+
+7. International Users
+If you access the Service outside the U.S., you consent to your data being transferred to and processed in the United States.
+
+8. Children’s Privacy
+The Service is not directed to children under 13 (or 16 where applicable by law). We do not knowingly collect data from children.
+
+9. Changes to Policy
+We may update this Privacy Policy from time to time. Continued use of the Service after changes take effect constitutes acceptance.
+
