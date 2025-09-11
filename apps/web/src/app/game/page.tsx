@@ -56,7 +56,7 @@ export default function DailyChallengePage() {
       </div>
 
       {/* CONTENT */}
-      <div className="max-w-2xl mx-auto px-12">
+      <div className="max-w-xl mx-auto px-12">
         {/* Scenario Card */}
         <Card className="p-8">
           <div className="flex items-center justify-center gap-3 mb-2">
