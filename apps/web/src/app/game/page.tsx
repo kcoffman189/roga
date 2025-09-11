@@ -31,11 +31,11 @@ export default function DailyChallengePage() {
     <main className="min-h-screen bg-fog text-coal">
       {/* HEADER */}
       <header className="w-full relative" style={{backgroundColor: '#20B2AA'}}>
-        <div className="absolute top-20 flex items-center gap-4" style={{left: '86px'}}>
-          <BrandMark size={80} />
-          <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '6rem', color: 'white'}}>roga</span>
-        </div>
-        <div className="flex justify-end px-6 py-4">
+        <div className="absolute top-20 flex items-center justify-between w-full" style={{left: '86px', right: '86px', width: 'calc(100% - 172px)'}}>
+          <div className="flex items-center gap-4">
+            <BrandMark size={80} />
+            <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '6rem', color: 'white'}}>roga</span>
+          </div>
           <Link
             href="/"
             className="inline-flex items-center gap-2 rounded-2xl border border-white/40 px-4 py-2 text-white hover:bg-white/10 transition-colors"
