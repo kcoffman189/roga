@@ -18,7 +18,7 @@ export default function Privacy() {
           <p className="text-sm text-gray-600 mb-6">Effective Date: 9/11/2025</p>
           
           <p className="text-gray-700 leading-relaxed mb-6">
-            Roga ("we," "our," or "us") values your privacy. This Privacy Policy explains how we collect, use, and protect your information when you use our Service.
+            Roga (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) values your privacy. This Privacy Policy explains how we collect, use, and protect your information when you use our Service.
           </p>
 
           <h2 className="text-2xl font-bold mt-8 mb-4">1. Information We Collect</h2>
@@ -71,7 +71,7 @@ export default function Privacy() {
             If you access the Service outside the U.S., you consent to your data being transferred to and processed in the United States.
           </p>
 
-          <h2 className="text-2xl font-bold mt-8 mb-4">8. Children's Privacy</h2>
+          <h2 className="text-2xl font-bold mt-8 mb-4">8. Children&apos;s Privacy</h2>
           <p className="text-gray-700 leading-relaxed mb-6">
             The Service is not directed to children under 13 (or 16 where applicable by law). We do not knowingly collect data from children.
           </p>
