@@ -57,10 +57,10 @@ export default function DailyChallengePage() {
       </div>
 
       {/* CONTENT */}
-      <div className="flex justify-start">
-        <div className="w-1/3 flex justify-center">
+      <div className="flex">
+        <div className="flex justify-center items-start" style={{width: 'calc(100vw / 3)', position: 'relative'}}>
           {/* Scenario Card */}
-          <Card className="p-6" style={{width: '600px'}}>
+          <Card className="p-6" style={{width: '600px', position: 'absolute', left: '50%', transform: 'translateX(-50%)'}}>
             <div className="flex items-center justify-center gap-3 mb-2">
               <Image src="/brand/school_icon.svg" alt="Class Instructions" width={24} height={24} />
               <h2 className="font-display font-bold text-xl">Class Instructions</h2>
