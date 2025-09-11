@@ -74,10 +74,10 @@ export default function Home() {
               Roga trains Question Intelligence — the art of asking better questions.
             </p>
           </div>
-          <div className="flex gap-6 text-sm">
-            <a href="#" className="text-gray-600 hover:text-gray-900">Privacy</a>
-            <a href="#" className="text-gray-600 hover:text-gray-900">Terms</a>
-            <a href="#" className="text-gray-600 hover:text-gray-900">Contact</a>
+          <div className="flex text-sm" style={{gap: '10px'}}>
+            <a href="#" className="text-black hover:text-gray-700">Privacy</a>
+            <a href="#" className="text-black hover:text-gray-700">Terms</a>
+            <a href="#" className="text-black hover:text-gray-700">Contact</a>
           </div>
         </div>
       </footer>
