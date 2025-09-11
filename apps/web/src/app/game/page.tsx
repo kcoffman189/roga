@@ -8,6 +8,13 @@ import Card from "@/components/ui/Card";
 import Link from "next/link";
 import Image from "next/image";
 
+interface Scenario {
+  id: number;
+  title: string;
+  text: string;
+  icon: string;
+}
+
 interface FeedbackData {
   score: number;
   rubric: {
@@ -24,11 +31,45 @@ interface FeedbackData {
   };
 }
 
+const scenarios: Scenario[] = [
+  {
+    id: 1,
+    title: "Class Instructions",
+    text: "Your teacher explains a project, but you're still not sure what to do. The teacher is about to move on to the next part of class. What question could you ask to make the directions clearer before it's too late?",
+    icon: "/brand/school_icon.svg"
+  },
+  {
+    id: 2,
+    title: "Team Meeting",
+    text: "Your manager mentions a new initiative in passing during a busy team meeting. You think it might affect your current project, but you're not certain. What question could you ask to understand the impact?",
+    icon: "/brand/school_icon.svg"
+  },
+  {
+    id: 3,
+    title: "Customer Feedback",
+    text: "A customer says your product 'doesn't feel right' but won't elaborate further. You need to understand their concern to improve the experience. What question could help you dig deeper?",
+    icon: "/brand/school_icon.svg"
+  },
+  {
+    id: 4,
+    title: "Project Deadline",
+    text: "Your team lead says the deadline is 'tight but doable' for an important project. You want to understand what resources or support might be needed. What question would help clarify the situation?",
+    icon: "/brand/school_icon.svg"
+  },
+  {
+    id: 5,
+    title: "Career Discussion",
+    text: "During your performance review, your supervisor mentions 'growth opportunities' but doesn't specify what they mean. You want to understand your next steps. What question could help clarify your path forward?",
+    icon: "/brand/school_icon.svg"
+  }
+];
+
 export default function DailyChallengePage() {
   const [question, setQuestion] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentScenario, setCurrentScenario] = useState<Scenario>(scenarios[0]);
 
   const onSubmit = async () => {
     if (!question.trim()) return;
@@ -42,8 +83,9 @@ export default function DailyChallengePage() {
         },
         body: JSON.stringify({
           question: question,
-          scenarioTitle: "Class Instructions",
-          scenarioText: "Your teacher explains a project, but you're still not sure what to do. The teacher is about to move on to the next part of class. What question could you ask to make the directions clearer before it's too late?"
+          scenarioId: currentScenario.id,
+          scenarioTitle: currentScenario.title,
+          scenarioText: currentScenario.text
         }),
       });
 
@@ -98,7 +140,11 @@ export default function DailyChallengePage() {
   };
 
   const onNewScenario = () => {
-    // TODO: fetch new scenario from backend
+    // Select a random scenario that's different from the current one
+    const availableScenarios = scenarios.filter(s => s.id !== currentScenario.id);
+    const randomScenario = availableScenarios[Math.floor(Math.random() * availableScenarios.length)];
+    
+    setCurrentScenario(randomScenario);
     setQuestion("");
     setShowFeedback(false);
     setFeedback(null);
@@ -136,13 +182,11 @@ export default function DailyChallengePage() {
         <div>
           <Card className="p-6" style={{width: '600px'}}>
             <div className="flex items-center justify-center gap-3 mb-2">
-              <Image src="/brand/school_icon.svg" alt="Class Instructions" width={24} height={24} />
-              <h2 className="font-display font-bold text-xl">Class Instructions</h2>
+              <Image src={currentScenario.icon} alt={currentScenario.title} width={24} height={24} />
+              <h2 className="font-display font-bold text-xl">{currentScenario.title}</h2>
             </div>
             <p className="font-sans text-coal/80">
-              Your teacher explains a project, but you&apos;re still not sure what to do. The
-              teacher is about to move on to the next part of class. What question could
-              you ask to make the directions clearer before it&apos;s too late?
+              {currentScenario.text}
             </p>
 
             {/* Input */}
