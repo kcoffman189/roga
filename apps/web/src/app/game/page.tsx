@@ -82,24 +82,26 @@ export default function DailyChallengePage() {
 
           {/* Actions */}
           <div className="mt-6 flex flex-wrap justify-center gap-4">
-            <button
+            <Button
               onClick={onSubmit}
-              className="inline-flex items-center justify-center rounded-2xl bg-teal px-6 py-3 font-semibold text-white hover:bg-violet transition-colors"
+              className="text-lg px-8 py-4 border-0"
             >
               Submit Question
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={onReset}
-              className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3 font-semibold text-coal border border-black/10 hover:bg-fog transition-colors"
+              variant="ghost"
+              className="text-lg px-8 py-4 bg-transparent border-2 border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
             >
               Reset
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={onNewScenario}
-              className="inline-flex items-center justify-center rounded-2xl bg-coral px-6 py-3 font-semibold text-white hover:bg-[#e85b50] transition-colors"
+              variant="ghost"
+              className="text-lg px-8 py-4 bg-transparent border-2 border-teal-600 text-teal-600 hover:bg-teal-600 hover:text-white"
             >
               New Scenario
-            </button>
+            </Button>
           </div>
         </section>
 
