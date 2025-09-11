@@ -39,19 +39,25 @@ export default function Home() {
         <div className="max-w-4xl mx-auto mt-16">
           <div className="flex flex-row justify-center items-stretch" style={{gap: '20px'}}>
             <Card className="text-center py-8 px-4 w-40" style={{minHeight: '215px', width: '160px'}}>
-              <div className="text-4xl mb-4" style={{color: '#FF8C00'}}>⏱️</div>
+              <div className="h-16 mb-4 flex items-center justify-center">
+                {/* Placeholder for Daily Challenge icon */}
+              </div>
               <h3 className="heading text-sm mb-3 break-words">Daily Challenge</h3>
               <p className="copy text-xs break-words">2-3 minute scenarios with fast feedback</p>
             </Card>
 
             <Card className="text-center py-8 px-4 w-40" style={{minHeight: '215px', width: '160px'}}>
-              <div className="text-4xl mb-4" style={{color: '#8A2BE2'}}>💬</div>
+              <div className="h-16 mb-4 flex items-center justify-center">
+                {/* Placeholder for Deep Practice icon */}
+              </div>
               <h3 className="heading text-sm mb-3 break-words">Deep Practice</h3>
               <p className="copy text-xs break-words">10-15 minute multi-round roleplay</p>
             </Card>
 
             <Card className="text-center py-8 px-4 w-40" style={{minHeight: '215px', width: '160px'}}>
-              <div className="text-4xl mb-4" style={{color: '#DC143C'}}>🏆</div>
+              <div className="h-16 mb-4 flex items-center justify-center">
+                {/* Placeholder for Streaks & Badges icon */}
+              </div>
               <h3 className="heading text-sm mb-3 break-words">Streaks & Badges</h3>
               <p className="copy text-xs break-words">Keep your curiosity going</p>
             </Card>
