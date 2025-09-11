@@ -56,9 +56,9 @@ export default function DailyChallengePage() {
       </div>
 
       {/* CONTENT */}
-      <div className="max-w-xl mx-auto px-12">
+      <div className="mx-auto" style={{width: '300px'}}>
         {/* Scenario Card */}
-        <Card className="p-8">
+        <Card className="p-6">
           <div className="flex items-center justify-center gap-3 mb-2">
             <span className="text-coral text-2xl leading-none">🎯</span>
             <h2 className="font-display font-bold text-xl">Class Instructions</h2>
