@@ -57,9 +57,10 @@ export default function DailyChallengePage() {
       </div>
 
       {/* CONTENT */}
-      <div style={{marginLeft: '65px'}}>
-        {/* Scenario Card */}
-        <Card className="p-6" style={{width: '600px'}}>
+      <div className="flex gap-8" style={{marginLeft: '65px'}}>
+        {/* Left Column - Scenario Card */}
+        <div>
+          <Card className="p-6" style={{width: '600px'}}>
             <div className="flex items-center justify-center gap-3 mb-2">
               <Image src="/brand/school_icon.svg" alt="Class Instructions" width={24} height={24} />
               <h2 className="font-display font-bold text-xl">Class Instructions</h2>
@@ -106,31 +107,74 @@ export default function DailyChallengePage() {
               </Button>
             </div>
           </Card>
-      </div>
+        </div>
 
-      <div className="max-w-3xl mx-auto px-6" style={{marginLeft: '65px'}}>
-        {/* Feedback Card (shown after submit) */}
-        {showFeedback && (
-          <section className="mt-6 bg-white rounded-2xl shadow-card p-6">
-            <h3 className="font-bold text-violet mb-2">Your Feedback</h3>
-            <p className="text-coal/80">
-              Great start! Try making your question a bit clearer and more specific to the
-              instructions. (This is placeholder text — replace with real feedback from
-              your API.)
-            </p>
-            <div className="mt-4 flex gap-2">
-              <span className="inline-flex items-center rounded-full bg-teal text-white text-xs font-semibold px-3 py-1">
-                Clarity
-              </span>
-              <span className="inline-flex items-center rounded-full bg-violet text-white text-xs font-semibold px-3 py-1">
-                Relevance
-              </span>
-              <span className="inline-flex items-center rounded-full bg-coral text-white text-xs font-semibold px-3 py-1">
-                Empathy
-              </span>
-            </div>
-          </section>
-        )}
+        {/* Right Column - Feedback Section */}
+        <div style={{width: '500px'}}>
+          {showFeedback && (
+            <Card className="p-6">
+              <h3 className="font-bold text-violet mb-4 text-center">Your Feedback</h3>
+              
+              {/* Score */}
+              <div className="text-center mb-6">
+                <div className="text-4xl font-bold text-teal mb-2">85</div>
+                <div className="text-sm text-gray-600">Overall Score</div>
+              </div>
+
+              {/* Feedback Text */}
+              <div className="mb-6">
+                <h4 className="font-semibold mb-2">Feedback:</h4>
+                <p className="text-coal/80 text-sm leading-relaxed">
+                  Great start! Your question shows good awareness of the situation. Try making it more specific to get clearer directions from your teacher.
+                </p>
+              </div>
+
+              {/* Skills Breakdown */}
+              <div className="mb-6">
+                <h4 className="font-semibold mb-3">Skills Assessment:</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Clarity</span>
+                    <div className="flex gap-1">
+                      <div className="w-3 h-3 rounded-full bg-teal"></div>
+                      <div className="w-3 h-3 rounded-full bg-teal"></div>
+                      <div className="w-3 h-3 rounded-full bg-teal"></div>
+                      <div className="w-3 h-3 rounded-full bg-gray-200"></div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Relevance</span>
+                    <div className="flex gap-1">
+                      <div className="w-3 h-3 rounded-full bg-violet"></div>
+                      <div className="w-3 h-3 rounded-full bg-violet"></div>
+                      <div className="w-3 h-3 rounded-full bg-violet"></div>
+                      <div className="w-3 h-3 rounded-full bg-violet"></div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Empathy</span>
+                    <div className="flex gap-1">
+                      <div className="w-3 h-3 rounded-full bg-coral"></div>
+                      <div className="w-3 h-3 rounded-full bg-coral"></div>
+                      <div className="w-3 h-3 rounded-full bg-gray-200"></div>
+                      <div className="w-3 h-3 rounded-full bg-gray-200"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pro Tip */}
+              <div className="bg-fog rounded-lg p-4">
+                <h5 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                  <span>💡</span> Pro Tip:
+                </h5>
+                <p className="text-xs text-coal/70">
+                  Try asking "What specific steps should I focus on first?" to get more actionable guidance.
+                </p>
+              </div>
+            </Card>
+          )}
+        </div>
       </div>
 
       {/* FOOTER */}
