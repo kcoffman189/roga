@@ -16,7 +16,7 @@ export default function Home() {
         </div>
         
         {/* Centered hero content */}
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8 max-w-4xl mx-auto">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8 max-w-4xl mx-auto" style={{transform: 'translateY(15px)'}}>
           <h1 className="text-white text-7xl md:text-8xl lg:text-9xl leading-tight" style={{fontFamily: 'Georgia, serif', color: 'white'}}>
             The art of asking
           </h1>
