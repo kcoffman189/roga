@@ -57,10 +57,9 @@ export default function DailyChallengePage() {
       </div>
 
       {/* CONTENT */}
-      <div className="flex">
-        <div className="flex justify-center items-start" style={{width: 'calc(100vw / 3)', position: 'relative'}}>
-          {/* Scenario Card */}
-          <Card className="p-6" style={{width: '600px', position: 'absolute', left: '50%', transform: 'translateX(-50%)'}}>
+      <div style={{marginLeft: '50px'}}>
+        {/* Scenario Card */}
+        <Card className="p-6" style={{width: '600px'}}>
             <div className="flex items-center justify-center gap-3 mb-2">
               <Image src="/brand/school_icon.svg" alt="Class Instructions" width={24} height={24} />
               <h2 className="font-display font-bold text-xl">Class Instructions</h2>
@@ -107,10 +106,9 @@ export default function DailyChallengePage() {
               </Button>
             </div>
           </Card>
-        </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-6">
+      <div className="max-w-3xl mx-auto px-6" style={{marginLeft: '50px'}}>
         {/* Feedback Card (shown after submit) */}
         {showFeedback && (
           <section className="mt-6 bg-white rounded-2xl shadow-card p-6">
@@ -136,7 +134,7 @@ export default function DailyChallengePage() {
       </div>
 
       {/* FOOTER */}
-      <footer className="bg-fog border-t border-black/5">
+      <footer className="bg-fog border-t border-black/5 mt-16">
         <div className="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between text-sm text-coal/70">
           <p>MVP • v0 • powered by gpt-4o-mini</p>
           <nav className="flex gap-4">
