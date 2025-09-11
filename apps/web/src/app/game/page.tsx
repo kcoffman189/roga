@@ -57,9 +57,10 @@ export default function DailyChallengePage() {
       </div>
 
       {/* CONTENT */}
-      <div className="mx-auto" style={{width: '600px'}}>
-        {/* Scenario Card */}
-        <Card className="p-6">
+      <div className="flex justify-start">
+        <div className="w-1/3 flex justify-center">
+          {/* Scenario Card */}
+          <Card className="p-6" style={{width: '600px'}}>
           <div className="flex items-center justify-center gap-3 mb-2">
             <Image src="/brand/school_icon.svg" alt="Class Instructions" width={24} height={24} />
             <h2 className="font-display font-bold text-xl">Class Instructions</h2>
@@ -106,6 +107,8 @@ export default function DailyChallengePage() {
             </Button>
           </div>
         </Card>
+        </div>
+      </div>
 
         {/* Feedback Card (shown after submit) */}
         {showFeedback && (
