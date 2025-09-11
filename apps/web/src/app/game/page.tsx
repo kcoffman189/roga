@@ -6,6 +6,7 @@ import BrandMark from "@/components/ui/BrandMark";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function DailyChallengePage() {
   const [question, setQuestion] = useState("");
@@ -60,7 +61,7 @@ export default function DailyChallengePage() {
         {/* Scenario Card */}
         <Card className="p-6">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <span className="text-coral text-2xl leading-none">🎯</span>
+            <Image src="/brand/school_icon.svg" alt="Class Instructions" width={24} height={24} />
             <h2 className="font-display font-bold text-xl">Class Instructions</h2>
           </div>
           <p className="font-sans text-coal/80">
