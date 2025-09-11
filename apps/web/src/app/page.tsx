@@ -57,7 +57,7 @@ export default function Home() {
 
             <Card className="text-center py-8 px-4 w-40" style={{minHeight: '215px', width: '160px'}}>
               <div className="h-16 mb-4 flex items-center justify-center">
-                {/* Placeholder for Streaks & Badges icon */}
+                <Image src="/brand/trophy_icon.svg" alt="Streaks & Badges" width={48} height={48} />
               </div>
               <h3 className="heading text-sm mb-3 break-words">Streaks & Badges</h3>
               <p className="copy text-xs break-words">Keep your curiosity going</p>
