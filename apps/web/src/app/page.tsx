@@ -10,7 +10,7 @@ export default function Home() {
       {/* TEAL SECTION - 80-85% viewport with all content */}
       <section className="min-h-[84vh] relative px-6 py-6" style={{backgroundColor: '#20B2AA'}}>
         {/* Logo positioned further down and right with massive font size */}
-        <div className="absolute top-20 left-14 flex items-center gap-4">
+        <div className="absolute top-20 flex items-center gap-4" style={{left: '86px'}}>
           <BrandMark size={80} />
           <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '6rem', color: 'white'}}>roga</span>
         </div>
