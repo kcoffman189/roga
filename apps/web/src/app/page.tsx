@@ -37,7 +37,7 @@ export default function Home() {
         </div>
 
         {/* FEATURE CARDS - 50% NARROWER WITH FOG BACKGROUND */}
-        <div className="max-w-4xl mx-auto mt-16">
+        <div className="max-w-4xl mx-auto" style={{marginTop: '54px'}}>
           <div className="flex flex-row justify-center items-stretch" style={{gap: '20px'}}>
             <Card className="text-center py-8 px-4 w-40" style={{minHeight: '215px', width: '160px'}}>
               <div className="h-16 mb-4 flex items-center justify-center">
