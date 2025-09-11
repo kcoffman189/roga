@@ -169,7 +169,7 @@ export default function DailyChallengePage() {
                   <span>💡</span> Pro Tip:
                 </h5>
                 <p className="text-xs text-coal/70">
-                  Try asking "What specific steps should I focus on first?" to get more actionable guidance.
+                  Try asking &quot;What specific steps should I focus on first?&quot; to get more actionable guidance.
                 </p>
               </div>
             </Card>
