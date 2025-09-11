@@ -43,12 +43,12 @@ export default function DailyChallengePage() {
             ← Back to Home
           </Link>
         </div>
-        <div className="h-32"></div>
+        <div className="h-160" style={{height: '640px'}}></div>
       </header>
 
       {/* TITLE */}
       <div className="text-center" style={{marginTop: '50px', marginBottom: '40px'}}>
-        <h1 className="text-4xl font-bold" style={{fontFamily: 'Georgia, serif', color: '#1D1B20'}}>Daily Challenge - TEST</h1>
+        <h1 className="text-4xl font-bold" style={{fontFamily: 'Georgia, serif', color: '#1D1B20'}}>Daily Challenge</h1>
       </div>
 
       {/* CONTENT */}
