@@ -57,7 +57,7 @@ export default function DailyChallengePage() {
       </div>
 
       {/* CONTENT */}
-      <div style={{marginLeft: '50px'}}>
+      <div style={{marginLeft: '65px'}}>
         {/* Scenario Card */}
         <Card className="p-6" style={{width: '600px'}}>
             <div className="flex items-center justify-center gap-3 mb-2">
@@ -108,7 +108,7 @@ export default function DailyChallengePage() {
           </Card>
       </div>
 
-      <div className="max-w-3xl mx-auto px-6" style={{marginLeft: '50px'}}>
+      <div className="max-w-3xl mx-auto px-6" style={{marginLeft: '65px'}}>
         {/* Feedback Card (shown after submit) */}
         {showFeedback && (
           <section className="mt-6 bg-white rounded-2xl shadow-card p-6">
