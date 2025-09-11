@@ -2,6 +2,7 @@ import BrandMark from "@/components/ui/BrandMark";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Home() {
   return (
@@ -40,7 +41,7 @@ export default function Home() {
           <div className="flex flex-row justify-center items-stretch" style={{gap: '20px'}}>
             <Card className="text-center py-8 px-4 w-40" style={{minHeight: '215px', width: '160px'}}>
               <div className="h-16 mb-4 flex items-center justify-center">
-                {/* Placeholder for Daily Challenge icon */}
+                <Image src="/brand/stopwatch.svg" alt="Daily Challenge" width={48} height={48} />
               </div>
               <h3 className="heading text-sm mb-3 break-words">Daily Challenge</h3>
               <p className="copy text-xs break-words">2-3 minute scenarios with fast feedback</p>
