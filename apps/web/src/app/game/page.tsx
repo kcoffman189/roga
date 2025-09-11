@@ -42,25 +42,25 @@ const scenarios: Scenario[] = [
     id: 2,
     title: "Team Meeting",
     text: "Your manager mentions a new initiative in passing during a busy team meeting. You think it might affect your current project, but you're not certain. What question could you ask to understand the impact?",
-    icon: "/brand/school_icon.svg"
+    icon: "/brand/team_icon.svg"
   },
   {
     id: 3,
     title: "Customer Feedback",
     text: "A customer says your product 'doesn't feel right' but won't elaborate further. You need to understand their concern to improve the experience. What question could help you dig deeper?",
-    icon: "/brand/school_icon.svg"
+    icon: "/brand/customer_feedback_icon.svg"
   },
   {
     id: 4,
     title: "Project Deadline",
     text: "Your team lead says the deadline is 'tight but doable' for an important project. You want to understand what resources or support might be needed. What question would help clarify the situation?",
-    icon: "/brand/school_icon.svg"
+    icon: "/brand/project_icon.svg"
   },
   {
     id: 5,
     title: "Career Discussion",
     text: "During your performance review, your supervisor mentions 'growth opportunities' but doesn't specify what they mean. You want to understand your next steps. What question could help clarify your path forward?",
-    icon: "/brand/school_icon.svg"
+    icon: "/brand/career_growth_icon.svg"
   }
 ];
 
