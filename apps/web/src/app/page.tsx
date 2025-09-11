@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       {/* TEAL SECTION - 80-85% viewport with all content */}
-      <section className="min-h-[85vh] relative px-6 py-6" style={{backgroundColor: '#20B2AA'}}>
+      <section className="min-h-[84vh] relative px-6 py-6" style={{backgroundColor: '#20B2AA'}}>
         {/* Logo positioned further down and right with massive font size */}
         <div className="absolute top-20 left-14 flex items-center gap-4">
           <BrandMark size={80} />
