@@ -21,7 +21,8 @@ export async function POST(
     return NextResponse.json(data, {
       status: res.status,
     });
-  } catch (error) {
+  } catch (err) {
+    console.error('Failed to complete session:', err);
     return NextResponse.json(
       { error: "Failed to complete session" },
       { status: 500 }

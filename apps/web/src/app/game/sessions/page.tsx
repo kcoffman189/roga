@@ -233,7 +233,7 @@ export default function RogaSessionsPage() {
               
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
                 <h3 className="font-semibold mb-2">Your Best Question:</h3>
-                <p className="italic text-coal/80">"{sessionSummary.bestQuestion}"</p>
+                <p className="italic text-coal/80">&ldquo;{sessionSummary.bestQuestion}&rdquo;</p>
               </div>
               
               {sessionSummary.badges.length > 0 && (

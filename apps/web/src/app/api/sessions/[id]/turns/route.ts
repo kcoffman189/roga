@@ -27,7 +27,8 @@ export async function POST(
     return NextResponse.json(data, {
       status: res.status,
     });
-  } catch (error) {
+  } catch (err) {
+    console.error('Failed to process turn:', err);
     return NextResponse.json(
       { error: "Failed to process turn" },
       { status: 500 }

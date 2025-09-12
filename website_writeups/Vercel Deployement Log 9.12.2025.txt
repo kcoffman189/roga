@@ -1,0 +1,32 @@
+Running build in Washington, D.C., USA (East) – iad1
+Build machine configuration: 2 cores, 8 GB
+Cloning github.com/kcoffman189/roga (Branch: main, Commit: d6164a3)
+Cloning completed: 1.120s
+Restored build cache from previous deployment (JBDVW3qweniGSbSeTMa1UGbUDdpT)
+Running "vercel build"
+Vercel CLI 47.1.1
+Running "install" command: `npm ci`...
+added 353 packages, and audited 354 packages in 13s
+145 packages are looking for funding
+  run `npm fund` for details
+found 0 vulnerabilities
+Detected Next.js version: 15.5.2
+Running "npm run build"
+> web@0.1.0 build
+> next build
+ ▲ Next.js 15.5.2
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 4.9s
+   Linting and checking validity of types ...
+Failed to compile.
+./src/app/api/sessions/[id]/complete/route.ts
+24:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+./src/app/api/sessions/[id]/turns/route.ts
+30:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+./src/app/api/sessions/route.ts
+27:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+./src/app/game/sessions/page.tsx
+236:52  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+236:82  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+Error: Command "npm run build" exited with 1
