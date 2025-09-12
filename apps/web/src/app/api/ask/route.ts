@@ -11,6 +11,14 @@ export async function POST(req: NextRequest) {
       scenarioId: body.scenarioId ?? body.scenario_id,
       scenarioTitle: body.scenarioTitle,
       scenarioText: body.scenarioText,
+      // Session mode fields
+      mode: body.mode,
+      round: body.round,
+      sessionId: body.sessionId,
+      sessionTitle: body.sessionTitle,
+      sessionScene: body.sessionScene,
+      sessionPersona: body.sessionPersona,
+      priorSummary: body.priorSummary,
     }),
   });
 

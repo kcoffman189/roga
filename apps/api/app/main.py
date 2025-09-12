@@ -27,6 +27,14 @@ class ScoreRequest(BaseModel):
     scenario_id: Optional[int] = None
     scenarioTitle: Optional[str] = None
     scenarioText: Optional[str] = None
+    # Session mode fields
+    mode: Optional[str] = None
+    round: Optional[int] = None
+    sessionId: Optional[str] = None
+    sessionTitle: Optional[str] = None
+    sessionScene: Optional[str] = None
+    sessionPersona: Optional[str] = None
+    priorSummary: Optional[str] = None
 
 class ScoreResponse(BaseModel):
     scenario: dict
@@ -92,8 +100,37 @@ Guidance:
 - Do NOT leak chain-of-thought—only the JSON fields described by the schema.
 """
 
-def build_user_prompt(question: str, scenario_title: str, scenario_text: str) -> str:
-    return f"""\
+def build_user_prompt(question: str, scenario_title: str, scenario_text: str, session_context: Optional[dict] = None) -> str:
+    if session_context and session_context.get("mode") == "session":
+        # Session mode: multi-round conversation context
+        round_num = session_context.get("round", 1)
+        session_title = session_context.get("sessionTitle", "")
+        session_scene = session_context.get("sessionScene", "")
+        session_persona = session_context.get("sessionPersona", "")
+        prior_summary = session_context.get("priorSummary", "")
+        
+        context_section = f"""SESSION: {session_title}
+SCENE: {session_scene}
+PERSONA: {session_persona}
+ROUND: {round_num}"""
+        
+        if prior_summary:
+            context_section += f"\nPRIOR_ROUNDS: {prior_summary}"
+            
+        return f"""\
+{context_section}
+
+USER_QUESTION: {question}
+
+TASKS:
+1) Score 0–100 overall (integer). Consider this is round {round_num} of a multi-round conversation.
+2) Produce exactly 4 rubric items (keys: clarity, depth, insight, openness) with short, pointed notes.
+3) One sentence proTip tailored to the user's question and conversation context.
+4) A single best "suggestedUpgrade"—rewrite the user's question to be stronger in this conversational context.
+5) Optionally assign a badge if warranted (e.g., "Clarity Star", "Deep Diver", "Insight Spark", "Open Door")."""
+    else:
+        # Standard daily challenge mode
+        return f"""\
 SCENARIO: {scenario_title}
 CONTEXT: {scenario_text}
 
@@ -113,9 +150,21 @@ def score(req: ScoreRequest):
     if not req.question or not req.question.strip():
         raise HTTPException(status_code=400, detail="Missing question")
 
-    scenario_title = req.scenarioTitle or "Today's Scenario"
-    scenario_text  = req.scenarioText  or ""
-    user_prompt    = build_user_prompt(req.question.strip(), scenario_title, scenario_text)
+    # Build session context if in session mode
+    session_context = None
+    if req.mode == "session":
+        session_context = {
+            "mode": req.mode,
+            "round": req.round,
+            "sessionTitle": req.sessionTitle,
+            "sessionScene": req.sessionScene,
+            "sessionPersona": req.sessionPersona,
+            "priorSummary": req.priorSummary
+        }
+
+    scenario_title = req.scenarioTitle or req.sessionTitle or "Today's Scenario"
+    scenario_text  = req.scenarioText  or req.sessionScene or ""
+    user_prompt    = build_user_prompt(req.question.strip(), scenario_title, scenario_text, session_context)
 
     try:
         chat = client.chat.completions.create(
