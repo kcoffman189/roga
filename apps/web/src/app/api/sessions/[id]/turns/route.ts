@@ -3,11 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const body = await req.json();
-    const sessionId = params.id;
+    const { id: sessionId } = await params;
     
     const res = await fetch(`https://roga-api.fly.dev/sessions/${sessionId}/turns`, {
       method: "POST",
