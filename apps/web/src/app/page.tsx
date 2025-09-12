@@ -31,7 +31,7 @@ export default function Home() {
               variant="ghost" 
               className="text-lg px-8 py-4 bg-transparent border-2 border-white text-white hover:bg-white hover:text-teal-600"
             >
-              Deep Practice
+              Roga Sessions
             </Button>
           </div>
         </div>
