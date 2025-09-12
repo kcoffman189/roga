@@ -186,16 +186,18 @@ export default function RogaSessionsPage() {
         <div className="max-w-4xl mx-auto px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {PERSONAS.map((persona) => (
-              <Card key={persona.type} className="p-6 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => startSession(persona.type)}>
-                <h2 className="font-display font-bold text-xl mb-4">{persona.name}</h2>
-                <p className="text-coal/80 text-sm">{persona.description}</p>
-                <Button 
-                  className="mt-4 text-sm px-6 py-2 border-0"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Starting..." : "Start Session"}
-                </Button>
-              </Card>
+              <div key={persona.type} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => startSession(persona.type)}>
+                <Card className="p-6">
+                  <h2 className="font-display font-bold text-xl mb-4">{persona.name}</h2>
+                  <p className="text-coal/80 text-sm">{persona.description}</p>
+                  <Button 
+                    className="mt-4 text-sm px-6 py-2 border-0"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Starting..." : "Start Session"}
+                  </Button>
+                </Card>
+              </div>
             ))}
           </div>
         </div>
