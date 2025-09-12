@@ -1,0 +1,167 @@
+📄 Roga Sessions – Implementation Guide (MVP)
+
+Date: September 2025
+Prepared for: Roga Engineering Team
+Goal: Implement Roga Sessions (multi-round, character-driven gameplay) aligned with the original multi-round prototype.
+
+🎯 Overview
+
+Roga Sessions = 5-round, back-and-forth dialogues between the user and an AI persona.
+Each round =
+
+User asks a question.
+
+AI persona responds (2–6 sentences, streamed).
+
+Evaluator scores the user’s question and returns structured feedback (score, rubric, pro tip, suggested upgrade, badge).
+
+🔗 API Contract (FastAPI backend + Next.js proxy)
+Endpoints
+
+POST /sessions
+Create a new session.
+Input: { persona: "generic_philosopher"|"business_coach"|"teacher_mentor", topic, difficulty, roundsPlanned: 5 }
+Output: { id, persona, topic, difficulty, roundsPlanned }
+
+POST /sessions/{id}/turns
+Process a turn:
+
+Run character pass → streamed reply.
+
+Run evaluator pass → strict JSON feedback.
+Input: { round: 1..5, question, priorSummary? }
+Output:
+
+{
+  "round": 1,
+  "characterReply": "2–6 sentences of persona text",
+  "feedback": {
+    "score": 82,
+    "rubric": [
+      { "key": "clarity", "label": "Clarity", "status": "good", "note": "Clear phrasing" },
+      { "key": "depth", "label": "Depth", "status": "warn", "note": "Surface-level" },
+      { "key": "insight", "label": "Insight", "status": "good", "note": "Fresh angle" },
+      { "key": "openness", "label": "Openness", "status": "good", "note": "Invites reply" }
+    ],
+    "proTip": "Ask a layered follow-up next time.",
+    "suggestedUpgrade": "What tradeoffs might this decision create?",
+    "badge": { "name": "Curiosity Badge", "label": "Good probing instincts" }
+  }
+}
+
+
+POST /sessions/{id}/complete
+Finalize the session.
+Output: { summary, bestQuestion, badges }
+
+🧑 Personas (MVP)
+
+Generic Philosopher – analytic, reasoned, concise, invites reflection.
+
+Business Coach – practical, tradeoffs, outcomes.
+
+Teacher Mentor – guiding questions, scaffolds depth.
+
+All:
+
+Concise (2–6 sentences).
+
+Respectful, mildly challenging.
+
+Avoid AI/meta talk unless asked.
+
+📋 Backend Tasks
+
+Session API (FastAPI)
+
+Add /sessions, /sessions/{id}/turns, /sessions/{id}/complete.
+
+Store sessions + turns in in-memory dicts (MVP).
+
+Character Prompting
+
+System prompt from persona (see above).
+
+User prompt: Round X, priorSummary, user question.
+
+Call OpenAI → plain text reply.
+
+Evaluator Prompting
+
+System prompt: Score clarity, depth, insight, openness (0–25 each); JSON only.
+
+User prompt: include the user’s question (and optionally last coach reply).
+
+Call OpenAI with response_format=json.
+
+Persistence
+
+Store sessions and turns in SESSIONS and TURNS dicts.
+
+Later: migrate to DB schema from the original prototype.
+
+💻 Frontend Tasks (Next.js)
+API Proxies
+
+Create thin proxies in /app/api/:
+
+POST /api/sessions → backend /sessions
+
+POST /api/sessions/[id]/turns → backend /sessions/{id}/turns (support streaming reply)
+
+POST /api/sessions/[id]/complete → backend /sessions/{id}/complete
+
+Sessions Page
+
+apps/web/src/app/game/sessions/page.tsx
+
+On Start: call POST /api/sessions with persona + roundsPlanned=5.
+
+Each Round:
+
+Show “Round i/5” header.
+
+User submits question → call /api/sessions/{id}/turns.
+
+Stream persona reply into chat bubble.
+
+Display feedback card (reuse Daily Challenge ScoreCard) under that round.
+
+Completion: after round 5, call /api/sessions/{id}/complete. Show summary and restart option.
+
+UI Details
+
+Chat-like layout: persona reply bubble on left, feedback card beneath.
+
+Show round progress at top.
+
+Disable input until feedback arrives.
+
+Use existing Roga brand tokens (bg-fog, btn-primary, card, badge).
+
+🛡️ Guardrails & Quality
+
+Topic filter: block/reframe AI/meta unless explicitly asked.
+
+JSON enforcement: use response_format=json or robust parser with retry.
+
+Streaming: only persona reply streams; evaluator returns once complete.
+
+Telemetry (later): session length, per-dimension averages.
+
+✅ Next Steps
+
+Backend: implement /sessions endpoints with in-memory storage.
+
+Backend: add call_openai_character + call_openai_evaluator helpers.
+
+Frontend: build /api/sessions/* proxy routes.
+
+Frontend: update Sessions page with chat-style 5-round flow.
+
+Test: run a full session → 5 questions, 5 persona replies, 5 feedback cards, summary.
+
+📌 MVP Deliverable:
+A working 5-round Roga Session where the user asks questions, receives persona replies, and gets evaluator feedback each round.
+
+📌 Future: persistence in DB (Supabase/Postgres), adjustable rounds, more personas, XP/badges, analytics
