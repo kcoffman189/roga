@@ -1,165 +1,143 @@
-// app/sessions/page.tsx
+// apps/web/src/app/game/sessions/page.tsx
 "use client";
 
-import { useState } from "react";
-import BrandMark from "@/components/ui/BrandMark";
-import Button from "@/components/ui/Button";
-import Card from "@/components/ui/Card";
-import Link from "next/link";
+import { useMemo, useState } from "react";
+import { getDefaultSession } from "@/data/sessions";
+import type { RogaSessionSeed } from "@/data/sessions/types";
 
-interface Scenario {
-  id: number;
-  title: string;
-  text: string;
-}
-
-interface FeedbackData {
+type RubricItem = {
+  key: "clarity" | "depth" | "insight" | "openness";
+  label: string;
+  status: "good" | "warn" | "bad";
+  note: string;
+};
+type Feedback = {
   score: number;
-  rubric: {
-    key: string;
-    label: string;
-    status: "good" | "warn" | "bad";
-    note: string;
-  }[];
+  rubric: RubricItem[];
   proTip?: string;
   suggestedUpgrade?: string;
-  badge?: {
-    name: string;
-    label: string;
-  };
-}
+  badge?: { name: string; label?: string };
+};
+
+// Minimal conversation memory we pass to the backend
+type RoundSummary = {
+  round: number;
+  question: string;
+  weakest?: RubricItem["key"];
+  suggestedUpgrade?: string;
+};
 
 export default function RogaSessionsPage() {
+  const seed: RogaSessionSeed = useMemo(() => getDefaultSession(), []);
   const [round, setRound] = useState(1);
-  const [maxRounds] = useState(5);
   const [question, setQuestion] = useState("");
-  const [feedbackHistory, setFeedbackHistory] = useState<FeedbackData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [history, setHistory] = useState<RoundSummary[]>([]);
+  const [feedbackHistory, setFeedbackHistory] = useState<Feedback[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const scenario: Scenario = {
-    id: 101,
-    title: "Mentor Conversation",
-    text: "You’re meeting a mentor to explore career paths. Practice asking deeper questions over several rounds.",
-  };
+  const maxRounds = seed.rounds;
 
-  const onSubmit = async () => {
+  const submit = async () => {
     if (!question.trim()) return;
-    setIsLoading(true);
+    setLoading(true);
+
     try {
-      const response = await fetch("/api/ask", {
+      const prior_summary = history.slice(-2) // keep it short
+        .map(h => `r${h.round}: q="${h.question}" weak=${h.weakest ?? "n/a"} upg="${h.suggestedUpgrade ?? ""}"`)
+        .join(" | ");
+
+      const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          question,
-          scenarioId: scenario.id,
-          scenarioTitle: scenario.title,
-          scenarioText: scenario.text,
+          mode: "session",
+          sessionId: seed.id,
           round,
-        }),
+          question,
+          sessionTitle: seed.title,
+          sessionScene: seed.scene,
+          sessionPersona: seed.persona,
+          priorSummary: prior_summary
+        })
       });
 
-      let data: FeedbackData;
-      if (response.ok) {
-        data = await response.json();
-      } else {
-        // fallback dummy feedback
-        data = {
-          score: 70,
-          rubric: [
-            { key: "clarity", label: "Clarity", status: "good", note: "Clear question." },
-            { key: "depth", label: "Depth", status: "warn", note: "Could dig deeper." },
-            { key: "insight", label: "Insight", status: "warn", note: "Surface-level insight." },
-            { key: "openness", label: "Openness", status: "good", note: "Invites discussion." },
-          ],
-          proTip: "Try layering your next question for depth.",
-        };
-      }
-      setFeedbackHistory([...feedbackHistory, data]);
+      const fb: Feedback = await res.json();
+
+      // Track minimal details for the next round’s context
+      const weakest = fb.rubric
+        ?.sort((a, b) => (a.status === "bad" ? -1 : a.status === "warn" && b.status === "good" ? -1 : 1))[0]?.key;
+
+      setHistory(prev => [...prev, { round, question, weakest, suggestedUpgrade: fb.suggestedUpgrade }]);
+      setFeedbackHistory(prev => [...prev, fb]);
       setQuestion("");
-      setRound((r) => r + 1);
-    } catch (e) {
-      console.error("Error:", e);
+      setRound(r => Math.min(r + 1, maxRounds));
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const onReset = () => {
+  const reset = () => {
     setRound(1);
     setQuestion("");
+    setHistory([]);
     setFeedbackHistory([]);
   };
 
   return (
-    <main className="min-h-screen bg-fog text-coal">
-      {/* HEADER */}
-      <header className="w-full bg-teal p-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <BrandMark size={60} />
-          <span className="text-white text-4xl font-bold">Roga Sessions</span>
-        </div>
-        <Link href="/">
-          <Button variant="ghost" className="text-white border-white">
-            ← Back to Home
-          </Button>
-        </Link>
-      </header>
+    <main className="px-6 py-10 max-w-3xl mx-auto">
+      {/* Intro / seed */}
+      <section className="card mb-6">
+        <h1 className="heading text-2xl">{seed.title}</h1>
+        <p className="copy mt-1">{seed.scene}</p>
+        <p className="copy mt-2 text-sm opacity-70">
+          Persona: <em>{seed.persona}</em> • Rounds: {seed.rounds}
+        </p>
+      </section>
 
-      {/* TITLE */}
-      <div className="text-center mt-10 mb-6">
-        <h1 className="text-3xl font-bold">{scenario.title}</h1>
-        <p className="max-w-2xl mx-auto text-coal/80 mt-2">{scenario.text}</p>
-      </div>
-
-      {/* CONTENT */}
-      <div className="flex flex-col items-center gap-8">
-        {round <= maxRounds ? (
-          <Card className="p-6 w-[600px]">
-            <h2 className="font-bold mb-2">Round {round} of {maxRounds}</h2>
-            <textarea
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Type your question…"
-              className="w-full min-h-[120px] p-3 rounded-xl border border-coal/20 bg-fog"
-            />
-            <div className="mt-4 flex justify-center gap-4">
-              <Button onClick={onSubmit} disabled={isLoading || !question.trim()}>
-                {isLoading ? "Scoring…" : "Submit"}
-              </Button>
-              <Button variant="ghost" onClick={onReset}>Reset</Button>
-            </div>
-          </Card>
-        ) : (
-          <Card className="p-6 w-[600px] text-center">
-            <h2 className="font-bold text-xl mb-4">Session Complete 🎉</h2>
-            <p>You’ve finished {maxRounds} rounds. Review your feedback below or start again.</p>
-            <Button className="mt-4" onClick={onReset}>Start New Session</Button>
-          </Card>
-        )}
-
-        {/* Feedback history */}
-        {feedbackHistory.length > 0 && (
-          <div className="w-[600px] space-y-6">
-            {feedbackHistory.map((fb, i) => (
-              <Card key={i} className="p-4">
-                <h3 className="font-semibold mb-2">Round {i + 1} Feedback</h3>
-                <div className="font-bold text-teal mb-2">{fb.score}</div>
-                {fb.suggestedUpgrade && (
-                  <p className="text-sm mb-2"><strong>Upgrade:</strong> {fb.suggestedUpgrade}</p>
-                )}
-                {fb.proTip && (
-                  <p className="text-sm mb-2"><strong>Pro Tip:</strong> {fb.proTip}</p>
-                )}
-                <ul className="text-xs text-coal/70 space-y-1">
-                  {fb.rubric.map((r) => (
-                    <li key={r.key}><strong>{r.label}:</strong> {r.note}</li>
-                  ))}
-                </ul>
-              </Card>
-            ))}
+      {/* Round entry */}
+      {round <= maxRounds ? (
+        <section className="card mb-6">
+          <h2 className="heading text-xl mb-2">Round {round} of {maxRounds}</h2>
+          <textarea
+            className="w-full bg-white rounded-2xl border p-3 min-h-[120px]"
+            placeholder={round === 1 ? "Start with an opening question…" : "Follow up based on prior feedback…"}
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+          />
+          <div className="mt-3 flex gap-3">
+            <button className="btn btn-primary" onClick={submit} disabled={loading || !question.trim()}>
+              {loading ? "Scoring…" : "Submit"}
+            </button>
+            <button className="btn btn-ghost" onClick={reset}>Reset</button>
           </div>
-        )}
-      </div>
+        </section>
+      ) : (
+        <section className="card mb-6 text-center">
+          <h2 className="heading text-xl">Session complete 🎉</h2>
+          <button className="btn btn-primary mt-3" onClick={reset}>Start again</button>
+        </section>
+      )}
+
+      {/* Feedback per round */}
+      {feedbackHistory.length > 0 && (
+        <section className="space-y-4">
+          {feedbackHistory.map((fb, i) => (
+            <div className="card" key={i}>
+              <div className="flex items-center justify-between">
+                <h3 className="heading text-lg">Round {i + 1} Feedback</h3>
+                <span className="badge">{fb.score}</span>
+              </div>
+              {fb.suggestedUpgrade && <p className="copy mt-2"><strong>Upgrade:</strong> {fb.suggestedUpgrade}</p>}
+              {fb.proTip && <p className="copy mt-1"><strong>Pro Tip:</strong> {fb.proTip}</p>}
+              <ul className="copy text-sm mt-2 space-y-1">
+                {fb.rubric?.map(r => (
+                  <li key={r.key}><strong>{r.label}:</strong> {r.note}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
+      )}
     </main>
   );
 }

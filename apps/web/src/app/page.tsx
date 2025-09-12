@@ -28,10 +28,7 @@ export default function Home() {
               <Button className="text-lg px-8 py-4 border-0">Start Daily Challenge</Button>
             </Link>
             <Link href="/game/sessions">
-              <Button 
-                variant="ghost" 
-                className="text-lg px-8 py-4 bg-transparent border-2 border-white text-white hover:bg-white hover:text-teal-600"
-              >
+              <Button className="text-lg px-8 py-4 border-0">
                 Roga Sessions
               </Button>
             </Link>
