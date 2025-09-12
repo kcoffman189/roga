@@ -27,12 +27,14 @@ export default function Home() {
             <Link href="/game">
               <Button className="text-lg px-8 py-4 border-0">Start Daily Challenge</Button>
             </Link>
-            <Button 
-              variant="ghost" 
-              className="text-lg px-8 py-4 bg-transparent border-2 border-white text-white hover:bg-white hover:text-teal-600"
-            >
-              Roga Sessions
-            </Button>
+            <Link href="/game/sessions">
+              <Button 
+                variant="ghost" 
+                className="text-lg px-8 py-4 bg-transparent border-2 border-white text-white hover:bg-white hover:text-teal-600"
+              >
+                Roga Sessions
+              </Button>
+            </Link>
           </div>
         </div>
 
