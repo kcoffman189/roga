@@ -63,6 +63,7 @@ const SCENARIOS: SessionScenario[] = sessionsData as SessionScenario[];
 export default function RogaSessionsPage() {
   const [gameState, setGameState] = useState<GameState>('scenario-selection');
   const [session, setSession] = useState<Session | null>(null);
+  const [currentScenario, setCurrentScenario] = useState<SessionScenario | null>(null);
   const [currentRound, setCurrentRound] = useState(1);
   const [question, setQuestion] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -85,6 +86,7 @@ export default function RogaSessionsPage() {
       
       const sessionData: Session = await res.json();
       setSession(sessionData);
+      setCurrentScenario(scenario);
       setGameState('playing');
     } catch (error) {
       console.error('Failed to start session:', error);
@@ -110,7 +112,7 @@ export default function RogaSessionsPage() {
           round: currentRound,
           question,
           priorSummary,
-          context: SCENARIOS.find(s => s.persona === session?.persona)?.context || "business"
+          context: currentScenario?.context || "business"
         })
       });
 
@@ -150,6 +152,7 @@ export default function RogaSessionsPage() {
   const resetSession = () => {
     setGameState('scenario-selection');
     setSession(null);
+    setCurrentScenario(null);
     setCurrentRound(1);
     setQuestion("");
     setTurns([]);
@@ -296,10 +299,10 @@ export default function RogaSessionsPage() {
       {/* PROGRESS */}
       <div className="text-center" style={{marginTop: '50px', marginBottom: '20px'}}>
         <h1 className="text-3xl font-bold mb-2" style={{fontFamily: 'Georgia, serif', color: '#1D1B20'}}>
-          {SCENARIOS.find(s => s.persona === session?.persona)?.title}
+          {currentScenario?.title}
         </h1>
         <p className="text-base text-coal/80 mb-4 max-w-3xl mx-auto">
-          {SCENARIOS.find(s => s.persona === session?.persona)?.scene}
+          {currentScenario?.scene}
         </p>
         <div className="text-lg text-coal/70">
           Round {currentRound} of {session?.roundsPlanned || 5}
@@ -336,7 +339,7 @@ export default function RogaSessionsPage() {
               {/* Character reply */}
               <div className="flex justify-start">
                 <div className="bg-white rounded-2xl rounded-tl-md px-4 py-3 max-w-2xl border shadow-sm">
-                  <div className="text-xs text-gray-500 mb-1">{SCENARIOS.find(s => s.persona === session?.persona)?.title}:</div>
+                  <div className="text-xs text-gray-500 mb-1">{currentScenario?.title}:</div>
                   <div>{turn.characterReply}</div>
                 </div>
               </div>
@@ -422,7 +425,7 @@ export default function RogaSessionsPage() {
                 <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
                   <h4 className="font-semibold mb-2 text-gray-700">Your Scenario:</h4>
                   <p className="text-gray-700 text-sm leading-relaxed">
-                    {SCENARIOS.find(s => s.persona === session?.persona)?.scene}
+                    {currentScenario?.scene}
                   </p>
                 </div>
               )}
