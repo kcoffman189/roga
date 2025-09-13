@@ -378,7 +378,7 @@ export default function DailyChallengePage() {
                     <h4 className="font-semibold mb-2 text-purple-700">⚡ Example Upgrade:</h4>
                     <div className="bg-purple-50 p-3 rounded">
                       <p className="text-sm text-purple-800 italic">
-                        "{coachingFeedback.coach_feedback.example_upgrade}"
+                        &ldquo;{coachingFeedback.coach_feedback.example_upgrade}&rdquo;
                       </p>
                     </div>
                   </div>
