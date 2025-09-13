@@ -1,0 +1,299 @@
+Roga Sessions — “Coaching Upgrade (Quick Wins)” Implementation Guide
+
+Audience: Roga Engineering
+Goal: Improve coaching quality in Sessions with minimal surface-area changes (no major UI rewrites).
+Scope: Backend evaluator + light data and UI tweaks.
+Rounds: Fixed at 5 (MVP).
+
+0) Overview of the Quick Wins
+
+We will:
+
+Make coaching context-aware (business / academic / personal).
+
+Add an empathy dimension to the rubric.
+
+Return follow-up question suggestions.
+
+Return a likely response (how the conversation might play out next).
+
+(Optional MVP) Track simple user skill trends and feed them back into the evaluator.
+
+This keeps the existing Session flow and ScoreCard, adding fields that deepen feedback without large refactors.
+
+1) Data Model & API: V2 Evaluator Payload
+1.1 Response schema (superset of current)
+
+Add fields; keep existing ones unchanged so the UI doesn’t break.
+
+{
+  "scenario": { "title": "string", "text": "string" },
+  "question": "string",
+  "score": 0,
+  "rubric": [
+    { "key": "clarity",  "label": "Clarity",  "status": "good|warn|bad", "note": "string" },
+    { "key": "depth",    "label": "Depth",    "status": "good|warn|bad", "note": "string" },
+    { "key": "insight",  "label": "Insight",  "status": "good|warn|bad", "note": "string" },
+    { "key": "openness", "label": "Openness", "status": "good|warn|bad", "note": "string" }
+  ],
+  "proTip": "string|null",
+  "suggestedUpgrade": "string|null",
+  "badge": { "name": "string", "label": "string" },
+
+  "contextSpecificTip": "string",             // NEW: tailored to scenario context
+  "likelyResponse": "string",                 // NEW: how the other party might answer
+  "nextQuestionSuggestions": ["string", "..."], // NEW: 1–3 suggestions
+  "empathyScore": 0                            // NEW: 0–25; contributes to coaching copy (not total score)
+}
+
+
+Notes
+
+score remains 0–100. Keep total based on the original four rubric items so historical distributions stay comparable.
+
+empathyScore (0–25) is reported but does not change the score for now.
+
+All new fields are additive and optional-safe in the UI.
+
+1.2 Minimal TS updates (frontend types)
+// apps/web/src/types/feedback.ts
+export type RubricKey = "clarity" | "depth" | "insight" | "openness";
+
+export type RubricItem = {
+  key: RubricKey;
+  label: string;
+  status: "good" | "warn" | "bad";
+  note: string;
+};
+
+export type RogaFeedbackV2 = {
+  scenario: { title: string; text?: string };
+  question: string;
+  score: number;
+  rubric: RubricItem[];
+  proTip?: string | null;
+  suggestedUpgrade?: string | null;
+  badge?: { name: string; label?: string };
+
+  // NEW
+  contextSpecificTip?: string;
+  likelyResponse?: string;
+  nextQuestionSuggestions?: string[];
+  empathyScore?: number; // 0–25
+};
+
+2) Scenario Context Tagging (lightweight)
+
+Add a context tag to session seeds (or daily scenarios if reused):
+
+{
+  "id": "mentor-mentee",
+  "title": "Mentor Conversation",
+  "scene": "You’re meeting a mentor to explore career paths...",
+  "persona": "generic_philosopher",
+  "rounds": 5,
+  "context": "business", // "business" | "academic" | "personal"
+  "tags": ["career", "mentorship"]
+}
+
+
+Pass context in the body for each turn:
+
+await fetch(`/api/sessions/${id}/turns`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    round,
+    question,
+    priorSummary,
+    context // ← NEW
+  })
+});
+
+3) Backend — Evaluator Prompt & Handler Changes
+3.1 Turn input (FastAPI Pydantic)
+# apps/api/app/main.py (snippet)
+class TurnIn(BaseModel):
+    round: int
+    question: str
+    priorSummary: Optional[str] = None
+    context: Optional[str] = None  # "business" | "academic" | "personal"
+
+3.2 Character system prompt (unchanged conceptually)
+
+Keep concise 2–6 sentence persona reply.
+
+3.3 Evaluator system prompt (revised)
+def evaluator_system_prompt_v2(context_hint: Optional[str], user_trend_hint: Optional[str]) -> str:
+    base = (
+        "You are an evaluator of questions. Score on four 0–25 dimensions "
+        "(clarity, depth, insight, openness). Return STRICT JSON ONLY.\n"
+        "Also provide:\n"
+        "- contextSpecificTip: actionable tip tailored to the scenario context;\n"
+        "- likelyResponse: a plausible next reply (2–3 sentences);\n"
+        "- nextQuestionSuggestions: 1–3 concise follow-ups that build skillfully;\n"
+        "- empathyScore: 0–25 (awareness of feelings, culture, power dynamics).\n"
+        "Do not include explanations outside JSON.\n"
+    )
+    if context_hint:
+        base += f"\nContext: {context_hint}. Tailor tips to this context."
+    if user_trend_hint:
+        base += f"\nUser historical weakness: {user_trend_hint}. Prioritize coaching on this."
+    return base
+
+3.4 Evaluator user prompt (revised)
+user_eval = (
+    "Evaluate ONLY the USER'S QUESTION below. Consider the short priorSummary for continuity.\n"
+    f"priorSummary: {prior_summary or 'none'}\n"
+    f"question: {user_question}\n"
+    f"coachReply: {character_reply[:800]}\n"
+    "Return JSON with keys: score, rubric[4], proTip, suggestedUpgrade, badge, "
+    "contextSpecificTip, likelyResponse, nextQuestionSuggestions, empathyScore."
+)
+
+3.5 JSON enforcement (robust parse)
+import json
+
+async def call_openai_evaluator_json(system_msg: str, user_msg: str) -> dict:
+    # (Pseudocode) use your OpenAI client with response_format=json
+    resp_text = await openai_json_only(system=system_msg, user=user_msg)
+    try:
+        data = json.loads(resp_text)
+    except Exception:
+        # optional: retry with “Return STRICT JSON” reinforcement
+        resp_text = await openai_json_only(system=system_msg + "\nReturn STRICT JSON.", user=user_msg)
+        data = json.loads(resp_text)
+
+    # harden: defaults for missing fields
+    data.setdefault("contextSpecificTip", None)
+    data.setdefault("likelyResponse", None)
+    data.setdefault("nextQuestionSuggestions", [])
+    data.setdefault("empathyScore", 0)
+    return data
+
+
+Keep your existing score clamp and rubric validation. Ensure rubric still includes the 4 classic keys so UI remains consistent.
+
+4) (Optional) Minimal User Trend Tracking (MVP-Safe)
+
+Add a tiny, ephemeral user profile store (can be in-memory keyed by session or temp user id):
+
+USER_TRENDS = {}  # e.g., { "anon" : { "clarity": { "sum": 210, "n": 3 }, ... } }
+
+def update_trends(user_key: str, feedback: dict):
+    prof = USER_TRENDS.setdefault(user_key, {})
+    for item in feedback.get("rubric", []):
+        k = item["key"]
+        score_map = {"good": 22, "warn": 14, "bad": 6}  # heuristic mapping
+        s = score_map.get(item["status"], 14)
+        p = prof.setdefault(k, {"sum": 0, "n": 0})
+        p["sum"] += s
+        p["n"] += 1
+
+def weakest_skill_hint(user_key: str) -> Optional[str]:
+    prof = USER_TRENDS.get(user_key)
+    if not prof: return None
+    avg = [(k, v["sum"]/max(1,v["n"])) for k,v in prof.items()]
+    weakest = min(avg, key=lambda kv: kv[1])[0]
+    return weakest
+
+
+In /sessions/{id}/turns:
+
+After you compute feedback, call update_trends(user_key, feedback).
+
+Before evaluator call, pass weakest_skill_hint(user_key) into evaluator_system_prompt_v2().
+
+For MVP, user_key can be "anon" (per session) or a cookie/session id. Replace with real user id when auth is ready.
+
+5) Frontend — Rendering the New Fields
+
+No layout changes required. Just enrich the existing per-round card.
+
+// Where you render feedback per round
+{fb.contextSpecificTip && (
+  <p className="copy mt-2"><strong>Context Tip:</strong> {fb.contextSpecificTip}</p>
+)}
+{fb.likelyResponse && (
+  <p className="copy mt-2"><strong>Likely Response:</strong> {fb.likelyResponse}</p>
+)}
+{fb.nextQuestionSuggestions?.length ? (
+  <div className="copy mt-2">
+    <strong>Follow-ups you could try:</strong>
+    <ul className="list-disc pl-6">
+      {fb.nextQuestionSuggestions.map((s, i) => <li key={i}>{s}</li>)}
+    </ul>
+  </div>
+) : null}
+{typeof fb.empathyScore === "number" && (
+  <div className="badge mt-2">Empathy {fb.empathyScore}/25</div>
+)}
+
+
+Keep the original score, rubric, proTip, suggestedUpgrade, badge UI as-is.
+
+6) QA & Acceptance Checklist
+
+Backend
+
+ /sessions/{id}/turns includes context and priorSummary in prompts.
+
+ Evaluator returns valid JSON with new fields present.
+
+ score remains based on four classic dimensions.
+
+ JSON parser hardens missing fields with safe defaults.
+
+ (Optional) user trend store updates each turn and feeds weakest_skill_hint into prompt.
+
+Frontend
+
+ Types extended; build passes.
+
+ Cards display contextSpecificTip, likelyResponse, nextQuestionSuggestions, empathyScore when present.
+
+ No runtime errors if fields are absent.
+
+ Round flow unchanged (5 rounds, reply then feedback).
+
+UX Validation
+
+ Coaching feels context-specific.
+
+ Users get concrete follow-ups (1–3).
+
+ “Likely response” reads plausible and concise (2–3 sentences).
+
+ Empathy score appears and correlates with copy.
+
+7) Rollout Plan
+
+Feature flag (backend): COACHING_V2=true to switch evaluator prompt and new fields on.
+
+Deploy backend first; it’s backward-compatible.
+
+Deploy frontend with optional rendering of new fields.
+
+Monitor: capture % of turns with valid JSON and average latency impact.
+
+If regressions, flip the flag off to revert to baseline coaching until fixed.
+
+8) Example Prompts (reference)
+
+Evaluator (system)
+
+Score clarity, depth, insight, openness (0–25 each). Return STRICT JSON only with: score, rubric[4], proTip, suggestedUpgrade, badge, contextSpecificTip, likelyResponse, nextQuestionSuggestions (1–3), empathyScore (0–25). Tailor tips to the context: {business|academic|personal}. If the user historically struggles with {weakestSkill}, prioritize coaching on that.
+
+Evaluator (user)
+
+priorSummary: {priorSummary}
+question: {userQuestion}
+coachReply: {characterReply (truncated)}
+
+That’s it
+
+This upgrade stays within your current architecture, meaning a fast PR is feasible:
+
+PR-1 (backend): new evaluator prompt + parsing + optional trend store.
+
+PR-2 (frontend): types + render new fields.

@@ -13,6 +13,10 @@ client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 SESSIONS: Dict[str, Dict[str, Any]] = {}
 TURNS: Dict[str, List[Dict[str, Any]]] = {}
 
+# V2 Coaching Enhancements
+COACHING_V2_ENABLED = True  # Feature flag
+USER_TRENDS: Dict[str, Dict[str, Dict[str, Any]]] = {}  # user_key -> skill -> {sum, n}
+
 RubricKey = Literal["clarity", "depth", "insight", "openness"]
 RubricStatus = Literal["good", "warn", "bad"]
 
@@ -70,11 +74,17 @@ class TurnRequest(BaseModel):
     round: int = Field(ge=1, le=10)
     question: str
     priorSummary: Optional[str] = None
+    context: Optional[str] = None  # "business" | "academic" | "personal"
 
 class TurnResponse(BaseModel):
     round: int
     characterReply: str
     feedback: Dict[str, Any]
+
+class TurnResponseV2(BaseModel):
+    round: int
+    characterReply: str
+    feedback: Dict[str, Any]  # Now includes V2 fields
 
 class CompleteSessionResponse(BaseModel):
     summary: str
@@ -314,6 +324,35 @@ TASKS:
 
 def clamp(v, lo, hi): return max(lo, min(hi, v))
 
+# V2 Coaching: User Trend Tracking Functions
+def update_trends(user_key: str, feedback: Dict[str, Any]):
+    """Update user skill trends based on feedback"""
+    if not COACHING_V2_ENABLED:
+        return
+        
+    prof = USER_TRENDS.setdefault(user_key, {})
+    for item in feedback.get("rubric", []):
+        k = item["key"]
+        score_map = {"good": 22, "warn": 14, "bad": 6}  # heuristic mapping
+        s = score_map.get(item["status"], 14)
+        p = prof.setdefault(k, {"sum": 0, "n": 0})
+        p["sum"] += s
+        p["n"] += 1
+
+def weakest_skill_hint(user_key: str) -> Optional[str]:
+    """Get user's weakest skill for personalized coaching"""
+    if not COACHING_V2_ENABLED:
+        return None
+        
+    prof = USER_TRENDS.get(user_key)
+    if not prof:
+        return None
+    avg = [(k, v["sum"]/max(1, v["n"])) for k, v in prof.items()]
+    if not avg:
+        return None
+    weakest = min(avg, key=lambda kv: kv[1])[0]
+    return weakest
+
 # Coaching Engine Pipeline Functions
 def generate_coaching_feedback(question: str, character_reply: Optional[str] = None) -> Dict[str, Any]:
     """Generate initial coaching feedback using OpenAI"""
@@ -460,6 +499,126 @@ def coach_filter_pipeline(question: str, character_reply: Optional[str] = None) 
         pro_tip=feedback.get("pro_tip", "Ask 'what would success look like?'")[:80],
         example_upgrade=feedback.get("example_upgrade", "What specific outcome are we targeting?")[:150]
     )
+
+# V2 Coaching: Enhanced Evaluator Functions
+def evaluator_system_prompt_v2(context_hint: Optional[str], user_trend_hint: Optional[str]) -> str:
+    """Generate V2 evaluator system prompt with context awareness"""
+    base = (
+        "You are an evaluator of questions. Score on four 0–25 dimensions "
+        "(clarity, depth, insight, openness). Return STRICT JSON ONLY.\n"
+        "Also provide:\n"
+        "- contextSpecificTip: actionable tip tailored to the scenario context;\n"
+        "- likelyResponse: a plausible next reply (2–3 sentences);\n"
+        "- nextQuestionSuggestions: 1–3 concise follow-ups that build skillfully;\n"
+        "- empathyScore: 0–25 (awareness of feelings, culture, power dynamics).\n"
+        "Do not include explanations outside JSON.\n"
+    )
+    if context_hint:
+        base += f"\nContext: {context_hint}. Tailor tips to this context."
+    if user_trend_hint:
+        base += f"\nUser historical weakness: {user_trend_hint}. Prioritize coaching on this."
+    return base
+
+async def call_openai_evaluator_v2(
+    user_question: str,
+    character_reply: str,
+    prior_summary: Optional[str] = None,
+    context: Optional[str] = None,
+    user_key: str = "anon"
+) -> Dict[str, Any]:
+    """V2 Evaluator with context awareness and trend tracking"""
+    
+    # Get user's weakest skill for personalized coaching
+    trend_hint = weakest_skill_hint(user_key) if COACHING_V2_ENABLED else None
+    
+    # Build context-aware system prompt
+    system_msg = evaluator_system_prompt_v2(context, trend_hint)
+    
+    # Build user prompt
+    user_eval = (
+        "Evaluate ONLY the USER'S QUESTION below. Consider the short priorSummary for continuity.\n"
+        f"priorSummary: {prior_summary or 'none'}\n"
+        f"question: {user_question}\n"
+        f"coachReply: {character_reply[:800]}\n"
+        "Return JSON with keys: score, rubric[4], proTip, suggestedUpgrade, badge, "
+        "contextSpecificTip, likelyResponse, nextQuestionSuggestions, empathyScore."
+    )
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0.4,
+            response_format={"type": "json_schema", "json_schema": {
+                "name": "roga_feedback_v2",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "score": {"type": "integer", "minimum": 0, "maximum": 100},
+                        "rubric": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {"type": "string"},
+                                    "label": {"type": "string"},
+                                    "status": {"type": "string"},
+                                    "note": {"type": "string"}
+                                },
+                                "required": ["key", "label", "status", "note"]
+                            }
+                        },
+                        "proTip": {"type": "string"},
+                        "suggestedUpgrade": {"type": "string"},
+                        "badge": {
+                            "type": "object",
+                            "properties": {
+                                "name": {"type": "string"},
+                                "label": {"type": "string"}
+                            }
+                        },
+                        "contextSpecificTip": {"type": "string"},
+                        "likelyResponse": {"type": "string"},
+                        "nextQuestionSuggestions": {
+                            "type": "array",
+                            "items": {"type": "string"}
+                        },
+                        "empathyScore": {"type": "integer", "minimum": 0, "maximum": 25}
+                    },
+                    "required": ["score", "rubric"]
+                }
+            }},
+            messages=[
+                {"role": "system", "content": system_msg},
+                {"role": "user", "content": user_eval}
+            ]
+        )
+        
+        data = json.loads(response.choices[0].message.content or "{}")
+        
+        # Harden: defaults for missing fields
+        data.setdefault("contextSpecificTip", None)
+        data.setdefault("likelyResponse", None)
+        data.setdefault("nextQuestionSuggestions", [])
+        data.setdefault("empathyScore", 0)
+        
+        return data
+        
+    except Exception as e:
+        # Fallback V2 response
+        return {
+            "score": 70,
+            "rubric": [
+                {"key": "clarity", "label": "Clarity", "status": "good", "note": "Clear question"},
+                {"key": "depth", "label": "Depth", "status": "warn", "note": "Could probe deeper"},
+                {"key": "insight", "label": "Insight", "status": "warn", "note": "Surface level"},
+                {"key": "openness", "label": "Openness", "status": "good", "note": "Invites discussion"}
+            ],
+            "proTip": "Try adding more context or specific examples.",
+            "contextSpecificTip": f"In {context or 'this'} context, be more specific about outcomes.",
+            "likelyResponse": "They might ask for clarification or provide more details.",
+            "nextQuestionSuggestions": ["What would success look like?", "What are the main constraints?"],
+            "empathyScore": 15
+        }
 
 def call_openai_character(persona: PersonaType, question: str, round_num: int, prior_summary: Optional[str] = None):
     """Generate persona character response"""
@@ -683,8 +842,22 @@ def process_turn(session_id: str, req: TurnRequest):
         prior_summary=req.priorSummary
     )
     
-    # Generate feedback
-    feedback_data = call_openai_evaluator(req.question, character_reply)
+    # Generate feedback (V2 if enabled, V1 fallback)
+    user_key = session_id  # Use session_id as user key for MVP
+    
+    if COACHING_V2_ENABLED:
+        # Use V2 evaluator with context awareness
+        import asyncio
+        feedback_data = asyncio.run(call_openai_evaluator_v2(
+            user_question=req.question,
+            character_reply=character_reply,
+            prior_summary=req.priorSummary,
+            context=req.context,
+            user_key=user_key
+        ))
+    else:
+        # Fallback to V1 evaluator
+        feedback_data = call_openai_evaluator(req.question, character_reply)
     
     # Normalize feedback to match existing structure
     score = int(clamp(int(feedback_data.get("score", 70)), 0, 100))
@@ -714,6 +887,18 @@ def process_turn(session_id: str, req: TurnRequest):
         "suggestedUpgrade": feedback_data.get("suggestedUpgrade"),
         "badge": feedback_data.get("badge")
     }
+    
+    # Add V2 fields if present
+    if COACHING_V2_ENABLED:
+        feedback.update({
+            "contextSpecificTip": feedback_data.get("contextSpecificTip"),
+            "likelyResponse": feedback_data.get("likelyResponse"),
+            "nextQuestionSuggestions": feedback_data.get("nextQuestionSuggestions", []),
+            "empathyScore": feedback_data.get("empathyScore", 0)
+        })
+        
+        # Update user trends for personalized coaching
+        update_trends(user_key, feedback)
     
     # Store the turn
     turn_data = {

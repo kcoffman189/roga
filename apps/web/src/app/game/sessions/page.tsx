@@ -22,6 +22,12 @@ type Feedback = {
   proTip?: string;
   suggestedUpgrade?: string;
   badge?: { name: string; label?: string };
+  
+  // V2 Enhanced Fields
+  contextSpecificTip?: string;
+  likelyResponse?: string;
+  nextQuestionSuggestions?: string[];
+  empathyScore?: number;
 };
 
 type Turn = {
@@ -108,7 +114,9 @@ export default function RogaSessionsPage() {
         body: JSON.stringify({
           round: currentRound,
           question,
-          priorSummary
+          priorSummary,
+          context: session?.persona === "business_coach" ? "business" : 
+                  session?.persona === "teacher_mentor" ? "academic" : "personal"
         })
       });
 
@@ -355,6 +363,40 @@ export default function RogaSessionsPage() {
                   <div className="mb-3">
                     <h4 className="font-semibold mb-1 text-blue-700">Pro Tip:</h4>
                     <p className="text-sm text-gray-700">{turn.feedback.proTip}</p>
+                  </div>
+                )}
+                
+                {/* V2 Enhanced Fields */}
+                {turn.feedback.contextSpecificTip && (
+                  <div className="mb-3">
+                    <h4 className="font-semibold mb-1 text-purple-700">Context Tip:</h4>
+                    <p className="text-sm text-gray-700">{turn.feedback.contextSpecificTip}</p>
+                  </div>
+                )}
+                
+                {turn.feedback.likelyResponse && (
+                  <div className="mb-3">
+                    <h4 className="font-semibold mb-1 text-orange-700">Likely Response:</h4>
+                    <p className="text-sm text-gray-700 italic">{turn.feedback.likelyResponse}</p>
+                  </div>
+                )}
+                
+                {turn.feedback.nextQuestionSuggestions && turn.feedback.nextQuestionSuggestions.length > 0 && (
+                  <div className="mb-3">
+                    <h4 className="font-semibold mb-1 text-indigo-700">Follow-ups you could try:</h4>
+                    <ul className="list-disc pl-6 text-sm text-gray-700">
+                      {turn.feedback.nextQuestionSuggestions.map((suggestion, i) => (
+                        <li key={i}>{suggestion}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {typeof turn.feedback.empathyScore === "number" && (
+                  <div className="mb-3">
+                    <div className="inline-flex items-center gap-2 bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-medium">
+                      💝 Empathy Score: {turn.feedback.empathyScore}/25
+                    </div>
                   </div>
                 )}
                 
