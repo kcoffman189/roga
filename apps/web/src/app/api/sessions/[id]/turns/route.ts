@@ -19,8 +19,18 @@ export async function POST(
         round: body.round,
         question: body.question,
         priorSummary: body.priorSummary,
+        context: body.context,
       }),
     });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Backend API error:', res.status, errorText);
+      return NextResponse.json(
+        { error: `Backend error: ${res.status}` },
+        { status: res.status }
+      );
+    }
 
     const data = await res.json();
     

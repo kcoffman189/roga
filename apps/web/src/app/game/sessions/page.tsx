@@ -116,7 +116,12 @@ export default function RogaSessionsPage() {
         })
       });
 
+      if (!res.ok) {
+        throw new Error(`API responded with status: ${res.status}`);
+      }
+
       const turnData: Turn = await res.json();
+      console.log('Turn data received:', turnData); // Debug log
       setTurns(prev => [...prev, turnData]);
       setQuestion("");
       
