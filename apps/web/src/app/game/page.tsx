@@ -52,6 +52,37 @@ interface CoachingFeedbackData {
   };
 }
 
+interface EnhancedCoachingFeedbackData {
+  schema: string;
+  scenario_id?: number;
+  user_question: string;
+  character_reply?: string;
+  coach_feedback: {
+    qi_score: {
+      overall: number;
+      clarity: number;
+      depth: number;
+      relevance: number;
+      empathy: number;
+    };
+    strengths: string;
+    improvement: string;
+    coaching_moment: string;
+    technique_spotlight: {
+      name: string;
+      description: string;
+    };
+    example_upgrades: string[];
+    progress_message: string;
+  };
+  meta: {
+    brand_check: boolean;
+    length_ok: boolean;
+    banned_content: string[];
+    hash: string;
+  };
+}
+
 const scenarios: Scenario[] = [
   {
     id: 1,
@@ -90,7 +121,8 @@ export default function DailyChallengePage() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackData | null>(null);
   const [coachingFeedback, setCoachingFeedback] = useState<CoachingFeedbackData | null>(null);
-  const [useCoachingMode, setUseCoachingMode] = useState(true); // Toggle between old/new feedback
+  const [enhancedFeedback, setEnhancedFeedback] = useState<EnhancedCoachingFeedbackData | null>(null);
+  const [useCoachingMode, setUseCoachingMode] = useState("enhanced"); // "enhanced", "legacy", "original"
   const [isLoading, setIsLoading] = useState(false);
   const [currentScenario, setCurrentScenario] = useState<Scenario>(() => {
     // Start with a random scenario
@@ -102,26 +134,38 @@ export default function DailyChallengePage() {
     
     setIsLoading(true);
     try {
-      const endpoint = useCoachingMode ? '/api/coach' : '/api/ask';
+      let endpoint = '/api/ask';
+      if (useCoachingMode === 'enhanced') {
+        endpoint = '/api/coach/enhanced';
+      } else if (useCoachingMode === 'legacy') {
+        endpoint = '/api/coach';
+      }
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          question: question,
-          scenarioId: currentScenario.id,
-          scenarioTitle: currentScenario.title,
-          scenarioText: currentScenario.text
+          user_question: question,
+          scenario_id: currentScenario.id,
+          scenario_title: currentScenario.title,
+          scenario_text: currentScenario.text
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
         
-        if (useCoachingMode) {
+        // Reset all feedback states
+        setFeedback(null);
+        setCoachingFeedback(null);
+        setEnhancedFeedback(null);
+
+        if (useCoachingMode === 'enhanced') {
+          setEnhancedFeedback(data);
+        } else if (useCoachingMode === 'legacy') {
           setCoachingFeedback(data);
-          setFeedback(null);
         } else {
           setFeedback({
             score: data.score,
@@ -130,13 +174,45 @@ export default function DailyChallengePage() {
             suggestedUpgrade: data.suggestedUpgrade,
             badge: data.badge
           });
-          setCoachingFeedback(null);
         }
         setShowFeedback(true);
       } else {
         console.error('Failed to get feedback');
         // Show hardcoded coaching feedback as fallback
-        if (useCoachingMode) {
+        if (useCoachingMode === 'enhanced') {
+          setEnhancedFeedback({
+            schema: "roga.feedback.v2",
+            scenario_id: currentScenario.id,
+            user_question: question,
+            coach_feedback: {
+              qi_score: {
+                overall: 3,
+                clarity: 3,
+                depth: 2,
+                relevance: 4,
+                empathy: 3
+              },
+              strengths: "Your question shows good awareness of the situation.",
+              improvement: "Try adding more specific details to deepen your question.",
+              coaching_moment: "Great questions combine clarity with depth to uncover what truly matters.",
+              technique_spotlight: {
+                name: "The Clarifier",
+                description: "Focus on making vague situations specific and actionable."
+              },
+              example_upgrades: [
+                "What specific information do I need to move forward?",
+                "Which part of this process needs the most clarity?"
+              ],
+              progress_message: "🌟 Good start! Keep practicing to sharpen your questioning skills."
+            },
+            meta: {
+              brand_check: true,
+              length_ok: true,
+              banned_content: [],
+              hash: "fallback123"
+            }
+          });
+        } else if (useCoachingMode === 'legacy') {
           setCoachingFeedback({
             schema: "roga.feedback.v1",
             scenario_id: currentScenario.id,
@@ -220,6 +296,7 @@ export default function DailyChallengePage() {
     setShowFeedback(false);
     setFeedback(null);
     setCoachingFeedback(null);
+    setEnhancedFeedback(null);
   };
 
   const onNewScenario = () => {
@@ -232,6 +309,7 @@ export default function DailyChallengePage() {
     setShowFeedback(false);
     setFeedback(null);
     setCoachingFeedback(null);
+    setEnhancedFeedback(null);
   };
 
   return (
@@ -286,12 +364,36 @@ export default function DailyChallengePage() {
             />
 
             {/* Mode Toggle */}
-            <div className="mt-4 flex justify-center">
+            <div className="mt-4 flex justify-center gap-2">
               <button
-                onClick={() => setUseCoachingMode(!useCoachingMode)}
-                className="text-sm px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200"
+                onClick={() => setUseCoachingMode("enhanced")}
+                className={`text-sm px-4 py-2 rounded-lg transition-colors ${
+                  useCoachingMode === "enhanced" 
+                    ? "bg-purple-100 text-purple-700 border-2 border-purple-300" 
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
               >
-                {useCoachingMode ? "Using New Coaching Mode ⚡" : "Using Legacy Mode 📊"}
+                Enhanced v2 🚀
+              </button>
+              <button
+                onClick={() => setUseCoachingMode("legacy")}
+                className={`text-sm px-4 py-2 rounded-lg transition-colors ${
+                  useCoachingMode === "legacy" 
+                    ? "bg-blue-100 text-blue-700 border-2 border-blue-300" 
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                Legacy v1 ⚡
+              </button>
+              <button
+                onClick={() => setUseCoachingMode("original")}
+                className={`text-sm px-4 py-2 rounded-lg transition-colors ${
+                  useCoachingMode === "original" 
+                    ? "bg-green-100 text-green-700 border-2 border-green-300" 
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                Original 📊
               </button>
             </div>
 
@@ -328,7 +430,100 @@ export default function DailyChallengePage() {
             <Card className="p-6" style={{width: '600px'}}>
               <h3 className="font-bold text-violet mb-4 text-center">Your Feedback</h3>
               
-              {/* Coaching Mode Feedback */}
+              {/* Enhanced Coaching Mode Feedback (v2) */}
+              {enhancedFeedback && (
+                <>
+                  {/* QI Score Header */}
+                  <div className="text-center mb-6">
+                    <div className="text-4xl font-bold text-teal mb-2">{enhancedFeedback.coach_feedback.qi_score.overall}/5</div>
+                    <div className="text-sm text-gray-600 mb-3">Question Intelligence Score</div>
+                    
+                    {/* Sub-scores Grid */}
+                    <div className="grid grid-cols-4 gap-4 max-w-md mx-auto">
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-blue-600">{enhancedFeedback.coach_feedback.qi_score.clarity}</div>
+                        <div className="text-xs text-gray-500">Clarity</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-green-600">{enhancedFeedback.coach_feedback.qi_score.depth}</div>
+                        <div className="text-xs text-gray-500">Depth</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-purple-600">{enhancedFeedback.coach_feedback.qi_score.relevance}</div>
+                        <div className="text-xs text-gray-500">Relevance</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-pink-600">{enhancedFeedback.coach_feedback.qi_score.empathy}</div>
+                        <div className="text-xs text-gray-500">Empathy</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Strengths */}
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2 text-green-700">✓ Strengths:</h4>
+                    <p className="text-coal/80 text-sm leading-relaxed bg-green-50 p-3 rounded">
+                      {enhancedFeedback.coach_feedback.strengths}
+                    </p>
+                  </div>
+
+                  {/* Improvement */}
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2 text-orange-700">→ Improvement:</h4>
+                    <p className="text-coal/80 text-sm leading-relaxed bg-orange-50 p-3 rounded">
+                      {enhancedFeedback.coach_feedback.improvement}
+                    </p>
+                  </div>
+
+                  {/* Coaching Moment */}
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2 text-blue-700">📖 Coaching Moment:</h4>
+                    <p className="text-coal/80 text-sm leading-relaxed bg-blue-50 p-3 rounded">
+                      {enhancedFeedback.coach_feedback.coaching_moment}
+                    </p>
+                  </div>
+
+                  {/* Technique Spotlight */}
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2 text-purple-700">🔍 Roga Technique Spotlight:</h4>
+                    <div className="bg-purple-50 p-3 rounded">
+                      <h5 className="font-medium text-purple-800 mb-1">{enhancedFeedback.coach_feedback.technique_spotlight.name}</h5>
+                      <p className="text-sm text-purple-700">{enhancedFeedback.coach_feedback.technique_spotlight.description}</p>
+                    </div>
+                  </div>
+
+                  {/* Example Upgrades */}
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2 text-indigo-700">⚡ Example Upgrades:</h4>
+                    <div className="bg-indigo-50 p-3 rounded">
+                      <ul className="list-disc pl-6 text-sm text-indigo-800 space-y-1">
+                        {enhancedFeedback.coach_feedback.example_upgrades.map((upgrade, index) => (
+                          <li key={index} className="italic">&ldquo;{upgrade}&rdquo;</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Progress Message */}
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2 text-teal-700">🌟 Progress Message:</h4>
+                    <p className="text-coal/80 text-sm leading-relaxed bg-teal-50 p-3 rounded font-medium">
+                      {enhancedFeedback.coach_feedback.progress_message}
+                    </p>
+                  </div>
+
+                  {/* Meta Info */}
+                  <div className="mt-6 text-center">
+                    <div className="text-xs text-gray-500">
+                      v2 Enhanced • Quality: {enhancedFeedback.meta.brand_check ? '✓ Brand' : '✗ Brand'} • 
+                      {enhancedFeedback.meta.length_ok ? ' ✓ Length' : ' ✗ Length'} • 
+                      Hash: {enhancedFeedback.meta.hash}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Legacy Coaching Mode Feedback (v1) */}
               {coachingFeedback && (
                 <>
                   {/* Score */}

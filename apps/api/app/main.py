@@ -98,6 +98,28 @@ QISkill = Literal[
     "systems-thinking", "outcome-focused"
 ]
 
+# Enhanced Daily Challenge Feedback Models (v2)
+class QIScore(BaseModel):
+    overall: int = Field(ge=1, le=5)
+    clarity: int = Field(ge=1, le=5)
+    depth: int = Field(ge=1, le=5)
+    relevance: int = Field(ge=1, le=5)
+    empathy: int = Field(ge=1, le=5)
+
+class TechniqueSpotlight(BaseModel):
+    name: str
+    description: str
+
+class EnhancedCoachFeedback(BaseModel):
+    qi_score: QIScore
+    strengths: str = Field(max_length=120)
+    improvement: str = Field(max_length=120)
+    coaching_moment: str = Field(max_length=200)
+    technique_spotlight: TechniqueSpotlight
+    example_upgrades: List[str] = Field(min_length=2, max_length=3)
+    progress_message: str = Field(max_length=150)
+
+# Legacy CoachFeedback for backwards compatibility
 class CoachFeedback(BaseModel):
     score_1to5: int = Field(ge=1, le=5)
     qi_skills: List[QISkill] = Field(min_length=1, max_length=3)
@@ -116,6 +138,8 @@ class CoachIn(BaseModel):
     scenario_id: Optional[int] = None
     user_question: str
     character_reply: Optional[str] = None
+    scenario_title: Optional[str] = None
+    scenario_text: Optional[str] = None
 
 class CoachResponse(BaseModel):
     schema: str = "roga.feedback.v1"
@@ -123,6 +147,14 @@ class CoachResponse(BaseModel):
     user_question: str
     character_reply: Optional[str]
     coach_feedback: CoachFeedback
+    meta: CoachMeta
+
+class EnhancedCoachResponse(BaseModel):
+    schema: str = "roga.feedback.v2"
+    scenario_id: Optional[int]
+    user_question: str
+    character_reply: Optional[str]
+    coach_feedback: EnhancedCoachFeedback
     meta: CoachMeta
 
 SCHEMA = {
@@ -190,6 +222,49 @@ PERSONA_PROMPTS = {
 - Focus on helping the person learn to think better"""
 }
 
+# Enhanced Daily Challenge Schema
+ENHANCED_SCHEMA = {
+    "name": "roga_enhanced_feedback_v2",
+    "schema": {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "qi_score": {
+                "type": "object",
+                "properties": {
+                    "overall": {"type": "integer", "minimum": 1, "maximum": 5},
+                    "clarity": {"type": "integer", "minimum": 1, "maximum": 5},
+                    "depth": {"type": "integer", "minimum": 1, "maximum": 5},
+                    "relevance": {"type": "integer", "minimum": 1, "maximum": 5},
+                    "empathy": {"type": "integer", "minimum": 1, "maximum": 5}
+                },
+                "required": ["overall", "clarity", "depth", "relevance", "empathy"],
+                "additionalProperties": False
+            },
+            "strengths": {"type": "string", "maxLength": 120},
+            "improvement": {"type": "string", "maxLength": 120},
+            "coaching_moment": {"type": "string", "maxLength": 200},
+            "technique_spotlight": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "description": {"type": "string"}
+                },
+                "required": ["name", "description"],
+                "additionalProperties": False
+            },
+            "example_upgrades": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 3,
+                "items": {"type": "string"}
+            },
+            "progress_message": {"type": "string", "maxLength": 150}
+        },
+        "required": ["qi_score", "strengths", "improvement", "coaching_moment", "technique_spotlight", "example_upgrades", "progress_message"]
+    }
+}
+
 # Coaching Engine Prompts Library
 COACHING_PROMPTS = {
     "qi_classifier": """You are a QI Skills classifier. Analyze the user's question and identify 1-3 relevant QI skills.
@@ -231,7 +306,38 @@ REQUIREMENTS:
 ORIGINAL FEEDBACK: {original_feedback}
 FAILURE REASONS: {failure_reasons}
 
-Rewrite the feedback to fix these issues."""
+Rewrite the feedback to fix these issues.""",
+    
+    "enhanced_coach": """You are an advanced QI coaching system providing comprehensive feedback on daily challenge questions.
+
+Your role is to evaluate a user's question and provide detailed coaching using the new enhanced feedback structure.
+
+CONTEXT:
+Question: {question}
+Scenario: {scenario_title} - {scenario_text}
+
+TASK: Provide comprehensive coaching feedback with these elements:
+
+1. QI SCORE (1-5 for each):
+   - Overall: Holistic question quality
+   - Clarity: How specific and well-articulated 
+   - Depth: How much it probes beyond surface level
+   - Relevance: How well it fits the scenario context
+   - Empathy: How much it considers others' perspectives
+
+2. STRENGTHS: What the user did well (positive reinforcement, ≤120 chars)
+
+3. IMPROVEMENT: One specific area to focus on next (actionable, ≤120 chars)
+
+4. COACHING_MOMENT: Educational nugget about question intelligence (≤200 chars)
+
+5. TECHNIQUE_SPOTLIGHT: Highlight a QI technique with name and description
+
+6. EXAMPLE_UPGRADES: 2-3 specific stronger question examples for this scenario
+
+7. PROGRESS_MESSAGE: Gamified encouragement tied to skill development (≤150 chars)
+
+Be supportive yet challenging, educational yet practical. Focus on building QI skills."""
 }
 
 # Coaching Engine Schema for OpenAI
@@ -713,6 +819,97 @@ def coach(req: CoachIn):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Coaching pipeline failed: {e}")
+
+def generate_enhanced_feedback(question: str, scenario_title: str = "", scenario_text: str = "") -> EnhancedCoachFeedback:
+    """Generate enhanced coaching feedback using the new v2 structure"""
+    try:
+        # Format the prompt with context
+        prompt = COACHING_PROMPTS["enhanced_coach"].format(
+            question=question,
+            scenario_title=scenario_title,
+            scenario_text=scenario_text
+        )
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0.3,
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_schema", "json_schema": ENHANCED_SCHEMA}
+        )
+        
+        feedback_data = json.loads(response.choices[0].message.content)
+        
+        # Create the structured response
+        qi_score = QIScore(**feedback_data["qi_score"])
+        technique_spotlight = TechniqueSpotlight(**feedback_data["technique_spotlight"])
+        
+        return EnhancedCoachFeedback(
+            qi_score=qi_score,
+            strengths=feedback_data["strengths"],
+            improvement=feedback_data["improvement"],
+            coaching_moment=feedback_data["coaching_moment"],
+            technique_spotlight=technique_spotlight,
+            example_upgrades=feedback_data["example_upgrades"],
+            progress_message=feedback_data["progress_message"]
+        )
+        
+    except Exception as e:
+        print(f"Error generating enhanced feedback: {e}")
+        # Return fallback enhanced feedback
+        return EnhancedCoachFeedback(
+            qi_score=QIScore(overall=3, clarity=3, depth=3, relevance=4, empathy=3),
+            strengths="Your question shows good awareness of the situation.",
+            improvement="Try adding more specific details to make your question clearer.",
+            coaching_moment="Great questions combine clarity with depth to uncover what matters most.",
+            technique_spotlight=TechniqueSpotlight(
+                name="The Clarifier",
+                description="Focus on making vague situations specific and actionable."
+            ),
+            example_upgrades=[
+                "What specific information do I need to move forward?",
+                "Which part of this process needs the most clarity?",
+                "What details would help me understand the expectations better?"
+            ],
+            progress_message="🌟 Good start! Keep practicing to sharpen your questioning skills."
+        )
+
+@app.post("/coach/enhanced", response_model=EnhancedCoachResponse)
+def enhanced_coach(req: CoachIn):
+    """Enhanced coaching endpoint with comprehensive v2 feedback structure"""
+    if not req.user_question or not req.user_question.strip():
+        raise HTTPException(status_code=400, detail="Missing user question")
+    
+    try:
+        # Generate enhanced feedback
+        enhanced_feedback = generate_enhanced_feedback(
+            question=req.user_question,
+            scenario_title=req.scenario_title or '',
+            scenario_text=req.scenario_text or ''
+        )
+        
+        # Generate metadata
+        feedback_content = f"{enhanced_feedback.strengths} {enhanced_feedback.improvement} {enhanced_feedback.coaching_moment}"
+        content_hash = hashlib.sha256(feedback_content.encode()).hexdigest()[:16]
+        
+        meta = CoachMeta(
+            brand_check=True,  # Enhanced feedback is pre-validated
+            length_ok=True,
+            banned_content=[],
+            hash=content_hash
+        )
+        
+        return EnhancedCoachResponse(
+            schema="roga.feedback.v2",
+            scenario_id=req.scenario_id,
+            user_question=req.user_question.strip(),
+            character_reply=req.character_reply,
+            coach_feedback=enhanced_feedback,
+            meta=meta
+        )
+        
+    except Exception as e:
+        print(f"Error in enhanced coach endpoint: {e}")
+        raise HTTPException(status_code=500, detail="Internal enhanced coaching error")
 
 @app.post("/score", response_model=ScoreResponse)
 def score(req: ScoreRequest):

@@ -1,0 +1,99 @@
+Roga Daily Challenge Feedback — Implementation Guide
+🎯 Purpose
+
+The current feedback section is too simple (QI Skill, one improvement, one pro tip). We need more robust coaching feedback to:
+
+Teach Question Intelligence (QI) skills in context.
+
+Motivate users with actionable upgrades.
+
+Build stickiness through encouragement and progress framing.
+
+🧩 New Feedback Structure
+
+Each Daily Challenge attempt should return the following fields:
+
+{
+  "qi_score": {
+    "overall": 4,
+    "clarity": 4,
+    "depth": 3,
+    "relevance": 5,
+    "empathy": 2
+  },
+  "strengths": "You showed strong clarifying instincts — you reduced ambiguity and made the task clearer.",
+  "improvement": "Add depth by asking why this step matters, not just what it is.",
+  "coaching_moment": "Clarifying questions reduce uncertainty, but deep questions uncover hidden assumptions. Pairing both makes your question much more powerful.",
+  "technique_spotlight": {
+    "name": "The Clarifier",
+    "description": "A clarifying question works best when it targets missing details. Aim for precision, not repetition."
+  },
+  "example_upgrades": [
+    "What specific deliverable do we need to complete first?",
+    "Which part of the process is slowing us down the most?",
+    "Who needs to approve this step before we move forward?"
+  ],
+  "progress_message": "🌟 Nice work — you’re on track toward Clarifier Level 2. Keep sharpening your questions!"
+}
+
+🎨 UI Layout (Suggested)
+
+Header:
+
+Show QI Score prominently (overall 1–5 stars or numeric).
+
+Include sub-scores in a compact grid (Clarity, Depth, Relevance, Empathy).
+
+Body Sections:
+
+✓ Strengths → short positive feedback.
+
+→ Improvement → one targeted improvement suggestion.
+
+📖 Coaching Moment → 1–2 sentences teaching nugget from the QI library.
+
+🔍 Roga Technique Spotlight → highlight taxonomy skill (name + description).
+
+⚡ Example Upgrades → list 2–3 stronger question examples.
+
+🌟 Progress Message → gamified encouragement tied to skill level.
+
+🔗 Integration Notes
+
+Source of Content:
+
+Feedback templates should be stored in the QI Knowledge Base (taxonomy-linked).
+
+Backend should select appropriate template based on detected skill + performance case.
+
+Consistency:
+
+Always return all fields, even if empty (so frontend doesn’t break).
+
+Ensure example upgrades rotate (to avoid repetition).
+
+Scoring:
+
+qi_score.overall = 1–5 (derived from taxonomy rubric).
+
+Sub-scores map to QI dimensions (Clarity, Depth, Relevance, Empathy).
+
+Gamification Hook:
+
+Tie progress_message to XP + streak logic.
+
+Example: “You’re on track for Clarifier Level 2.”
+
+✅ Acceptance Criteria
+
+Feedback screen displays all sections in order.
+
+Example upgrades are shown as a list, not a single line.
+
+Coaching moment + technique spotlight rotate per scenario.
+
+Sub-scores are visible but secondary to overall QI Score.
+
+Progress message matches gamification system (levels, badges).
+
+This structure ensures every user feels like they’re getting personalized coaching, not just a generic note. It also builds your QI dataset (every feedback instance logged with taxonomy + score).
