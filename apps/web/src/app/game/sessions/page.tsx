@@ -417,6 +417,16 @@ export default function RogaSessionsPage() {
             <Card className="p-6">
               <h3 className="font-bold text-lg mb-4">Round {currentRound}</h3>
               
+              {/* Scenario Description */}
+              {currentRound === 1 && (
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+                  <h4 className="font-semibold mb-2 text-gray-700">Your Scenario:</h4>
+                  <p className="text-gray-700 text-sm leading-relaxed">
+                    {SCENARIOS.find(s => s.persona === session?.persona)?.scene}
+                  </p>
+                </div>
+              )}
+              
               <textarea
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
