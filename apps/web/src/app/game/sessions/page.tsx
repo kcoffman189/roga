@@ -73,30 +73,79 @@ export default function RogaSessionsPage() {
   const startSession = async (scenario: SessionScenario) => {
     setIsLoading(true);
     try {
+      console.log('Starting session with scenario:', scenario);
+      
+      const requestBody = {
+        persona: scenario.persona,
+        topic: scenario.scene,
+        difficulty: "intermediate",
+        roundsPlanned: scenario.rounds
+      };
+      console.log('Session request body:', requestBody);
+
       const res = await fetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          persona: scenario.persona,
-          topic: scenario.scene,
-          difficulty: "intermediate",
-          roundsPlanned: scenario.rounds
-        })
+        body: JSON.stringify(requestBody)
       });
       
-      const sessionData: Session = await res.json();
+      console.log('Session API response:', {
+        status: res.status,
+        statusText: res.statusText
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Session API error:', errorText);
+        throw new Error(`Failed to create session: ${res.status} - ${errorText}`);
+      }
+      
+      let sessionData: Session;
+      try {
+        const responseText = await res.text();
+        console.log('Session response text:', responseText);
+        sessionData = JSON.parse(responseText) as Session;
+        console.log('Parsed session data:', sessionData);
+      } catch (parseError) {
+        console.error('Session JSON parse error:', parseError);
+        throw new Error(`Failed to parse session response: ${parseError}`);
+      }
+
       setSession(sessionData);
       setCurrentScenario(scenario);
       setGameState('playing');
+      console.log('Session started successfully');
     } catch (error) {
       console.error('Failed to start session:', error);
+      alert(`Failed to start session: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   const submitTurn = async () => {
-    if (!question.trim() || !session) return;
+    console.log('submitTurn function called!');
+    console.log('Current state:', {
+      questionLength: question.length,
+      questionTrimmed: question.trim(),
+      hasSession: !!session,
+      isLoading,
+      currentRound
+    });
+
+    if (!question.trim() || !session) {
+      console.error('Cannot submit turn:', { question: question.trim(), session: !!session });
+      return;
+    }
+    
+    console.log('Submitting turn:', {
+      sessionId: session.id,
+      round: currentRound,
+      questionLength: question.length,
+      context: currentScenario?.context
+    });
+    
+    console.log('Setting isLoading to true...');
     setIsLoading(true);
 
     try {
@@ -104,6 +153,13 @@ export default function RogaSessionsPage() {
       const priorSummary = turns.slice(-2)
         .map(t => `r${t.round}: "${t.question}" -> "${t.characterReply.substring(0, 50)}..."`)
         .join(" | ");
+
+      console.log('Making API request with body:', {
+        round: currentRound,
+        question,
+        priorSummary,
+        context: currentScenario?.context || "business"
+      });
 
       const res = await fetch(`/api/sessions/${session.id}/turns`, {
         method: 'POST',
@@ -116,13 +172,40 @@ export default function RogaSessionsPage() {
         })
       });
 
+      console.log('API response received:', {
+        status: res.status,
+        statusText: res.statusText,
+        headers: Object.fromEntries(res.headers.entries())
+      });
+
       if (!res.ok) {
-        throw new Error(`API responded with status: ${res.status}`);
+        const errorText = await res.text();
+        console.error('API error response text:', errorText);
+        throw new Error(`API responded with status: ${res.status} - ${errorText}`);
       }
 
-      const turnData: Turn = await res.json();
-      console.log('Turn data received:', turnData); // Debug log
-      setTurns(prev => [...prev, turnData]);
+      let turnData: Turn;
+      try {
+        const responseText = await res.text();
+        console.log('Raw response text:', responseText);
+        turnData = JSON.parse(responseText) as Turn;
+        console.log('Parsed turn data:', turnData);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        console.error('Response was not valid JSON');
+        throw new Error(`Failed to parse response as JSON: ${parseError}`);
+      }
+
+      // Validate the turn data structure
+      if (!turnData || typeof turnData !== 'object') {
+        console.error('Invalid turn data structure:', turnData);
+        throw new Error('Received invalid turn data from API');
+      }
+
+      setTurns(prev => {
+        console.log('Updating turns array, current length:', prev.length);
+        return [...prev, turnData];
+      });
       setQuestion("");
       
       if (currentRound >= 5) {
@@ -133,6 +216,15 @@ export default function RogaSessionsPage() {
       }
     } catch (error) {
       console.error('Failed to submit turn:', error);
+      console.error('Error details:', {
+        sessionId: session?.id,
+        currentRound,
+        question,
+        context: currentScenario?.context,
+        error: error instanceof Error ? error.message : error
+      });
+      // Show user-friendly error
+      alert(`Error submitting question: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -445,7 +537,21 @@ export default function RogaSessionsPage() {
               
               <div className="mt-4 flex justify-center">
                 <Button
-                  onClick={submitTurn}
+                  onClick={(e) => {
+                    console.log('Button clicked!', e);
+                    console.log('Button disabled?', isLoading || !question.trim());
+                    console.log('About to call submitTurn...');
+                    
+                    try {
+                      submitTurn().catch(error => {
+                        console.error('Uncaught error in submitTurn:', error);
+                        alert(`Uncaught error: ${error}`);
+                      });
+                    } catch (syncError) {
+                      console.error('Synchronous error calling submitTurn:', syncError);
+                      alert(`Sync error: ${syncError}`);
+                    }
+                  }}
                   disabled={isLoading || !question.trim()}
                   className="text-lg px-8 py-4 border-0"
                 >
