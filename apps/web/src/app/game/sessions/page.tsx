@@ -58,7 +58,7 @@ type Session = {
 
 type GameState = 'scenario-selection' | 'playing' | 'completed';
 
-const SCENARIOS: SessionScenario[] = sessionsData;
+const SCENARIOS: SessionScenario[] = sessionsData as SessionScenario[];
 
 export default function RogaSessionsPage() {
   const [gameState, setGameState] = useState<GameState>('scenario-selection');
