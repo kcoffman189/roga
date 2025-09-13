@@ -31,6 +31,27 @@ interface FeedbackData {
   };
 }
 
+interface CoachingFeedbackData {
+  schema: string;
+  scenario_id?: number;
+  user_question: string;
+  character_reply?: string;
+  coach_feedback: {
+    score_1to5: number;
+    qi_skills: string[];
+    why_it_works: string;
+    improvement: string;
+    pro_tip: string;
+    example_upgrade: string;
+  };
+  meta: {
+    brand_check: boolean;
+    length_ok: boolean;
+    banned_content: string[];
+    hash: string;
+  };
+}
+
 const scenarios: Scenario[] = [
   {
     id: 1,
@@ -68,6 +89,8 @@ export default function DailyChallengePage() {
   const [question, setQuestion] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackData | null>(null);
+  const [coachingFeedback, setCoachingFeedback] = useState<CoachingFeedbackData | null>(null);
+  const [useCoachingMode, setUseCoachingMode] = useState(true); // Toggle between old/new feedback
   const [isLoading, setIsLoading] = useState(false);
   const [currentScenario, setCurrentScenario] = useState<Scenario>(() => {
     // Start with a random scenario
@@ -79,7 +102,8 @@ export default function DailyChallengePage() {
     
     setIsLoading(true);
     try {
-      const response = await fetch('/api/ask', {
+      const endpoint = useCoachingMode ? '/api/coach' : '/api/ask';
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -94,17 +118,85 @@ export default function DailyChallengePage() {
 
       if (response.ok) {
         const data = await response.json();
-        setFeedback({
-          score: data.score,
-          rubric: data.rubric,
-          proTip: data.proTip,
-          suggestedUpgrade: data.suggestedUpgrade,
-          badge: data.badge
-        });
+        
+        if (useCoachingMode) {
+          setCoachingFeedback(data);
+          setFeedback(null);
+        } else {
+          setFeedback({
+            score: data.score,
+            rubric: data.rubric,
+            proTip: data.proTip,
+            suggestedUpgrade: data.suggestedUpgrade,
+            badge: data.badge
+          });
+          setCoachingFeedback(null);
+        }
         setShowFeedback(true);
       } else {
         console.error('Failed to get feedback');
-        // Show hardcoded feedback as fallback
+        // Show hardcoded coaching feedback as fallback
+        if (useCoachingMode) {
+          setCoachingFeedback({
+            schema: "roga.feedback.v1",
+            scenario_id: currentScenario.id,
+            user_question: question,
+            coach_feedback: {
+              score_1to5: 4,
+              qi_skills: ["clarifying"],
+              why_it_works: "Shows good questioning instinct",
+              improvement: "Add more specific context",
+              pro_tip: "Try the clarifying technique for better results",
+              example_upgrade: "What specific deliverable do we need to complete first?"
+            },
+            meta: {
+              brand_check: true,
+              length_ok: true,
+              banned_content: [],
+              hash: "fallback123"
+            }
+          });
+          setFeedback(null);
+        } else {
+          setFeedback({
+            score: 85,
+            rubric: [
+              { key: 'clarity', label: 'Clarity', status: 'good', note: 'Specific and scoped.' },
+              { key: 'depth', label: 'Depth', status: 'warn', note: 'Could probe deeper.' },
+              { key: 'insight', label: 'Insight', status: 'good', note: 'Shows good perspective.' },
+              { key: 'openness', label: 'Openness', status: 'good', note: 'Invites more info.' }
+            ],
+            proTip: 'Try being more specific to get clearer directions from your teacher.'
+          });
+          setCoachingFeedback(null);
+        }
+        setShowFeedback(true);
+      }
+    } catch (error) {
+      console.error('Error calling API:', error);
+      // Show hardcoded feedback as fallback
+      if (useCoachingMode) {
+        setCoachingFeedback({
+          schema: "roga.feedback.v1", 
+          scenario_id: currentScenario.id,
+          user_question: question,
+          coach_feedback: {
+            score_1to5: 4,
+            qi_skills: ["clarifying"],
+            why_it_works: "Shows good questioning instinct",
+            improvement: "Add more specific context", 
+            pro_tip: "Try the clarifying technique for better results",
+            example_upgrade: "What specific deliverable do we need to complete first?"
+          },
+          meta: {
+            brand_check: true,
+            length_ok: true,
+            banned_content: [],
+            hash: "fallback123"
+          }
+        });
+        setFeedback(null);
+      } else {
         setFeedback({
           score: 85,
           rubric: [
@@ -115,21 +207,8 @@ export default function DailyChallengePage() {
           ],
           proTip: 'Try being more specific to get clearer directions from your teacher.'
         });
-        setShowFeedback(true);
+        setCoachingFeedback(null);
       }
-    } catch (error) {
-      console.error('Error calling API:', error);
-      // Show hardcoded feedback as fallback
-      setFeedback({
-        score: 85,
-        rubric: [
-          { key: 'clarity', label: 'Clarity', status: 'good', note: 'Specific and scoped.' },
-          { key: 'depth', label: 'Depth', status: 'warn', note: 'Could probe deeper.' },
-          { key: 'insight', label: 'Insight', status: 'good', note: 'Shows good perspective.' },
-          { key: 'openness', label: 'Openness', status: 'good', note: 'Invites more info.' }
-        ],
-        proTip: 'Try being more specific to get clearer directions from your teacher.'
-      });
       setShowFeedback(true);
     } finally {
       setIsLoading(false);
@@ -140,6 +219,7 @@ export default function DailyChallengePage() {
     setQuestion("");
     setShowFeedback(false);
     setFeedback(null);
+    setCoachingFeedback(null);
   };
 
   const onNewScenario = () => {
@@ -151,6 +231,7 @@ export default function DailyChallengePage() {
     setQuestion("");
     setShowFeedback(false);
     setFeedback(null);
+    setCoachingFeedback(null);
   };
 
   return (
@@ -204,6 +285,16 @@ export default function DailyChallengePage() {
               className="mt-6 w-full min-h-[140px] rounded-xl border border-coal/20 bg-fog p-4 text-coal placeholder:text-coal/50 focus:outline-none focus:shadow-[0_0_0_3px_rgba(123,97,255,0.35)]"
             />
 
+            {/* Mode Toggle */}
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={() => setUseCoachingMode(!useCoachingMode)}
+                className="text-sm px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200"
+              >
+                {useCoachingMode ? "Using New Coaching Mode ⚡" : "Using Legacy Mode 📊"}
+              </button>
+            </div>
+
             {/* Actions */}
             <div className="mt-6 flex flex-wrap justify-center" style={{gap: '20px'}}>
               <Button
@@ -237,80 +328,151 @@ export default function DailyChallengePage() {
             <Card className="p-6" style={{width: '600px'}}>
               <h3 className="font-bold text-violet mb-4 text-center">Your Feedback</h3>
               
-              {/* Score */}
-              <div className="text-center mb-6">
-                <div className="text-4xl font-bold text-teal mb-2">{feedback?.score || 0}</div>
-                <div className="text-sm text-gray-600">Overall Score</div>
-              </div>
-
-              {/* Feedback Text */}
-              {feedback?.suggestedUpgrade && (
-                <div className="mb-6">
-                  <h4 className="font-semibold mb-2">Suggested Improvement:</h4>
-                  <p className="text-coal/80 text-sm leading-relaxed">
-                    {feedback.suggestedUpgrade}
-                  </p>
-                </div>
-              )}
-
-              {/* Skills Breakdown */}
-              <div className="mb-6">
-                <h4 className="font-semibold mb-3">Skills Assessment:</h4>
-                <div className="space-y-3">
-                  {feedback?.rubric.map((item) => {
-                    const getStatusColor = (status: string) => {
-                      switch (status) {
-                        case 'good': return 'bg-teal';
-                        case 'warn': return 'bg-yellow-500';
-                        case 'bad': return 'bg-red-500';
-                        default: return 'bg-gray-200';
-                      }
-                    };
-                    
-                    const getStatusDots = (status: string) => {
-                      const filled = status === 'good' ? 4 : status === 'warn' ? 2 : 1;
-                      return Array.from({ length: 4 }, (_, i) => (
-                        <div 
-                          key={i} 
-                          className={`w-3 h-3 rounded-full ${i < filled ? getStatusColor(status) : 'bg-gray-200'}`}
-                        ></div>
-                      ));
-                    };
-
-                    return (
-                      <div key={item.key}>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">{item.label}</span>
-                          <div className="flex gap-1">
-                            {getStatusDots(item.status)}
-                          </div>
-                        </div>
-                        <p className="text-xs text-coal/70 mt-1">{item.note}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Pro Tip */}
-              {feedback?.proTip && (
-                <div className="bg-fog rounded-lg p-4">
-                  <h5 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                    <span>💡</span> Pro Tip:
-                  </h5>
-                  <p className="text-xs text-coal/70">
-                    {feedback.proTip}
-                  </p>
-                </div>
-              )}
-              
-              {/* Badge */}
-              {feedback?.badge && (
-                <div className="mt-4 text-center">
-                  <div className="inline-flex items-center gap-2 bg-violet/10 text-violet px-4 py-2 rounded-full text-sm font-medium">
-                    🏆 {feedback.badge.name}: {feedback.badge.label}
+              {/* Coaching Mode Feedback */}
+              {coachingFeedback && (
+                <>
+                  {/* Score */}
+                  <div className="text-center mb-6">
+                    <div className="text-4xl font-bold text-teal mb-2">{coachingFeedback.coach_feedback.score_1to5}/5</div>
+                    <div className="text-sm text-gray-600">Question Intelligence Score</div>
                   </div>
-                </div>
+
+                  {/* QI Skills */}
+                  <div className="mb-6">
+                    <h4 className="font-semibold mb-2">QI Skills Used:</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {coachingFeedback.coach_feedback.qi_skills.map((skill, index) => (
+                        <span key={index} className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm">
+                          {skill.replace('-', ' ')}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Why It Works */}
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2 text-green-700">✓ Why It Works:</h4>
+                    <p className="text-coal/80 text-sm leading-relaxed bg-green-50 p-3 rounded">
+                      {coachingFeedback.coach_feedback.why_it_works}
+                    </p>
+                  </div>
+
+                  {/* Improvement */}
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2 text-orange-700">→ Improvement:</h4>
+                    <p className="text-coal/80 text-sm leading-relaxed bg-orange-50 p-3 rounded">
+                      {coachingFeedback.coach_feedback.improvement}
+                    </p>
+                  </div>
+
+                  {/* Pro Tip */}
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2 text-blue-700">💡 Pro Tip:</h4>
+                    <p className="text-coal/80 text-sm leading-relaxed bg-blue-50 p-3 rounded">
+                      {coachingFeedback.coach_feedback.pro_tip}
+                    </p>
+                  </div>
+
+                  {/* Example Upgrade */}
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2 text-purple-700">⚡ Example Upgrade:</h4>
+                    <div className="bg-purple-50 p-3 rounded">
+                      <p className="text-sm text-purple-800 italic">
+                        "{coachingFeedback.coach_feedback.example_upgrade}"
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Meta Info */}
+                  <div className="mt-6 text-center">
+                    <div className="text-xs text-gray-500">
+                      Quality: {coachingFeedback.meta.brand_check ? '✓ Brand' : '✗ Brand'} • 
+                      {coachingFeedback.meta.length_ok ? ' ✓ Length' : ' ✗ Length'} • 
+                      Hash: {coachingFeedback.meta.hash}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Legacy Mode Feedback */}
+              {feedback && (
+                <>
+                  {/* Score */}
+                  <div className="text-center mb-6">
+                    <div className="text-4xl font-bold text-teal mb-2">{feedback.score || 0}</div>
+                    <div className="text-sm text-gray-600">Overall Score</div>
+                  </div>
+
+                  {/* Feedback Text */}
+                  {feedback.suggestedUpgrade && (
+                    <div className="mb-6">
+                      <h4 className="font-semibold mb-2">Suggested Improvement:</h4>
+                      <p className="text-coal/80 text-sm leading-relaxed">
+                        {feedback.suggestedUpgrade}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Skills Breakdown */}
+                  <div className="mb-6">
+                    <h4 className="font-semibold mb-3">Skills Assessment:</h4>
+                    <div className="space-y-3">
+                      {feedback.rubric.map((item) => {
+                        const getStatusColor = (status: string) => {
+                          switch (status) {
+                            case 'good': return 'bg-teal';
+                            case 'warn': return 'bg-yellow-500';
+                            case 'bad': return 'bg-red-500';
+                            default: return 'bg-gray-200';
+                          }
+                        };
+                        
+                        const getStatusDots = (status: string) => {
+                          const filled = status === 'good' ? 4 : status === 'warn' ? 2 : 1;
+                          return Array.from({ length: 4 }, (_, i) => (
+                            <div 
+                              key={i} 
+                              className={`w-3 h-3 rounded-full ${i < filled ? getStatusColor(status) : 'bg-gray-200'}`}
+                            ></div>
+                          ));
+                        };
+
+                        return (
+                          <div key={item.key}>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm font-medium">{item.label}</span>
+                              <div className="flex gap-1">
+                                {getStatusDots(item.status)}
+                              </div>
+                            </div>
+                            <p className="text-xs text-coal/70 mt-1">{item.note}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Pro Tip */}
+                  {feedback.proTip && (
+                    <div className="bg-fog rounded-lg p-4">
+                      <h5 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                        <span>💡</span> Pro Tip:
+                      </h5>
+                      <p className="text-xs text-coal/70">
+                        {feedback.proTip}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Badge */}
+                  {feedback.badge && (
+                    <div className="mt-4 text-center">
+                      <div className="inline-flex items-center gap-2 bg-violet/10 text-violet px-4 py-2 rounded-full text-sm font-medium">
+                        🏆 {feedback.badge.name}: {feedback.badge.label}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </Card>
           )}

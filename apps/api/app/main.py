@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import List, Literal, Optional, Dict, Any
-import os, json, uuid
+import os, json, uuid, hashlib
 from openai import OpenAI
 
 app = FastAPI()
@@ -81,6 +81,40 @@ class CompleteSessionResponse(BaseModel):
     bestQuestion: str
     badges: List[str]
 
+# Coaching Engine Models (v1.0)
+QISkill = Literal[
+    "clarifying", "probing", "criteria-setting", "perspective-taking", 
+    "assumption-testing", "root-cause", "prioritizing", "exploring-alternatives",
+    "systems-thinking", "outcome-focused"
+]
+
+class CoachFeedback(BaseModel):
+    score_1to5: int = Field(ge=1, le=5)
+    qi_skills: List[QISkill] = Field(min_length=1, max_length=3)
+    why_it_works: str = Field(max_length=80)
+    improvement: str = Field(max_length=80)
+    pro_tip: str = Field(max_length=80)
+    example_upgrade: str = Field(max_length=150)
+
+class CoachMeta(BaseModel):
+    brand_check: bool
+    length_ok: bool
+    banned_content: List[str] = []
+    hash: str
+
+class CoachIn(BaseModel):
+    scenario_id: Optional[int] = None
+    user_question: str
+    character_reply: Optional[str] = None
+
+class CoachResponse(BaseModel):
+    schema: str = "roga.feedback.v1"
+    scenario_id: Optional[int]
+    user_question: str
+    character_reply: Optional[str]
+    coach_feedback: CoachFeedback
+    meta: CoachMeta
+
 SCHEMA = {
     "name": "roga_scorecard_v1",
     "schema": {
@@ -146,6 +180,78 @@ PERSONA_PROMPTS = {
 - Focus on helping the person learn to think better"""
 }
 
+# Coaching Engine Prompts Library
+COACHING_PROMPTS = {
+    "qi_classifier": """You are a QI Skills classifier. Analyze the user's question and identify 1-3 relevant QI skills.
+
+QI Skills taxonomy:
+- clarifying: Making ambiguous things specific and concrete
+- probing: Digging deeper to understand causes, mechanisms, or hidden factors
+- criteria-setting: Establishing success metrics or evaluation standards
+- perspective-taking: Exploring different viewpoints or stakeholders
+- assumption-testing: Questioning underlying beliefs or givens
+- root-cause: Finding fundamental causes rather than symptoms
+- prioritizing: Determining what matters most or sequencing
+- exploring-alternatives: Considering different options or approaches
+- systems-thinking: Understanding interconnections and broader context
+- outcome-focused: Targeting specific results or end states
+
+Return ONLY a JSON array of 1-3 skill names. Example: ["clarifying", "probing"]""",
+
+    "judge": """You are a coaching feedback judge. Evaluate the coaching feedback using these criteria:
+
+RUBRIC v1.1:
+- Clarity (1-5): Is the feedback clear, specific, and actionable?
+- QI Alignment (1-5): Does it properly address QI skill development?
+- Brand (1-5): Is it supportive, clever, concise, and encouraging?
+
+THRESHOLDS: Clarity ≥4, QI Alignment ≥4, Brand ≥5
+
+Return JSON with scores: {"clarity": 4, "qi_alignment": 4, "brand": 5, "passes": true}""",
+
+    "rewrite": """You are a coaching feedback rewriter. Take the failed feedback and improve it to meet these standards:
+
+REQUIREMENTS:
+- ≤80 words total
+- Structure: Why it works → Improvement → Pro Tip → Example upgrade
+- Tone: supportive, clever, concise
+- Must name ≥1 QI skill explicitly
+- Be educational and actionable
+
+ORIGINAL FEEDBACK: {original_feedback}
+FAILURE REASONS: {failure_reasons}
+
+Rewrite the feedback to fix these issues."""
+}
+
+# Coaching Engine Schema for OpenAI
+COACHING_SCHEMA = {
+    "name": "roga_coaching_v1",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "score_1to5": {"type": "integer", "minimum": 1, "maximum": 5},
+            "qi_skills": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 3,
+                "items": {
+                    "type": "string",
+                    "enum": ["clarifying", "probing", "criteria-setting", "perspective-taking", 
+                            "assumption-testing", "root-cause", "prioritizing", "exploring-alternatives",
+                            "systems-thinking", "outcome-focused"]
+                }
+            },
+            "why_it_works": {"type": "string", "maxLength": 80},
+            "improvement": {"type": "string", "maxLength": 80},
+            "pro_tip": {"type": "string", "maxLength": 80},
+            "example_upgrade": {"type": "string", "maxLength": 150}
+        },
+        "required": ["score_1to5", "qi_skills", "why_it_works", "improvement", "pro_tip", "example_upgrade"],
+        "additionalProperties": False
+    }
+}
+
 SYSTEM_PROMPT = """\
 You are Roga, a coach that scores QUESTIONS (not answers).
 Return ONLY JSON that matches the provided schema.
@@ -208,6 +314,153 @@ TASKS:
 
 def clamp(v, lo, hi): return max(lo, min(hi, v))
 
+# Coaching Engine Pipeline Functions
+def generate_coaching_feedback(question: str, character_reply: Optional[str] = None) -> Dict[str, Any]:
+    """Generate initial coaching feedback using OpenAI"""
+    system_prompt = """You are Roga, an expert Question Intelligence coach. Analyze the user's question and provide structured coaching feedback.
+
+Structure your response as:
+- why_it_works: What's effective about this question (be specific)
+- improvement: One key area to strengthen 
+- pro_tip: Actionable advice for better questioning
+- example_upgrade: A concrete rewrite that improves the question
+
+Tone: Supportive, clever, concise. Always name at least one QI skill."""
+    
+    user_prompt = f"USER QUESTION: {question}"
+    if character_reply:
+        user_prompt += f"\nCHARACTER REPLY: {character_reply}"
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0.4,
+            response_format={"type": "json_schema", "json_schema": COACHING_SCHEMA},
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ]
+        )
+        return json.loads(response.choices[0].message.content or "{}")
+    except Exception as e:
+        # Fallback response
+        return {
+            "score_1to5": 3,
+            "qi_skills": ["clarifying"],
+            "why_it_works": "Clear and direct question",
+            "improvement": "Add more context for deeper insight",
+            "pro_tip": "Try asking 'what would success look like here?'",
+            "example_upgrade": f"Instead of '{question}', try: 'What specific outcome are we aiming for and how will we know we've achieved it?'"
+        }
+
+def classify_qi_skills(question: str) -> List[str]:
+    """Classify QI skills present in the question"""
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0.2,
+            messages=[
+                {"role": "system", "content": COACHING_PROMPTS["qi_classifier"]},
+                {"role": "user", "content": f"QUESTION: {question}"}
+            ]
+        )
+        skills = json.loads(response.choices[0].message.content or "[]")
+        # Validate skills are in our enum
+        valid_skills = [s for s in skills if s in [
+            "clarifying", "probing", "criteria-setting", "perspective-taking", 
+            "assumption-testing", "root-cause", "prioritizing", "exploring-alternatives",
+            "systems-thinking", "outcome-focused"
+        ]]
+        return valid_skills[:3] if valid_skills else ["clarifying"]
+    except:
+        return ["clarifying"]
+
+def judge_feedback_quality(feedback: Dict[str, Any]) -> Dict[str, Any]:
+    """Judge feedback quality against rubric thresholds"""
+    feedback_text = f"""
+    Why it works: {feedback.get('why_it_works', '')}
+    Improvement: {feedback.get('improvement', '')}
+    Pro tip: {feedback.get('pro_tip', '')}
+    Example: {feedback.get('example_upgrade', '')}
+    """
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0.2,
+            messages=[
+                {"role": "system", "content": COACHING_PROMPTS["judge"]},
+                {"role": "user", "content": f"FEEDBACK TO EVALUATE: {feedback_text}"}
+            ]
+        )
+        return json.loads(response.choices[0].message.content or '{"clarity": 3, "qi_alignment": 3, "brand": 3, "passes": false}')
+    except:
+        return {"clarity": 3, "qi_alignment": 3, "brand": 3, "passes": False}
+
+def check_guardrails(feedback: Dict[str, Any]) -> Dict[str, Any]:
+    """Apply guardrails: brand style, length, content checks"""
+    issues = []
+    
+    # Check word count (rough estimate: 5 chars per word)
+    total_chars = sum(len(str(feedback.get(field, ""))) for field in 
+                     ["why_it_works", "improvement", "pro_tip", "example_upgrade"])
+    if total_chars > 400:  # ~80 words * 5 chars
+        issues.append("too_long")
+    
+    # Check for QI skill mention
+    text = " ".join([str(feedback.get(field, "")) for field in 
+                    ["why_it_works", "improvement", "pro_tip"]])
+    qi_skills_mentioned = any(skill in text.lower() for skill in [
+        "clarify", "probe", "criteria", "perspective", "assumption", 
+        "root cause", "priority", "alternative", "system", "outcome"
+    ])
+    if not qi_skills_mentioned:
+        issues.append("missing_qi_skill")
+    
+    return {
+        "length_ok": "too_long" not in issues,
+        "brand_check": "missing_qi_skill" not in issues,
+        "banned_content": issues
+    }
+
+def coach_filter_pipeline(question: str, character_reply: Optional[str] = None) -> CoachFeedback:
+    """7-step CoachFilter pipeline"""
+    
+    # Step 1-2: Generate and normalize feedback
+    feedback = generate_coaching_feedback(question, character_reply)
+    
+    # Step 3: Classify QI Skills  
+    qi_skills = classify_qi_skills(question)
+    feedback["qi_skills"] = qi_skills
+    
+    # Step 4: Judge quality
+    quality_check = judge_feedback_quality(feedback)
+    
+    # Step 5-6: Critique & Revise (max 2 iterations)
+    revision_count = 0
+    while not quality_check.get("passes", False) and revision_count < 2:
+        # For now, just adjust the feedback slightly rather than full rewrite
+        if quality_check.get("clarity", 0) < 4:
+            feedback["improvement"] = "Focus on one specific aspect to improve"
+        if quality_check.get("brand", 0) < 5:
+            feedback["pro_tip"] = f"Try the {qi_skills[0]} technique for better results"
+        
+        revision_count += 1
+        quality_check = judge_feedback_quality(feedback)
+    
+    # Step 7: Apply guardrails and style check
+    guardrails = check_guardrails(feedback)
+    
+    # Ensure all fields are present and valid
+    return CoachFeedback(
+        score_1to5=min(5, max(1, feedback.get("score_1to5", 3))),
+        qi_skills=qi_skills,
+        why_it_works=feedback.get("why_it_works", "Shows good questioning instinct")[:80],
+        improvement=feedback.get("improvement", "Add more specific context")[:80], 
+        pro_tip=feedback.get("pro_tip", "Ask 'what would success look like?'")[:80],
+        example_upgrade=feedback.get("example_upgrade", "What specific outcome are we targeting?")[:150]
+    )
+
 def call_openai_character(persona: PersonaType, question: str, round_num: int, prior_summary: Optional[str] = None):
     """Generate persona character response"""
     system_prompt = PERSONA_PROMPTS[persona]
@@ -266,6 +519,41 @@ def call_openai_evaluator(question: str, character_reply: Optional[str] = None):
             ],
             "proTip": "Try adding more context or specific examples to deepen your question."
         }
+
+@app.post("/coach", response_model=CoachResponse)
+def coach(req: CoachIn):
+    """New coaching endpoint with 7-step CoachFilter pipeline"""
+    if not req.user_question or not req.user_question.strip():
+        raise HTTPException(status_code=400, detail="Missing user question")
+    
+    try:
+        # Run the 7-step coaching pipeline
+        coach_feedback = coach_filter_pipeline(req.user_question, req.character_reply)
+        
+        # Generate metadata
+        feedback_content = f"{coach_feedback.why_it_works} {coach_feedback.improvement} {coach_feedback.pro_tip} {coach_feedback.example_upgrade}"
+        content_hash = hashlib.sha256(feedback_content.encode()).hexdigest()[:16]
+        
+        guardrails = check_guardrails(coach_feedback.dict())
+        
+        meta = CoachMeta(
+            brand_check=guardrails["brand_check"],
+            length_ok=guardrails["length_ok"],
+            banned_content=guardrails["banned_content"],
+            hash=content_hash
+        )
+        
+        return CoachResponse(
+            schema="roga.feedback.v1",
+            scenario_id=req.scenario_id,
+            user_question=req.user_question.strip(),
+            character_reply=req.character_reply,
+            coach_feedback=coach_feedback,
+            meta=meta
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Coaching pipeline failed: {e}")
 
 @app.post("/score", response_model=ScoreResponse)
 def score(req: ScoreRequest):
