@@ -6,8 +6,19 @@ import BrandMark from "@/components/ui/BrandMark";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Link from "next/link";
+import sessionsData from "@/data/sessions.json";
 
 type PersonaType = "generic_philosopher" | "business_coach" | "teacher_mentor";
+
+type SessionScenario = {
+  id: string;
+  title: string;
+  scene: string;
+  persona: string;
+  rounds: number;
+  context: "business" | "academic" | "personal";
+  tags: string[];
+};
 
 type RubricItem = {
   key: "clarity" | "depth" | "insight" | "openness";
@@ -45,28 +56,12 @@ type Session = {
   roundsPlanned: number;
 };
 
-type GameState = 'persona-selection' | 'playing' | 'completed';
+type GameState = 'scenario-selection' | 'playing' | 'completed';
 
-const PERSONAS: Array<{type: PersonaType, name: string, description: string}> = [
-  {
-    type: "generic_philosopher",
-    name: "Thoughtful Philosopher",
-    description: "Analytical and reasoned perspective. Invites deep reflection on meaning and implications."
-  },
-  {
-    type: "business_coach", 
-    name: "Business Coach",
-    description: "Practical focus on outcomes and tradeoffs. Direct about business realities and strategic thinking."
-  },
-  {
-    type: "teacher_mentor",
-    name: "Teacher Mentor", 
-    description: "Guides through questions and scaffolding. Helps you learn to think better progressively."
-  }
-];
+const SCENARIOS: SessionScenario[] = sessionsData;
 
 export default function RogaSessionsPage() {
-  const [gameState, setGameState] = useState<GameState>('persona-selection');
+  const [gameState, setGameState] = useState<GameState>('scenario-selection');
   const [session, setSession] = useState<Session | null>(null);
   const [currentRound, setCurrentRound] = useState(1);
   const [question, setQuestion] = useState("");
@@ -74,17 +69,17 @@ export default function RogaSessionsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionSummary, setSessionSummary] = useState<{summary: string, bestQuestion: string, badges: string[]} | null>(null);
 
-  const startSession = async (persona: PersonaType) => {
+  const startSession = async (scenario: SessionScenario) => {
     setIsLoading(true);
     try {
       const res = await fetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          persona,
-          topic: "Career guidance and strategic thinking",
+          persona: scenario.persona,
+          topic: scenario.scene,
           difficulty: "intermediate",
-          roundsPlanned: 5
+          roundsPlanned: scenario.rounds
         })
       });
       
@@ -115,8 +110,7 @@ export default function RogaSessionsPage() {
           round: currentRound,
           question,
           priorSummary,
-          context: session?.persona === "business_coach" ? "business" : 
-                  session?.persona === "teacher_mentor" ? "academic" : "personal"
+          context: SCENARIOS.find(s => s.persona === session?.persona)?.context || "business"
         })
       });
 
@@ -154,7 +148,7 @@ export default function RogaSessionsPage() {
   };
 
   const resetSession = () => {
-    setGameState('persona-selection');
+    setGameState('scenario-selection');
     setSession(null);
     setCurrentRound(1);
     setQuestion("");
@@ -162,7 +156,7 @@ export default function RogaSessionsPage() {
     setSessionSummary(null);
   };
 
-  if (gameState === 'persona-selection') {
+  if (gameState === 'scenario-selection') {
     return (
       <main className="min-h-screen bg-fog text-coal">
         {/* HEADER */}
@@ -187,17 +181,27 @@ export default function RogaSessionsPage() {
         {/* TITLE */}
         <div className="text-center" style={{marginTop: '50px', marginBottom: '40px'}}>
           <h1 className="text-4xl font-bold" style={{fontFamily: 'Georgia, serif', color: '#1D1B20'}}>Roga Sessions</h1>
-          <p className="text-lg text-coal/70 mt-2">Choose your conversation partner for a 5-round dialogue</p>
+          <p className="text-lg text-coal/70 mt-2">Choose your conversation scenario for a 5-round dialogue</p>
         </div>
 
-        {/* PERSONA SELECTION */}
+        {/* SCENARIO SELECTION */}
         <div className="max-w-4xl mx-auto px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {PERSONAS.map((persona) => (
-              <div key={persona.type} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => startSession(persona.type)}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {SCENARIOS.map((scenario) => (
+              <div key={scenario.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => startSession(scenario)}>
                 <Card className="p-6">
-                  <h2 className="font-display font-bold text-xl mb-4">{persona.name}</h2>
-                  <p className="text-coal/80 text-sm">{persona.description}</p>
+                  <h2 className="font-display font-bold text-xl mb-4">{scenario.title}</h2>
+                  <p className="text-coal/80 text-sm mb-4">{scenario.scene}</p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {scenario.tags.map((tag, index) => (
+                      <span key={index} className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="text-xs text-gray-500 mb-4">
+                    {scenario.rounds} rounds • {scenario.context} context
+                  </div>
                   <Button 
                     className="mt-4 text-sm px-6 py-2 border-0"
                     disabled={isLoading}
@@ -303,7 +307,7 @@ export default function RogaSessionsPage() {
       {/* PROGRESS */}
       <div className="text-center" style={{marginTop: '50px', marginBottom: '20px'}}>
         <h1 className="text-3xl font-bold mb-2" style={{fontFamily: 'Georgia, serif', color: '#1D1B20'}}>
-          {PERSONAS.find(p => p.type === session?.persona)?.name}
+          {SCENARIOS.find(s => s.persona === session?.persona)?.title}
         </h1>
         <div className="text-lg text-coal/70">
           Round {currentRound} of {session?.roundsPlanned || 5}
@@ -340,7 +344,7 @@ export default function RogaSessionsPage() {
               {/* Character reply */}
               <div className="flex justify-start">
                 <div className="bg-white rounded-2xl rounded-tl-md px-4 py-3 max-w-2xl border shadow-sm">
-                  <div className="text-xs text-gray-500 mb-1">{PERSONAS.find(p => p.type === session?.persona)?.name}:</div>
+                  <div className="text-xs text-gray-500 mb-1">{SCENARIOS.find(s => s.persona === session?.persona)?.title}:</div>
                   <div>{turn.characterReply}</div>
                 </div>
               </div>
