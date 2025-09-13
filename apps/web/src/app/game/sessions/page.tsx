@@ -191,7 +191,6 @@ export default function RogaSessionsPage() {
               <div key={scenario.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => startSession(scenario)}>
                 <Card className="p-6">
                   <h2 className="font-display font-bold text-xl mb-4">{scenario.title}</h2>
-                  <p className="text-coal/80 text-sm mb-4">{scenario.scene}</p>
                   <div className="flex flex-wrap gap-2 mb-4">
                     {scenario.tags.map((tag, index) => (
                       <span key={index} className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs">
@@ -309,6 +308,9 @@ export default function RogaSessionsPage() {
         <h1 className="text-3xl font-bold mb-2" style={{fontFamily: 'Georgia, serif', color: '#1D1B20'}}>
           {SCENARIOS.find(s => s.persona === session?.persona)?.title}
         </h1>
+        <p className="text-base text-coal/80 mb-4 max-w-3xl mx-auto">
+          {SCENARIOS.find(s => s.persona === session?.persona)?.scene}
+        </p>
         <div className="text-lg text-coal/70">
           Round {currentRound} of {session?.roundsPlanned || 5}
         </div>
