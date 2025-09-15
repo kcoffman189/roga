@@ -858,7 +858,7 @@ async def call_openai_evaluator_v2(
 
 async def call_openai_character(persona: PersonaType, question: str, round_num: int, prior_summary: Optional[str] = None, scene: str = ""):
     """Generate persona character response using question-free mentor system"""
-    import asyncio
+    print(f"call_openai_character called with persona: {persona}, question: {question[:50]}...")
 
     # Determine target skill based on round (simplified skill progression)
     skill_progression = ["clarifying", "follow_up", "probing", "comparative", "open_question"]
@@ -867,7 +867,8 @@ async def call_openai_character(persona: PersonaType, question: str, round_num: 
     # For mentor personas, use the new question-free system
     if persona in ["teacher_mentor", "business_coach"]:
         try:
-            return await generate_mentor_reply(
+            print(f"Using mentor system for {persona}")
+            reply = await generate_mentor_reply(
                 client=client,
                 scene=scene or "Professional conversation setting",
                 round_idx=round_num,
@@ -875,12 +876,17 @@ async def call_openai_character(persona: PersonaType, question: str, round_num: 
                 user_q=question,
                 persona=persona
             )
+            print(f"Mentor reply generated: {reply[:100]}...")
+            return reply
         except Exception as e:
             print(f"Error in mentor reply generation: {e}")
+            import traceback
+            traceback.print_exc()
             # Fallback to sanitized response
             return "I appreciate your question. That's an interesting perspective that requires thoughtful consideration. Let me share some insights based on my experience."
 
     # For other personas, use original system with question filtering
+    print(f"Using standard system for {persona}")
     system_prompt = PERSONA_PROMPTS[persona] + " You NEVER ask questions in your responses."
 
     context = f"This is round {round_num} of our conversation."
@@ -906,8 +912,10 @@ async def call_openai_character(persona: PersonaType, question: str, round_num: 
         if contains_question(reply):
             reply = sanitize_to_statement(reply, max_sentences=4)
 
+        print(f"Standard reply generated: {reply[:100]}...")
         return reply
     except Exception as e:
+        print(f"Error in standard reply generation: {e}")
         return f"I appreciate your question. Let me think about this thoughtfully and get back to you with a meaningful response."
 
 def call_openai_evaluator(question: str, character_reply: Optional[str] = None):
