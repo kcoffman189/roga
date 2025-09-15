@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from typing import List, Literal, Optional, Dict, Any
 import os, json, uuid, hashlib
 from openai import OpenAI
+from app.llm_utils import generate_mentor_reply, create_telemetry_payload
 
 app = FastAPI()
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
@@ -855,27 +856,57 @@ async def call_openai_evaluator_v2(
             "empathyScore": 15
         }
 
-def call_openai_character(persona: PersonaType, question: str, round_num: int, prior_summary: Optional[str] = None):
-    """Generate persona character response"""
-    system_prompt = PERSONA_PROMPTS[persona]
-    
+async def call_openai_character(persona: PersonaType, question: str, round_num: int, prior_summary: Optional[str] = None, scene: str = ""):
+    """Generate persona character response using question-free mentor system"""
+    import asyncio
+
+    # Determine target skill based on round (simplified skill progression)
+    skill_progression = ["clarifying", "follow_up", "probing", "comparative", "open_question"]
+    target_skill = skill_progression[(round_num - 1) % len(skill_progression)]
+
+    # For mentor personas, use the new question-free system
+    if persona in ["teacher_mentor", "business_coach"]:
+        try:
+            return await generate_mentor_reply(
+                client=client,
+                scene=scene or "Professional conversation setting",
+                round_idx=round_num,
+                target_skill=target_skill,
+                user_q=question,
+                persona=persona
+            )
+        except Exception as e:
+            print(f"Error in mentor reply generation: {e}")
+            # Fallback to sanitized response
+            return "I appreciate your question. That's an interesting perspective that requires thoughtful consideration. Let me share some insights based on my experience."
+
+    # For other personas, use original system with question filtering
+    system_prompt = PERSONA_PROMPTS[persona] + " You NEVER ask questions in your responses."
+
     context = f"This is round {round_num} of our conversation."
     if prior_summary:
         context += f" Previous context: {prior_summary}"
-    
-    user_prompt = f"{context}\n\nUser's question: {question}\n\nRespond as the persona (2-6 sentences):"
-    
+
+    user_prompt = f"{context}\n\nUser's question: {question}\n\nRespond as the persona (2-6 sentences). Do not ask any questions:"
+
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
-            temperature=0.7,
+            temperature=0.6,
             max_tokens=200,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ]
         )
-        return response.choices[0].message.content.strip()
+        reply = response.choices[0].message.content.strip()
+
+        # Apply question filtering to non-mentor personas too
+        from app.llm_utils import contains_question, sanitize_to_statement
+        if contains_question(reply):
+            reply = sanitize_to_statement(reply, max_sentences=4)
+
+        return reply
     except Exception as e:
         return f"I appreciate your question. Let me think about this thoughtfully and get back to you with a meaningful response."
 
@@ -1149,23 +1180,24 @@ def create_session(req: CreateSessionRequest):
     )
 
 @app.post("/sessions/{session_id}/turns", response_model=TurnResponse)
-def process_turn(session_id: str, req: TurnRequest):
+async def process_turn(session_id: str, req: TurnRequest):
     """Process a turn: generate character reply and feedback"""
     if session_id not in SESSIONS:
         raise HTTPException(status_code=404, detail="Session not found")
-    
+
     session = SESSIONS[session_id]
-    
+
     # Validate round
     if req.round > session["roundsPlanned"]:
         raise HTTPException(status_code=400, detail="Round exceeds planned rounds")
-    
-    # Generate character response
-    character_reply = call_openai_character(
+
+    # Generate character response using new question-free system
+    character_reply = await call_openai_character(
         persona=session["persona"],
         question=req.question,
         round_num=req.round,
-        prior_summary=req.priorSummary
+        prior_summary=req.priorSummary,
+        scene=session.get("topic", "Professional conversation setting")
     )
     
     # Generate feedback (V2 if enabled, V1 fallback)
@@ -1237,7 +1269,62 @@ def process_turn(session_id: str, req: TurnRequest):
     
     TURNS[session_id].append(turn_data)
     SESSIONS[session_id]["currentRound"] = req.round
-    
+
+    # Add telemetry logging for session rounds
+    try:
+        # Determine target skill and extract scores for telemetry
+        skill_progression = ["clarifying", "follow_up", "probing", "comparative", "open_question"]
+        target_skill = skill_progression[(req.round - 1) % len(skill_progression)]
+
+        # Convert rubric to scores format for telemetry
+        scores = {}
+        issues = []
+        for item in normalized_rubric:
+            key = item["key"]
+            if key == "insight":
+                key = "relevance"  # Map insight to relevance for consistency
+            elif key == "openness":
+                key = "empathy"    # Map openness to empathy for consistency
+
+            # Convert status to 1-5 score
+            if item["status"] == "good":
+                scores[key] = 4
+            elif item["status"] == "warn":
+                scores[key] = 3
+                issues.append(f"{key}_needs_work")
+            else:  # bad
+                scores[key] = 2
+                issues.append(f"{key}_poor")
+
+        # Ensure all required score fields exist
+        for field in ["clarity", "depth", "relevance", "empathy"]:
+            if field not in scores:
+                scores[field] = 3  # Default neutral score
+
+        scores["overall"] = int(score / 20)  # Convert 0-100 to 1-5 scale
+
+        # Create telemetry payload
+        telemetry_data = create_telemetry_payload(
+            session_id=session_id,
+            scenario_id=session_id,  # Use session_id as scenario_id for now
+            user_id=None,  # Anonymous for MVP
+            round_index=req.round,
+            target_skill=target_skill,
+            user_question=req.question,
+            mentor_reply=character_reply,
+            scores=scores,
+            issues=issues,
+            feedback=feedback
+        )
+
+        # TODO: Store telemetry data in database when persistence is added
+        # For now, just log it for debugging
+        print(f"Session telemetry: {json.dumps(telemetry_data, indent=2)}")
+
+    except Exception as e:
+        print(f"Error logging telemetry: {e}")
+        # Don't fail the request if telemetry fails
+
     return TurnResponse(
         round=req.round,
         characterReply=character_reply,

@@ -1,0 +1,185 @@
+1) Mentor “no-questions” post-processor (with retry + hard filter)
+Purpose
+
+Ensure the Mentor’s response never contains questions. If the model returns a question, we reprompt once. If it still contains a question, we sanitize (remove the interrogative content) and truncate to ≤4 sentences.
+
+Drop-in (FastAPI / Python)
+# app/llm_utils.py
+import re
+
+QUESTION_REGEX = re.compile(
+    r"(\?|(?:^|\b)(who|what|when|where|why|how|which|could|would|should|did|do|does|are|is|can)\b.*[.?!]$)",
+    re.IGNORECASE | re.MULTILINE
+)
+
+SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
+
+def contains_question(text: str) -> bool:
+    return bool(QUESTION_REGEX.search(text))
+
+def sanitize_to_statement(text: str, max_sentences: int = 4) -> str:
+    # 1) Remove any content from the first question mark onwards
+    if "?" in text:
+        text = text.split("?")[0].strip()
+    # 2) Remove trailing interrogative lead-ins (e.g., "Why ..." without '?')
+    lines = [ln for ln in text.splitlines() if not contains_question(ln)]
+    text = " ".join(lines).strip()
+    # 3) Limit to max_sentences and ensure ends with a period
+    sentences = SENTENCE_SPLIT.split(text)
+    text = " ".join(sentences[:max_sentences]).strip()
+    if text and text[-1] not in ".!":
+        text += "."
+    return text
+
+async def generate_mentor_reply(llm_call, scene: str, round_idx: int, target_skill: str, user_q: str) -> str:
+    system = (
+        "You are the Mentor. You NEVER ask questions. "
+        "Provide ONE concise answer (2–4 sentences). "
+        "Do not ask for clarification. No bullet lists. No real names. No AI topics."
+    )
+    user = f'''Scene: "{scene}"
+Round: {round_idx}   TargetSkill: {target_skill}
+UserQuestion: "{user_q}"
+
+Respond with one concise paragraph (2–4 sentences), informative and encouraging, no questions.'''
+    # First attempt
+    reply = await llm_call(system=system, user=user, temperature=0.4)
+    if contains_question(reply):
+        # Retry once with explicit correction
+        retry_user = user + "\n\nYour previous reply contained a question. Remove all questions and answer succinctly."
+        reply = await llm_call(system=system, user=retry_user, temperature=0.3)
+
+    # Hard filter (guarantee)
+    if contains_question(reply):
+        reply = sanitize_to_statement(reply, max_sentences=4)
+
+    # Final length guard (very long paragraphs)
+    sentences = SENTENCE_SPLIT.split(reply)
+    if len(sentences) > 4:
+        reply = " ".join(sentences[:4]).strip()
+        if reply and reply[-1] not in ".!":
+            reply += "."
+    return reply
+
+Usage in your endpoint
+# app/routes/sessions.py
+from app.llm_utils import generate_mentor_reply
+
+@router.post("/session/round")
+async def session_round(req: RoundRequest):
+    # ... load scene/skill pacing, etc.
+    mentor_reply = await generate_mentor_reply(
+        llm_call=your_llm_func,
+        scene=req.scene,
+        round_idx=req.round_index,
+        target_skill=req.target_skill,
+        user_q=req.user_question
+    )
+    # return echo_user_question + mentor_reply + feedback payload
+
+
+Frontend rule: Always render echo_user_question under You asked, and mentor_reply under Mentor’s response.
+
+2) Telemetry schema (Roga Session rounds)
+Purpose
+
+Capture every turn to power analytics, cohort benchmarking, and your QI moat. Normalized for Roga Session (deep practice). Works for Daily Challenge too with a nullable round_index.
+
+PostgreSQL migration
+-- 001_create_roga_session_rounds.sql
+CREATE TABLE roga_session_rounds (
+  attempt_id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id        TEXT NOT NULL,                 -- e.g., "mentor-mentee-001"
+  scenario_id       TEXT NOT NULL,                 -- the session/scenario json id
+  user_id           UUID,                          -- nullable if anonymous
+  round_index       INT,                           -- 1..5 for deep practice; NULL for daily
+  target_skill      TEXT NOT NULL,                 -- clarifying, follow_up, probing, comparative, etc.
+  user_question     TEXT NOT NULL,
+  mentor_reply      TEXT NOT NULL,
+
+  scores            JSONB,                         -- {"clarity":..,"depth":..,"relevance":..,"empathy":..,"overall":..}
+  issues            TEXT[] DEFAULT '{}',           -- e.g., {"too_vague","closed_question"}
+  feedback          JSONB,                         -- full CoachFeedback JSON you render
+  feedback_hash     TEXT,                          -- SHA-256 of normalized feedback JSON (for dup detection)
+
+  model_latency_ms  INT,                           -- optional perf metrics
+  tokens_input      INT,
+  tokens_output     INT,
+
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Helpful indexes
+CREATE INDEX idx_roga_rounds_user ON roga_session_rounds(user_id, created_at DESC);
+CREATE INDEX idx_roga_rounds_scenario ON roga_session_rounds(scenario_id, round_index);
+CREATE INDEX idx_roga_rounds_skill ON roga_session_rounds(target_skill);
+CREATE INDEX idx_roga_rounds_created ON roga_session_rounds(created_at);
+
+Ingestion contract (server payload you store)
+{
+  "session_id": "mentor-mentee-001",
+  "scenario_id": "mentor-mentee-001",
+  "user_id": "d4d6a4f2-9b4d-463c-9a6a-0db3f6f9b9a1",
+  "round_index": 2,
+  "target_skill": "follow_up",
+  "user_question": "What skills should I focus on this year?",
+  "mentor_reply": "Given your interest in product work, double down on synthesis: turning messy inputs into clear decisions.",
+  "scores": { "clarity": 4, "depth": 3, "relevance": 5, "empathy": 3, "overall": 4 },
+  "issues": ["missing_context"],
+  "feedback": {
+    "qi_score": { "overall": 4, "clarity": 4, "depth": 3, "relevance": 5, "empathy": 3 },
+    "strengths": "Direct and relevant to the context.",
+    "improvement": "Anchor your follow-up to a detail in the mentor’s reply to deepen the thread.",
+    "coaching_moment": "Follow-ups extend what was just said—point to a specific detail.",
+    "technique_spotlight": { "name": "Follow-up", "description": "Extend what was just said by pointing to a specific detail." },
+    "example_upgrades": [
+      "You mentioned synthesis—where do beginners usually get stuck?",
+      "What habits helped you improve that skill the fastest?"
+    ],
+    "progress_message": "Good thread. Next: anchor to one phrase the mentor used."
+  },
+  "feedback_hash": "sha256:0f2e3d...c71"
+}
+
+Hashing helper (Python)
+import hashlib, json
+
+def feedback_hash(feedback_json: dict) -> str:
+    # stable key order
+    normalized = json.dumps(feedback_json, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    return "sha256:" + hashlib.sha256(normalized).hexdigest()
+
+Logging hook (server)
+# app/logging_repo.py
+from psycopg import Connection
+from datetime import datetime
+from typing import Dict, Any
+
+def log_round(conn: Connection, payload: Dict[str, Any]) -> None:
+    with conn.cursor() as cur:
+        cur.execute("""
+          INSERT INTO roga_session_rounds
+          (session_id, scenario_id, user_id, round_index, target_skill,
+           user_question, mentor_reply, scores, issues, feedback, feedback_hash,
+           model_latency_ms, tokens_input, tokens_output, created_at)
+          VALUES
+          (%(session_id)s, %(scenario_id)s, %(user_id)s, %(round_index)s, %(target_skill)s,
+           %(user_question)s, %(mentor_reply)s, %(scores)s, %(issues)s, %(feedback)s, %(feedback_hash)s,
+           %(model_latency_ms)s, %(tokens_input)s, %(tokens_output)s, %(created_at)s)
+        """, {
+            **payload,
+            "created_at": datetime.utcnow()
+        })
+    conn.commit()
+
+QA / Acceptance Criteria (add to your checklist)
+
+Mentor replies contain zero “?” and ≤ 4 sentences (post-processor enforced).
+
+If model outputs a question, server retries once; failing that, output is sanitized and still coherent.
+
+You asked shows the exact user question, always.
+
+Each round writes a row into roga_session_rounds with a valid feedback_hash.
+
+Indexes support analytics by scenario, skill, user, and time without slow queries.
