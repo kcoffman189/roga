@@ -1200,22 +1200,9 @@ async def process_turn(session_id: str, req: TurnRequest):
         scene=session.get("topic", "Professional conversation setting")
     )
     
-    # Generate feedback (V2 if enabled, V1 fallback)
+    # Generate feedback using V1 evaluator (stable)
     user_key = session_id  # Use session_id as user key for MVP
-    
-    if COACHING_V2_ENABLED:
-        # Use V2 evaluator with context awareness
-        import asyncio
-        feedback_data = asyncio.run(call_openai_evaluator_v2(
-            user_question=req.question,
-            character_reply=character_reply,
-            prior_summary=req.priorSummary,
-            context=req.context,
-            user_key=user_key
-        ))
-    else:
-        # Fallback to V1 evaluator
-        feedback_data = call_openai_evaluator(req.question, character_reply)
+    feedback_data = call_openai_evaluator(req.question, character_reply)
     
     # Normalize feedback to match existing structure
     score = int(clamp(int(feedback_data.get("score", 70)), 0, 100))
@@ -1246,17 +1233,15 @@ async def process_turn(session_id: str, req: TurnRequest):
         "badge": feedback_data.get("badge")
     }
     
-    # Add V2 fields if present
-    if COACHING_V2_ENABLED:
-        feedback.update({
-            "contextSpecificTip": feedback_data.get("contextSpecificTip"),
-            "likelyResponse": feedback_data.get("likelyResponse"),
-            "nextQuestionSuggestions": feedback_data.get("nextQuestionSuggestions", []),
-            "empathyScore": feedback_data.get("empathyScore", 0)
-        })
-        
-        # Update user trends for personalized coaching
-        update_trends(user_key, feedback)
+    # Add V2 fields if present in feedback_data
+    if feedback_data.get("contextSpecificTip"):
+        feedback["contextSpecificTip"] = feedback_data.get("contextSpecificTip")
+    if feedback_data.get("likelyResponse"):
+        feedback["likelyResponse"] = feedback_data.get("likelyResponse")
+    if feedback_data.get("nextQuestionSuggestions"):
+        feedback["nextQuestionSuggestions"] = feedback_data.get("nextQuestionSuggestions", [])
+    if feedback_data.get("empathyScore"):
+        feedback["empathyScore"] = feedback_data.get("empathyScore", 0)
     
     # Store the turn
     turn_data = {
