@@ -7,6 +7,8 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Link from "next/link";
 import Image from "next/image";
+import DailyChallengeScoreCard from "@/components/DailyChallengeScoreCard";
+import { getFeedback, type CoachFeedback } from "./actions";
 
 interface Scenario {
   id: number;
@@ -122,7 +124,8 @@ export default function DailyChallengePage() {
   const [feedback, setFeedback] = useState<FeedbackData | null>(null);
   const [coachingFeedback, setCoachingFeedback] = useState<CoachingFeedbackData | null>(null);
   const [enhancedFeedback, setEnhancedFeedback] = useState<EnhancedCoachingFeedbackData | null>(null);
-  const [useCoachingMode, setUseCoachingMode] = useState("enhanced"); // "enhanced", "legacy", "original"
+  const [dailyChallengeFeedback, setDailyChallengeFeedback] = useState<CoachFeedback | null>(null);
+  const [useCoachingMode, setUseCoachingMode] = useState("v3"); // "v3", "enhanced", "legacy", "original"
   const [isLoading, setIsLoading] = useState(false);
   const [currentScenario, setCurrentScenario] = useState<Scenario>(() => {
     // Start with a random scenario
@@ -134,6 +137,20 @@ export default function DailyChallengePage() {
     
     setIsLoading(true);
     try {
+      // Reset all feedback states
+      setFeedback(null);
+      setCoachingFeedback(null);
+      setEnhancedFeedback(null);
+      setDailyChallengeFeedback(null);
+
+      if (useCoachingMode === 'v3') {
+        // Use the new Daily Challenge feedback system
+        const feedback = await getFeedback(currentScenario.text, question);
+        setDailyChallengeFeedback(feedback);
+        setShowFeedback(true);
+        return;
+      }
+
       let endpoint = '/api/ask';
       if (useCoachingMode === 'enhanced') {
         endpoint = '/api/coach/enhanced';
@@ -297,6 +314,7 @@ export default function DailyChallengePage() {
     setFeedback(null);
     setCoachingFeedback(null);
     setEnhancedFeedback(null);
+    setDailyChallengeFeedback(null);
   };
 
   const onNewScenario = () => {
@@ -310,6 +328,7 @@ export default function DailyChallengePage() {
     setFeedback(null);
     setCoachingFeedback(null);
     setEnhancedFeedback(null);
+    setDailyChallengeFeedback(null);
   };
 
   return (
@@ -364,12 +383,22 @@ export default function DailyChallengePage() {
             />
 
             {/* Mode Toggle */}
-            <div className="mt-4 flex justify-center gap-2">
+            <div className="mt-4 flex justify-center gap-2 flex-wrap">
+              <button
+                onClick={() => setUseCoachingMode("v3")}
+                className={`text-sm px-4 py-2 rounded-lg transition-colors ${
+                  useCoachingMode === "v3"
+                    ? "bg-teal-100 text-teal-700 border-2 border-teal-300 font-bold"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                Daily Challenge v3 ⭐
+              </button>
               <button
                 onClick={() => setUseCoachingMode("enhanced")}
                 className={`text-sm px-4 py-2 rounded-lg transition-colors ${
-                  useCoachingMode === "enhanced" 
-                    ? "bg-purple-100 text-purple-700 border-2 border-purple-300" 
+                  useCoachingMode === "enhanced"
+                    ? "bg-purple-100 text-purple-700 border-2 border-purple-300"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
@@ -427,10 +456,22 @@ export default function DailyChallengePage() {
         {/* Right Column - Feedback Section */}
         <div>
           {showFeedback && (
-            <Card className="p-6" style={{width: '600px'}}>
-              <h3 className="font-bold text-violet mb-4 text-center">Your Feedback</h3>
-              
-              {/* Enhanced Coaching Mode Feedback (v2) */}
+            <div style={{width: '600px'}}>
+              {/* Daily Challenge v3 Feedback */}
+              {dailyChallengeFeedback && (
+                <DailyChallengeScoreCard
+                  scenario={currentScenario}
+                  question={question}
+                  feedback={dailyChallengeFeedback}
+                />
+              )}
+
+              {/* Legacy feedback modes */}
+              {!dailyChallengeFeedback && (
+                <Card className="p-6">
+                  <h3 className="font-bold text-violet mb-4 text-center">Your Feedback</h3>
+
+                  {/* Enhanced Coaching Mode Feedback (v2) */}
               {enhancedFeedback && (
                 <>
                   {/* QI Score Header */}
@@ -669,7 +710,9 @@ export default function DailyChallengePage() {
                   )}
                 </>
               )}
-            </Card>
+                </Card>
+              )}
+            </div>
           )}
         </div>
       </div>

@@ -1,0 +1,205 @@
+{
+  "taxonomy": {
+    "clarifying": {
+      "definition": "Reduce ambiguity by targeting what's unclear.",
+      "do": ["ask 'what exactly…'", "refer to the missing piece"],
+      "dont": ["'wait, what?'", "broad 'can you repeat?'"],
+      "stems": ["What specifically…", "Which part…", "Could you clarify…"]
+    },
+    "probing": {
+      "definition": "Dig into reasons/assumptions.",
+      "do": ["ask why", "explore causation", "uncover trade-offs"],
+      "dont": ["surface-level questions", "yes/no probes"],
+      "stems": ["Why…", "What led…", "What's the trade-off…"]
+    },
+    "follow_up": {
+      "definition": "Extend what was just said.",
+      "do": ["build on previous statements", "ask for elaboration"],
+      "dont": ["repeat what was said", "change topics abruptly"],
+      "stems": ["You mentioned…could you say more about…", "Following up on that…"]
+    },
+    "comparative": {
+      "definition": "Contrast options to reveal differences.",
+      "do": ["compare alternatives", "highlight differences", "explore relative merits"],
+      "dont": ["make assumptions about preferences", "limit to binary choices"],
+      "stems": ["How does this differ from…", "Compared to…", "What makes this better than…"]
+    },
+    "open_question": {
+      "definition": "Invite expansive, thoughtful responses.",
+      "do": ["use open-ended words", "encourage exploration"],
+      "dont": ["limit to yes/no", "constrain response options"],
+      "stems": ["How might…", "What would happen if…", "Tell me about…"]
+    },
+    "closed_question": {
+      "definition": "Seek specific, factual information.",
+      "do": ["ask for specific data", "confirm understanding"],
+      "dont": ["overuse", "limit exploration"],
+      "stems": ["Is this…", "Did you…", "When will…"]
+    }
+  },
+  "rubric_rules": {
+    "closed_or_vague": { "overall_cap": 2 },
+    "excellent_requires": ["clear_target", "non_yes_no", "context_anchor"]
+  },
+  "feedback_templates": {
+    "clarifying": {
+      "good": [
+        "You targeted the unclear piece—nice focus. That reduces uncertainty for everyone.",
+        "Strong clarifier! You pinpointed exactly what needs explanation.",
+        "Good specificity—this helps zero in on the missing detail."
+      ],
+      "needs_work": [
+        "This signals confusion but doesn't guide a reply. Point to the exact part you need explained.",
+        "Too broad—which specific aspect needs clarification?",
+        "Try naming the exact word, step, or concept that's unclear."
+      ]
+    },
+    "probing": {
+      "good": [
+        "Strong 'why' uncovers causes.",
+        "Nice probe into the reasoning behind this.",
+        "This digs deeper into the underlying factors—excellent."
+      ],
+      "needs_work": [
+        "Add a reason-seeking 'why' to deepen it.",
+        "This stays at surface level—probe for the cause or motivation.",
+        "Go deeper—what's driving this situation?"
+      ]
+    },
+    "follow_up": {
+      "good": [
+        "Great follow-up that builds on what was shared.",
+        "You're extending the conversation naturally.",
+        "Nice way to dive deeper into that topic."
+      ],
+      "needs_work": [
+        "Connect this more clearly to what was just discussed.",
+        "Build on the previous point rather than starting fresh.",
+        "Reference what they said before asking for more."
+      ]
+    },
+    "comparative": {
+      "good": [
+        "Smart comparison that reveals key differences.",
+        "This contrast helps clarify the options.",
+        "Good way to highlight what makes each choice unique."
+      ],
+      "needs_work": [
+        "Add a specific comparison point to sharpen this.",
+        "What exactly are you comparing here?",
+        "Name the specific alternatives you're contrasting."
+      ]
+    },
+    "open_question": {
+      "good": [
+        "Beautifully open-ended—invites rich exploration.",
+        "This encourages thoughtful, expansive thinking.",
+        "Great way to open up possibilities."
+      ],
+      "needs_work": [
+        "Open this up more—avoid yes/no constraints.",
+        "Give them room to explore rather than limiting options.",
+        "Make this more expansive to encourage deeper thinking."
+      ]
+    }
+  },
+  "coaching_nuggets": {
+    "clarifying": [
+      "Clarifiers work best when they name the missing detail.",
+      "Specific > broad. Anchor your question to a word, step, or claim.",
+      "The best clarifiers point to exactly what's unclear.",
+      "Effective clarifying reduces uncertainty for everyone involved."
+    ],
+    "probing": [
+      "Great probes surface assumptions and trade-offs.",
+      "The magic of 'why' questions: they reveal underlying logic.",
+      "Probing works best when it uncovers hidden factors.",
+      "Strong probes help people think through their reasoning."
+    ],
+    "follow_up": [
+      "Follow-ups show you're listening and want to understand more.",
+      "Build on what was just shared rather than changing direction.",
+      "The best follow-ups extend the conversation naturally."
+    ],
+    "comparative": [
+      "Comparisons reveal differences that matter.",
+      "Contrasting options helps clarify decision criteria.",
+      "Good comparisons highlight unique strengths and weaknesses."
+    ],
+    "open_question": [
+      "Open questions invite creativity and exploration.",
+      "The best open questions encourage expansive thinking.",
+      "Wide-open questions often yield surprising insights."
+    ]
+  },
+  "example_upgrades": {
+    "clarifying": {
+      "easy": [
+        "Which step wasn't clear?",
+        "What exactly should happen first?",
+        "Which term needs defining?",
+        "What part of this process is unclear?"
+      ],
+      "medium": [
+        "What part slows us down most?",
+        "Which requirement needs more detail to proceed?",
+        "What specific information would help you move forward?",
+        "Which aspect of this timeline is uncertain?"
+      ]
+    },
+    "probing": {
+      "easy": [
+        "Why is this the priority now?",
+        "What led to this decision?",
+        "What's driving this change?"
+      ],
+      "medium": [
+        "What risks are we accepting with this choice?",
+        "What assumptions are we making here?",
+        "What would have to be true for this to work?"
+      ]
+    },
+    "follow_up": {
+      "easy": [
+        "You mentioned X—could you tell me more about that?",
+        "Following up on that point, what else should we consider?",
+        "Building on what you just said, how might we…?"
+      ],
+      "medium": [
+        "That's interesting about X—what implications does that have for Y?",
+        "You touched on X earlier—how does that connect to this situation?",
+        "Expanding on that idea, what other factors come into play?"
+      ]
+    },
+    "comparative": {
+      "easy": [
+        "How does this compare to what we did before?",
+        "What makes this different from the other option?",
+        "How does this approach differ from the standard one?"
+      ],
+      "medium": [
+        "What are the trade-offs between these two approaches?",
+        "Compared to other solutions, what unique advantages does this offer?",
+        "How does this stack up against our other priorities?"
+      ]
+    },
+    "open_question": {
+      "easy": [
+        "What possibilities are we not considering?",
+        "How might we approach this differently?",
+        "What would ideal success look like here?"
+      ],
+      "medium": [
+        "What creative solutions might we be overlooking?",
+        "If we had unlimited resources, how would we tackle this?",
+        "What would happen if we took a completely different approach?"
+      ]
+    }
+  },
+  "style_constraints": {
+    "banned_topics": ["real_person_names", "ai_evangelism", "political_actors"],
+    "voice": "modern, clever, approachable; concise; no jargon",
+    "max_words": 120,
+    "tone": "encouraging but honest, supportive but direct"
+  }
+}

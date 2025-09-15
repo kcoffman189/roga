@@ -1,0 +1,372 @@
+Here’s a drop-in Dev Kit to make the Daily Challenge feedback fully dynamic, on-brand, and reliable. 
+It includes schemas, prompts, endpoints, guardrails, and example code for your Next.js (frontend) + FastAPI (backend) stack on Vercel/Fly.io.
+
+0) Overview (two-step pipeline)
+/classify → low-temp judgment
+Input: scenario + userQuestion
+Output: detected skills, sub-scores (clarity/depth/relevance/empathy), issues (e.g., too_vague, closed_question), overall
+/coach → warm composition with RAG
+Inputs: scenario + userQuestion + classification output + retrieved QI assets
+Output: fully composed feedback object (strengths, improvement, coaching moment, technique spotlight, 2–3 example upgrades, progress message)
+If /coach validation fails → template-only fallback (still specific).
+
+1) Shared JSON Schemas
+1.1 ClassificationResponse
+{
+  "type": "object",
+  "properties": {
+    "detected_skills": { "type": "array", "items": { "type": "string" } },
+    "scores": {
+      "type": "object",
+      "properties": {
+        "clarity": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "depth": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "relevance": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "empathy": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "overall": { "type": "integer", "minimum": 1, "maximum": 5 }
+      },
+      "required": ["clarity","depth","relevance","empathy","overall"]
+    },
+    "issues": { "type": "array", "items": { "type": "string" } },
+    "justification": { "type": "string" }
+  },
+  "required": ["detected_skills","scores","issues"]
+}
+
+1.2 CoachFeedback
+{
+  "type": "object",
+  "properties": {
+    "qi_score": {
+      "type": "object",
+      "properties": {
+        "overall": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "clarity": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "depth": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "relevance": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "empathy": { "type": "integer", "minimum": 1, "maximum": 5 }
+      },
+      "required": ["overall","clarity","depth","relevance","empathy"]
+    },
+    "strengths": { "type": "string" },
+    "improvement": { "type": "string" },
+    "coaching_moment": { "type": "string" },
+    "technique_spotlight": {
+      "type": "object",
+      "properties": { "name": { "type":"string" }, "description": { "type":"string" } },
+      "required": ["name","description"]
+    },
+    "example_upgrades": { "type": "array", "items": { "type":"string" }, "minItems": 2, "maxItems": 3 },
+    "progress_message": { "type": "string" }
+  },
+  "required": ["qi_score","strengths","improvement","coaching_moment","technique_spotlight","example_upgrades","progress_message"]
+}
+
+1.3 Minimal QI KB (seed)
+{
+  "taxonomy": {
+    "clarifying": {
+      "definition": "Reduce ambiguity by targeting what’s unclear.",
+      "do": ["ask 'what exactly…'", "refer to the missing piece"],
+      "dont": ["'wait, what?'", "broad 'can you repeat?'"],
+      "stems": ["What specifically…","Which part…","Could you clarify…"]
+    },
+    "probing": { "definition": "Dig into reasons/assumptions.", "stems": ["Why…","What led…","What’s the trade-off…"] },
+    "follow_up": { "definition": "Extend what was just said.", "stems": ["You mentioned…could you say more about…"] },
+    "comparative": { "definition": "Contrast options to reveal differences.", "stems": ["How does this differ from…"] }
+  },
+  "rubric_rules": {
+    "closed_or_vague": { "overall_cap": 2 },
+    "excellent_requires": ["clear_target","non_yes_no","context_anchor"]
+  },
+  "feedback_templates": {
+    "clarifying": {
+      "good": [
+        "You targeted the unclear piece—nice focus. That reduces uncertainty for everyone."
+      ],
+      "needs_work": [
+        "This signals confusion but doesn’t guide a reply. Point to the exact part you need explained."
+      ]
+    },
+    "probing": { "good": ["Strong 'why' uncovers causes."], "needs_work": ["Add a reason-seeking 'why' to deepen it."] }
+  },
+  "coaching_nuggets": {
+    "clarifying": [
+      "Clarifiers work best when they name the missing detail.",
+      "Specific > broad. Anchor your question to a word, step, or claim."
+    ],
+    "probing": [
+      "Great probes surface assumptions and trade-offs."
+    ]
+  },
+  "example_upgrades": {
+    "clarifying": {
+      "easy": [
+        "Which step wasn’t clear?",
+        "What exactly should happen first?"
+      ],
+      "medium": [
+        "What part slows us down most?",
+        "Which requirement needs more detail to proceed?"
+      ]
+    },
+    "probing": {
+      "easy": ["Why is this the priority now?"],
+      "medium": ["What risks are we accepting with this choice?"]
+    }
+  },
+  "style_constraints": {
+    "banned_topics": ["real_person_names","ai_evangelism","political_actors"],
+    "voice": "modern, clever, approachable; concise; no jargon"
+  }
+}
+
+2) Model Prompts
+2.1 /classify (low temperature: 0.1–0.2)
+SYSTEM:
+You are Roga’s QI judge. Return STRICT JSON that matches ClassificationResponse.
+
+USER:
+Scenario: "{scenario_text}"
+UserQuestion: "{user_question}"
+
+Taxonomy: {taxonomy_json}
+RubricRules: {rubric_rules_json}
+
+Tasks:
+1) Detect skills used (one or more of: clarifying, probing, follow_up, comparative, open_question, closed_question).
+2) Score clarity, depth, relevance, empathy (1–5) and overall (1–5). Apply RubricRules (e.g., closed/vague caps).
+3) List issues from: ["too_vague","closed_question","off_topic","missing_context","low_empathy"].
+4) Provide a 1–2 sentence justification (for internal logs).
+
+Return JSON only.
+
+2.2 /coach (moderate temperature: 0.4–0.6)
+SYSTEM:
+You are Roga’s QI coach. Style: modern, clever, approachable. No real names, no AI themes. Output JSON that matches CoachFeedback.
+
+USER:
+Scenario: "{scenario_text}"
+UserQuestion: "{user_question}"
+
+DetectedSkills: {detected_skills}
+Scores: {scores}
+Issues: {issues}
+
+RetrievedAssets:
+FeedbackTemplates: {feedback_templates_for_skill_and_tier}
+CoachingNuggets: {nuggets_for_skill}
+TechniqueSpotlight: {"name":"The Clarifier","description":"A clarifying question targets the missing detail to reduce uncertainty."}
+ExampleUpgradePool: {top_6_to_10_examples}
+
+Instructions:
+- Keep total response under ~120 words.
+- Use 1–2 sentences for strengths; 1–2 for improvement; 1–2 for coaching_moment.
+- Choose 2–3 ExampleUpgrades that directly address the Issues.
+- Be specific to the user’s actual question.
+- If question is vague/closed, say so and show how to fix it.
+- Fill all required fields.
+
+Return JSON only.
+
+3) FastAPI (backend) — example endpoints
+# app/main.py
+from fastapi import FastAPI
+from pydantic import BaseModel, Field
+from typing import List, Dict, Any, Optional
+import os, json
+
+app = FastAPI()
+
+# ---- Models ----
+class ClassifyRequest(BaseModel):
+    scenario_text: str
+    user_question: str
+
+class Scores(BaseModel):
+    clarity: int
+    depth: int
+    relevance: int
+    empathy: int
+    overall: int
+
+class ClassifyResponse(BaseModel):
+    detected_skills: List[str]
+    scores: Scores
+    issues: List[str]
+    justification: Optional[str] = None
+
+class CoachRequest(BaseModel):
+    scenario_text: str
+    user_question: str
+    classification: ClassifyResponse
+
+class CoachFeedback(BaseModel):
+    qi_score: Scores
+    strengths: str
+    improvement: str
+    coaching_moment: str
+    technique_spotlight: Dict[str,str]
+    example_upgrades: List[str] = Field(min_items=2, max_items=3)
+    progress_message: str
+
+# ---- Load QI KB (seed) ----
+with open("qi_kb_seed.json","r",encoding="utf-8") as f:
+    QI_KB = json.load(f)
+
+# ---- Helpers (pseudo-LLM calls) ----
+def call_llm_json(system_prompt: str, user_prompt: str, schema: Dict[str,Any], temperature: float):
+    # TODO: integrate your model call with JSON mode / function-calling
+    # Must validate against `schema` before returning
+    raise NotImplementedError
+
+def retrieve_assets(skill: str, performance_tier: str):
+    ft = QI_KB["feedback_templates"].get(skill, {})
+    nuggets = QI_KB["coaching_nuggets"].get(skill, [])
+    examples = QI_KB["example_upgrades"].get(skill, {}).get("medium", []) + QI_KB["example_upgrades"].get(skill, {}).get("easy", [])
+    tech = {"name": f"The {skill.replace('_',' ').title()}", "description": QI_KB["taxonomy"][skill]["definition"]}
+    return {"feedback_templates": ft.get(performance_tier, []), "nuggets": nuggets, "examples": examples, "technique": tech}
+
+@app.post("/classify", response_model=ClassifyResponse)
+def classify(req: ClassifyRequest):
+    system = "You are Roga’s QI judge. Return STRICT JSON."
+    user = f'''Scenario: "{req.scenario_text}"
+UserQuestion: "{req.user_question}"
+Taxonomy: {json.dumps(QI_KB["taxonomy"])}
+RubricRules: {json.dumps(QI_KB["rubric_rules"])}
+Return schema: {{"detected_skills":[],"scores":{{"clarity":1,"depth":1,"relevance":1,"empathy":1,"overall":1}},"issues":[],"justification":""}}'''
+    schema = {}  # supply the ClassificationResponse schema (above) to your validator
+    out = call_llm_json(system, user, schema, temperature=0.2)
+    return out
+
+@app.post("/coach", response_model=CoachFeedback)
+def coach(req: CoachRequest):
+    skills = req.classification.detected_skills or ["clarifying"]
+    primary = skills[0]
+    tier = "good" if req.classification.scores.overall >= 4 else "needs_work"
+    assets = retrieve_assets(primary, tier)
+    system = "You are Roga’s QI coach. Style: modern, clever, approachable. Output STRICT JSON."
+    user = f'''Scenario: "{req.scenario_text}"
+UserQuestion: "{req.user_question}"
+DetectedSkills: {skills}
+Scores: {req.classification.scores.dict()}
+Issues: {req.classification.issues}
+RetrievedAssets:
+- FeedbackTemplates: {assets["feedback_templates"]}
+- CoachingNuggets: {assets["nuggets"]}
+- TechniqueSpotlight: {assets["technique"]}
+- ExampleUpgrades: {assets["examples"]}'''
+    schema = {}  # supply CoachFeedback schema to your validator
+    try:
+        out = call_llm_json(system, user, schema, temperature=0.5)
+    except Exception:
+        # Fallback: template-only
+        examples = assets["examples"][:3] if assets["examples"] else ["What exactly needs clarification?", "Which step is unclear?", "What should happen first?"]
+        out = {
+          "qi_score": req.classification.scores.dict(),
+          "strengths": (assets["feedback_templates"][:1] or ["You showed curiosity."])[0],
+          "improvement": "Point to the specific part that’s unclear to make your clarifier actionable.",
+          "coaching_moment": (assets["nuggets"][:1] or ["Specific > broad. Anchor your question to a word, step, or claim."])[0],
+          "technique_spotlight": assets["technique"],
+          "example_upgrades": examples,
+          "progress_message": "Keep going—target one detail and you’ll level up your Clarifier skill."
+        }
+    return out
+
+4) Next.js wiring (client)
+// app/(daily)/actions.ts
+export type ClassifyResponse = {
+  detected_skills: string[];
+  scores: { clarity:number; depth:number; relevance:number; empathy:number; overall:number };
+  issues: string[];
+  justification?: string;
+};
+
+export type CoachFeedback = {
+  qi_score: ClassifyResponse["scores"];
+  strengths: string;
+  improvement: string;
+  coaching_moment: string;
+  technique_spotlight: { name: string; description: string };
+  example_upgrades: string[];
+  progress_message: string;
+};
+
+export async function getFeedback(scenario: string, userQuestion: string): Promise<CoachFeedback> {
+  const classifyRes = await fetch(process.env.NEXT_PUBLIC_API_URL + "/classify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ scenario_text: scenario, user_question: userQuestion })
+  }).then(r => r.json()) as ClassifyResponse;
+
+  const coachRes = await fetch(process.env.NEXT_PUBLIC_API_URL + "/coach", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ scenario_text: scenario, user_question: userQuestion, classification: classifyRes })
+  }).then(r => r.json()) as CoachFeedback;
+
+  return coachRes;
+}
+
+
+Render sections in your Daily Challenge component in this order:
+
+Overall + sub-scores
+
+Strengths
+
+Improvement
+
+Coaching moment
+
+Technique spotlight
+
+2–3 example upgrades (list)
+
+Progress message
+
+5) Validation & guardrails
+
+Server-side JSON validation against the schemas above; reject responses missing required fields.
+
+Rule caps: if issues includes too_vague or closed_question, cap overall ≤ 2.
+
+Banned topics filter: scan final text against style_constraints.banned_topics.
+
+Length control: max ~120 words total in coaching output.
+
+Determinism: temp 0.2 for classify, 0.5 for coach; set top_p=1, presence/frequency penalties 0.
+
+6) Logging (for your QI moat)
+
+Write one row per attempt:
+
+attempt_id, user_id, scenario_id, user_question,
+intended_skill, detected_skills, scores.clarity, scores.depth, scores.relevance, scores.empathy, scores.overall,
+issues, feedback_hash, created_at
+
+
+(feedback_hash = hash of final JSON to detect duplicates/AB tests)
+
+7) Example: “Wait, what?” (test vector)
+
+Input userQuestion: "Wait, what?"
+
+Expected classify: issues=["too_vague","closed_question"], overall ≤ 2
+
+Expected coach:
+
+strengths: acknowledge curiosity only
+
+improvement: “point to the exact unclear part”
+
+examples (clarifying): “Which step wasn’t clear?”, “What exactly should happen first?”, “Which term should we define?”
+
+8) Config flags
+ROGA_STRICT_SCORING=true            # enforce caps for vague/closed
+ROGA_MIN_EXAMPLES=2
+ROGA_MAX_EXAMPLES=3
+ROGA_FEEDBACK_MAX_WORDS=120
+
+
+This kit gives your team everything needed to ship dynamic, AI-driven, taxonomy-consistent coaching inside the Daily Challenge—while building your QI dataset from day one. If you want, I can also produce a Postman collection or OpenAPI spec for the two endpoints.
