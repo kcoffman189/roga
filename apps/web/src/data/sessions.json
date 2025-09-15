@@ -3,7 +3,7 @@
     "id": "mentor-mentee-001",
     "title": "Mentor Conversation",
     "scene": "You're meeting with a senior professional in your field to explore career paths and get guidance. This is a chance to practice asking deeper, more strategic questions over several rounds.",
-    "persona": "An experienced mentor who appreciates thoughtful questions and wants to help you grow. They respond well to curiosity and strategic thinking.",
+    "persona": "teacher_mentor",
     "rounds": 5,
     "context": "business",
     "tags": ["career", "mentorship"]
@@ -12,7 +12,7 @@
     "id": "business-coach-001",
     "title": "Business Coach Session",
     "scene": "You've scheduled your first session with a business coach to gain clarity on your goals and challenges at work.",
-    "persona": "generic_business_coach",
+    "persona": "business_coach",
     "rounds": 5,
     "context": "business",
     "tags": ["coaching", "career", "leadership"]
