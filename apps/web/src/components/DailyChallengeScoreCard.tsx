@@ -129,7 +129,7 @@ export default function DailyChallengeScoreCard({ scenario, question, feedback }
               className="card !p-3 text-sm copy"
               style={{ backgroundColor: "var(--roga-fog)" }}
             >
-              "{upgrade}"
+              &ldquo;{upgrade}&rdquo;
             </div>
           ))}
         </div>
