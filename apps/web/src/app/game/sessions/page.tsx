@@ -429,96 +429,98 @@ export default function RogaSessionsPage() {
         <div className="space-y-6">
           {/* Previous turns */}
           {turns.map((turn, index) => (
-            <div key={index} className="space-y-4">
-              {/* User question */}
-              <div className="flex justify-start">
-                <div className="bg-teal text-white rounded-2xl rounded-tl-md px-4 py-3 max-w-2xl">
-                  <div className="text-xs opacity-80 mb-1">You asked:</div>
-                  <div>{turn.question}</div>
+            <Card key={index} className="p-6">
+              <div className="space-y-4">
+                {/* User question */}
+                <div className="flex justify-start">
+                  <div className="bg-teal text-white rounded-2xl rounded-tl-md px-4 py-3 max-w-2xl">
+                    <div className="text-xs opacity-80 mb-1">You asked:</div>
+                    <div>{turn.question}</div>
+                  </div>
+                </div>
+
+                {/* Character reply */}
+                <div className="flex justify-start">
+                  <div className="bg-white rounded-2xl rounded-tl-md px-4 py-3 max-w-2xl border shadow-sm">
+                    <div className="text-xs text-gray-500 mb-1">
+                      {session?.persona === "teacher_mentor" ? "Mentor's response:" :
+                       session?.persona === "business_coach" ? "Coach's response:" :
+                       `${currentScenario?.title}:`}
+                    </div>
+                    <div style={{margin: '3px'}}>{turn.characterReply}</div>
+                  </div>
+                </div>
+
+                {/* Feedback section */}
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-semibold">Round {turn.round} Feedback</h3>
+                    <span className="text-2xl font-bold text-teal">{turn.feedback.score}</span>
+                  </div>
+
+                  {turn.feedback.suggestedUpgrade && (
+                    <div className="mb-3">
+                      <h4 className="font-semibold mb-1 text-green-700">Suggested Upgrade:</h4>
+                      <p className="text-sm text-gray-700">{turn.feedback.suggestedUpgrade}</p>
+                    </div>
+                  )}
+
+                  {turn.feedback.proTip && (
+                    <div className="mb-3">
+                      <h4 className="font-semibold mb-1 text-blue-700">Pro Tip:</h4>
+                      <p className="text-sm text-gray-700">{turn.feedback.proTip}</p>
+                    </div>
+                  )}
+
+                  {/* V2 Enhanced Fields */}
+                  {turn.feedback.contextSpecificTip && (
+                    <div className="mb-3">
+                      <h4 className="font-semibold mb-1 text-purple-700">Context Tip:</h4>
+                      <p className="text-sm text-gray-700">{turn.feedback.contextSpecificTip}</p>
+                    </div>
+                  )}
+
+                  {turn.feedback.likelyResponse && (
+                    <div className="mb-3">
+                      <h4 className="font-semibold mb-1 text-orange-700">Likely Response:</h4>
+                      <p className="text-sm text-gray-700 italic">{turn.feedback.likelyResponse}</p>
+                    </div>
+                  )}
+
+                  {turn.feedback.nextQuestionSuggestions && turn.feedback.nextQuestionSuggestions.length > 0 && (
+                    <div className="mb-3">
+                      <h4 className="font-semibold mb-1 text-indigo-700">Follow-ups you could try:</h4>
+                      <ul className="list-disc pl-6 text-sm text-gray-700">
+                        {turn.feedback.nextQuestionSuggestions.map((suggestion, i) => (
+                          <li key={i}>{suggestion}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {typeof turn.feedback.empathyScore === "number" && (
+                    <div className="mb-3">
+                      <div className="inline-flex items-center gap-2 bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-medium">
+                        💝 Empathy Score: {turn.feedback.empathyScore}/25
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    {turn.feedback.rubric.map((item) => (
+                      <div key={item.key} className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${
+                          item.status === 'good' ? 'bg-green-500' :
+                          item.status === 'warn' ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}></div>
+                        <span className="font-medium">{item.label}:</span>
+                        <span className="text-gray-600">{item.note}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-              
-              {/* Character reply */}
-              <div className="flex justify-start">
-                <div className="bg-white rounded-2xl rounded-tl-md px-4 py-3 max-w-2xl border shadow-sm">
-                  <div className="text-xs text-gray-500 mb-1">
-                    {session?.persona === "teacher_mentor" ? "Mentor's response:" :
-                     session?.persona === "business_coach" ? "Coach's response:" :
-                     `${currentScenario?.title}:`}
-                  </div>
-                  <div style={{margin: '3px'}}>{turn.characterReply}</div>
-                </div>
-              </div>
-              
-              {/* Feedback card */}
-              <Card className="p-4 bg-gray-50">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-semibold">Round {turn.round} Feedback</h3>
-                  <span className="text-2xl font-bold text-teal">{turn.feedback.score}</span>
-                </div>
-                
-                {turn.feedback.suggestedUpgrade && (
-                  <div className="mb-3">
-                    <h4 className="font-semibold mb-1 text-green-700">Suggested Upgrade:</h4>
-                    <p className="text-sm text-gray-700">{turn.feedback.suggestedUpgrade}</p>
-                  </div>
-                )}
-                
-                {turn.feedback.proTip && (
-                  <div className="mb-3">
-                    <h4 className="font-semibold mb-1 text-blue-700">Pro Tip:</h4>
-                    <p className="text-sm text-gray-700">{turn.feedback.proTip}</p>
-                  </div>
-                )}
-                
-                {/* V2 Enhanced Fields */}
-                {turn.feedback.contextSpecificTip && (
-                  <div className="mb-3">
-                    <h4 className="font-semibold mb-1 text-purple-700">Context Tip:</h4>
-                    <p className="text-sm text-gray-700">{turn.feedback.contextSpecificTip}</p>
-                  </div>
-                )}
-                
-                {turn.feedback.likelyResponse && (
-                  <div className="mb-3">
-                    <h4 className="font-semibold mb-1 text-orange-700">Likely Response:</h4>
-                    <p className="text-sm text-gray-700 italic">{turn.feedback.likelyResponse}</p>
-                  </div>
-                )}
-                
-                {turn.feedback.nextQuestionSuggestions && turn.feedback.nextQuestionSuggestions.length > 0 && (
-                  <div className="mb-3">
-                    <h4 className="font-semibold mb-1 text-indigo-700">Follow-ups you could try:</h4>
-                    <ul className="list-disc pl-6 text-sm text-gray-700">
-                      {turn.feedback.nextQuestionSuggestions.map((suggestion, i) => (
-                        <li key={i}>{suggestion}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                
-                {typeof turn.feedback.empathyScore === "number" && (
-                  <div className="mb-3">
-                    <div className="inline-flex items-center gap-2 bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-medium">
-                      💝 Empathy Score: {turn.feedback.empathyScore}/25
-                    </div>
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  {turn.feedback.rubric.map((item) => (
-                    <div key={item.key} className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${
-                        item.status === 'good' ? 'bg-green-500' :
-                        item.status === 'warn' ? 'bg-yellow-500' : 'bg-red-500'
-                      }`}></div>
-                      <span className="font-medium">{item.label}:</span>
-                      <span className="text-gray-600">{item.note}</span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </div>
+            </Card>
           ))}
           
           {/* Current question input */}
