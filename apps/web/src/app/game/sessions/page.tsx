@@ -453,7 +453,7 @@ export default function RogaSessionsPage() {
                   <div className="text-gray-700">
                     {turn.characterReply && turn.characterReply.trim()
                       ? turn.characterReply
-                      : "I appreciate your question. Let me think about this thoughtfully and share some insights based on my experience in mentoring professionals at various career stages."}
+                      : "That's a thoughtful question that touches on some important considerations. In my experience, the most successful professionals are those who actively seek clarity and take ownership of their development. I've found that the best outcomes often come from combining strategic thinking with practical action steps."}
                   </div>
                 </div>
 

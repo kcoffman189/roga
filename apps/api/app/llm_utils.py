@@ -58,16 +58,27 @@ async def generate_mentor_reply(
     Uses retry logic and hard filtering to ensure compliance
     """
     system = (
-        "You are the Mentor. You NEVER ask questions. "
-        "Provide ONE concise answer (2–4 sentences). "
-        "Do not ask for clarification. No bullet lists. No real names. No AI topics."
+        "You are an experienced mentor who provides thoughtful, substantive guidance. "
+        "Share insights, perspectives, and practical advice based on your experience. "
+        "Be engaging and provide concrete details that give the person something meaningful to consider. "
+        "Keep responses to 3-5 sentences. Never ask questions - only provide insights and advice."
     )
 
-    user = f'''Scene: "{scene}"
-Round: {round_idx}   TargetSkill: {target_skill}
-UserQuestion: "{user_q}"
+    user = f'''You're in a mentoring conversation. Here's the context:
 
-Respond with one concise paragraph (2–4 sentences), informative and encouraging, no questions.'''
+Setting: {scene}
+Conversation Round: {round_idx}
+Focus Area: {target_skill}
+
+The person asked: "{user_q}"
+
+Provide a thoughtful mentor response that:
+- Shares specific insights or examples from experience
+- Gives them something concrete to think about
+- Helps them understand the topic more deeply
+- Is encouraging but realistic
+
+Respond naturally as a mentor would, sharing wisdom and perspective.'''
 
     # First attempt
     try:
@@ -84,24 +95,29 @@ Respond with one concise paragraph (2–4 sentences), informative and encouragin
 
         if not reply.strip():
             print("Warning: OpenAI returned empty response on first attempt")
-            reply = "I appreciate your thoughtful question. Let me share some insights based on my experience in this area."
+            reply = f"That's an insightful question about {target_skill}. In my experience, the most effective approach often starts with understanding the underlying dynamics at play. Each situation brings unique challenges that require thoughtful consideration of multiple perspectives."
 
     except Exception as e:
         print(f"Error in first OpenAI call: {e}")
-        reply = "I appreciate your thoughtful question. Let me share some insights based on my experience in this area."
+        reply = f"This touches on an important aspect of {target_skill}. From what I've observed, success in this area often comes down to consistent practice and learning from both successes and setbacks. The key is developing your own approach while staying open to feedback."
 
     if contains_question(reply):
         # Retry once with explicit correction
-        retry_user = user + "\n\nYour previous reply contained a question. Remove all questions and answer succinctly."
-        retry_response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            temperature=0.3,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": retry_user}
-            ]
-        )
-        reply = retry_response.choices[0].message.content or ""
+        retry_user = user + "\n\nNote: Provide advice and insights without asking any questions. Share your perspective directly."
+        try:
+            retry_response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                temperature=0.3,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": retry_user}
+                ]
+            )
+            reply = retry_response.choices[0].message.content or ""
+            print(f"Generated mentor reply (retry): {reply[:100]}...")
+        except Exception as e:
+            print(f"Error in retry OpenAI call: {e}")
+            # Keep the original reply if retry fails
 
     # Hard filter (guarantee)
     if contains_question(reply):
@@ -117,7 +133,7 @@ Respond with one concise paragraph (2–4 sentences), informative and encouragin
     # Ensure we never return empty string
     if not reply.strip():
         print("Warning: Final reply is empty, using fallback")
-        reply = "Thank you for your question. Based on my experience, I believe this requires thoughtful consideration of the various factors involved."
+        reply = f"This is a valuable question that connects to {target_skill}. From my experience working with professionals, I've found that the most meaningful progress happens when you combine strategic thinking with practical action. Consider how your current approach aligns with your longer-term goals."
 
     print(f"Final mentor reply: {reply[:100]}...")
     return reply
