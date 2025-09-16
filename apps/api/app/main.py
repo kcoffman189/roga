@@ -91,6 +91,9 @@ class TurnRequest(BaseModel):
     question: str
     priorSummary: Optional[str] = None
     context: Optional[str] = None  # "business" | "academic" | "personal"
+    # Session recovery fields
+    persona: Optional[PersonaType] = None
+    topic: Optional[str] = None
 
 class TurnResponse(BaseModel):
     round: int
@@ -1211,18 +1214,21 @@ async def process_turn(session_id: str, req: TurnRequest):
 
     if session_id not in SESSIONS:
         print(f"Session {session_id} not found. Creating new session from context.")
-        # Auto-recover session if possible
+        # Auto-recover session using provided context if available
+        recovered_persona = req.persona or "teacher_mentor"
+        recovered_topic = req.topic or "Professional conversation setting"
+
         SESSIONS[session_id] = {
             "id": session_id,
-            "persona": "teacher_mentor",  # Default persona
-            "topic": "Professional conversation setting",
+            "persona": recovered_persona,
+            "topic": recovered_topic,
             "difficulty": "intermediate",
             "roundsPlanned": 5,
             "currentRound": req.round - 1,
             "created_at": None
         }
         TURNS[session_id] = []
-        print(f"Created recovery session for {session_id}")
+        print(f"Created recovery session for {session_id} with persona={recovered_persona}, topic={recovered_topic}")
 
     session = SESSIONS[session_id]
 
@@ -1231,13 +1237,18 @@ async def process_turn(session_id: str, req: TurnRequest):
         raise HTTPException(status_code=400, detail="Round exceeds planned rounds")
 
     # Generate character response using new question-free system
+    scene_context = session.get("topic", "Professional conversation setting")
+    print(f"Generating AI response with: persona={session['persona']}, scene={scene_context}, round={req.round}")
+
     character_reply = await call_openai_character(
         persona=session["persona"],
         question=req.question,
         round_num=req.round,
         prior_summary=req.priorSummary,
-        scene=session.get("topic", "Professional conversation setting")
+        scene=scene_context
     )
+
+    print(f"AI response generated: {character_reply[:150]}...")
     
     # Generate feedback using V1 evaluator (stable)
     user_key = session_id  # Use session_id as user key for MVP

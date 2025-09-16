@@ -168,7 +168,10 @@ export default function RogaSessionsPage() {
           round: currentRound,
           question,
           priorSummary,
-          context: currentScenario?.context || "business"
+          context: currentScenario?.context || "business",
+          // Include session context for recovery
+          persona: session.persona,
+          topic: currentScenario?.scene || session.topic
         })
       });
 
