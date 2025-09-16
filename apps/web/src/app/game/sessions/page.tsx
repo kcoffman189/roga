@@ -215,10 +215,11 @@ export default function RogaSessionsPage() {
         return [...prev, turnWithQuestion];
       });
       setQuestion("");
-      
+
       if (currentRound >= 5) {
-        // Complete the session
-        await completeSession();
+        // After round 5, show the feedback but don't auto-complete session
+        // User can manually end session or we can add a "Complete Session" button
+        setCurrentRound(prev => prev + 1); // This will hide the input form
       } else {
         setCurrentRound(prev => prev + 1);
       }
@@ -251,14 +252,30 @@ export default function RogaSessionsPage() {
 
   const completeSession = async () => {
     if (!session) return;
-    
+
     try {
       const res = await fetch(`/api/sessions/${session.id}/complete`, {
         method: 'POST'
       });
-      
+
       const summary = await res.json();
-      setSessionSummary(summary);
+
+      // Calculate overall session feedback similar to individual rounds
+      const avgScore = Math.round(turns.reduce((sum, turn) => sum + (turn.feedback?.score || 0), 0) / Math.max(turns.length, 1));
+
+      // Create comprehensive session feedback
+      const enhancedSummary = {
+        ...summary,
+        overallScore: avgScore,
+        totalRounds: turns.length,
+        sessionFeedback: {
+          strengths: "You demonstrated consistent engagement and thoughtful questioning throughout the session.",
+          improvement: "Continue practicing to develop even deeper inquiry skills and follow-up techniques.",
+          overallNote: `Completed ${turns.length} rounds with an average score of ${avgScore}/100. Your questioning skills are developing well.`
+        }
+      };
+
+      setSessionSummary(enhancedSummary);
       setGameState('completed');
     } catch (error) {
       console.error('Failed to complete session:', error);
@@ -335,42 +352,74 @@ export default function RogaSessionsPage() {
               <BrandMark size={80} />
               <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '6rem', color: 'white'}}>roga</span>
             </div>
-            <Button 
-              onClick={resetSession}
-              variant="ghost" 
-              className="text-lg px-8 py-4 bg-transparent border-2 border-white text-white hover:bg-white hover:text-teal-600"
-            >
-              ← New Session
-            </Button>
+            <div className="flex gap-4">
+              <Button
+                onClick={completeSession}
+                variant="ghost"
+                className="text-lg px-6 py-3 bg-transparent border-2 border-white text-white hover:bg-white hover:text-teal-600"
+              >
+                End Session
+              </Button>
+              <Button
+                onClick={resetSession}
+                variant="ghost"
+                className="text-lg px-6 py-3 bg-transparent border-2 border-white text-white hover:bg-white hover:text-teal-600"
+              >
+                ← New Session
+              </Button>
+            </div>
           </div>
           <div className="h-160" style={{height: '135px'}}></div>
         </header>
 
         <div className="max-w-4xl mx-auto px-8 mt-12">
-          <Card className="p-8 text-center">
-            <h2 className="text-3xl font-bold mb-6" style={{fontFamily: 'Georgia, serif'}}>Session Complete! 🎉</h2>
-            
-            <div className="mb-8">
-              <p className="text-lg mb-4">{sessionSummary.summary}</p>
-              
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <h3 className="font-semibold mb-2">Your Best Question:</h3>
-                <p className="italic text-coal/80">&ldquo;{sessionSummary.bestQuestion}&rdquo;</p>
-              </div>
-              
-              {sessionSummary.badges.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="font-semibold mb-3">Badges Earned:</h3>
-                  <div className="flex flex-wrap justify-center gap-2">
-                    {sessionSummary.badges.map((badge, index) => (
-                      <span key={index} className="bg-violet/10 text-violet px-4 py-2 rounded-full text-sm font-medium">
-                        🏆 {badge}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+          <Card className="p-8">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold mb-4" style={{fontFamily: 'Georgia, serif'}}>Session Complete! 🎉</h2>
+              <p className="text-lg text-gray-600">{sessionSummary.sessionFeedback?.overallNote}</p>
             </div>
+
+            {/* Overall Session Feedback - Same style as round feedback */}
+            <div className="mb-8 p-6 bg-gray-50 rounded-lg">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold">Overall Session Performance</h3>
+                <span className="text-3xl font-bold text-teal">{sessionSummary.overallScore || 0}/100</span>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold mb-2 text-green-700">Strengths:</h4>
+                  <p className="text-sm text-gray-700">{sessionSummary.sessionFeedback?.strengths}</p>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-2 text-blue-700">Areas for Growth:</h4>
+                  <p className="text-sm text-gray-700">{sessionSummary.sessionFeedback?.improvement}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Best Question Section */}
+            <div className="mb-8">
+              <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-4">
+                <h3 className="font-semibold mb-2 text-amber-800">🌟 Your Best Question:</h3>
+                <p className="italic text-gray-800">&ldquo;{sessionSummary.bestQuestion}&rdquo;</p>
+              </div>
+            </div>
+
+            {/* Badges Section */}
+            {sessionSummary.badges && sessionSummary.badges.length > 0 && (
+              <div className="mb-8">
+                <h3 className="font-semibold mb-3 text-center">Badges Earned:</h3>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {sessionSummary.badges.map((badge, index) => (
+                    <span key={index} className="bg-violet/10 text-violet px-4 py-2 rounded-full text-sm font-medium">
+                      🏆 {badge}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-center gap-4">
               <Button onClick={resetSession} className="text-lg px-8 py-4 border-0">
@@ -466,12 +515,6 @@ export default function RogaSessionsPage() {
                         ? turn.characterReply
                         : `[Round ${turn.round}] That's a thoughtful question that touches on some important considerations. In my experience, the most successful professionals are those who actively seek clarity and take ownership of their development. I've found that the best outcomes often come from combining strategic thinking with practical action steps.`}
                     </div>
-                    {/* Temporary debug for rounds 2+ */}
-                    {turn.round > 1 && (
-                      <div className="text-xs text-red-600 mt-2">
-                        Debug: Round {turn.round}, Reply length: {turn.characterReply?.length || 0}, Empty: {!turn.characterReply?.trim()}
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -593,6 +636,22 @@ export default function RogaSessionsPage() {
                   {isLoading ? "Processing..." : "Submit Question"}
                 </Button>
               </div>
+            </Card>
+          )}
+
+          {/* Session Completion Message */}
+          {currentRound > (session?.roundsPlanned || 5) && (
+            <Card className="p-6 text-center">
+              <h3 className="font-bold text-xl mb-4">Session Complete!</h3>
+              <p className="text-gray-600 mb-6">
+                You've completed all {session?.roundsPlanned || 5} rounds. Review your conversation above and click below to see your overall performance.
+              </p>
+              <Button
+                onClick={completeSession}
+                className="text-lg px-8 py-4 border-0"
+              >
+                View Session Summary
+              </Button>
             </Card>
           )}
         </div>
