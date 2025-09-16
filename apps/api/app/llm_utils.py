@@ -82,6 +82,9 @@ Respond naturally as a mentor would, sharing wisdom and perspective.'''
 
     # First attempt
     try:
+        print(f"Making OpenAI call with system: {system[:100]}...")
+        print(f"User prompt: {user[:200]}...")
+
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             temperature=0.4,
@@ -92,6 +95,7 @@ Respond naturally as a mentor would, sharing wisdom and perspective.'''
         )
         reply = response.choices[0].message.content or ""
         print(f"Generated mentor reply (first attempt): {reply[:100]}...")
+        print(f"Full reply length: {len(reply)}")
 
         if not reply.strip():
             print("Warning: OpenAI returned empty response on first attempt")
@@ -99,6 +103,9 @@ Respond naturally as a mentor would, sharing wisdom and perspective.'''
 
     except Exception as e:
         print(f"Error in first OpenAI call: {e}")
+        print(f"Exception type: {type(e)}")
+        import traceback
+        traceback.print_exc()
         reply = f"This touches on an important aspect of {target_skill}. From what I've observed, success in this area often comes down to consistent practice and learning from both successes and setbacks. The key is developing your own approach while staying open to feedback."
 
     if contains_question(reply):
@@ -133,7 +140,8 @@ Respond naturally as a mentor would, sharing wisdom and perspective.'''
     # Ensure we never return empty string
     if not reply.strip():
         print("Warning: Final reply is empty, using fallback")
-        reply = f"This is a valuable question that connects to {target_skill}. From my experience working with professionals, I've found that the most meaningful progress happens when you combine strategic thinking with practical action. Consider how your current approach aligns with your longer-term goals."
+        # Create a more personalized fallback that references the user's actual question
+        reply = f"You've raised an important question about {user_q[:50] if len(user_q) > 50 else user_q}. In my experience with {target_skill}, I've found that the most effective approach combines careful analysis with practical action. Consider the specific context of your situation and what outcomes would indicate real progress here."
 
     print(f"Final mentor reply: {reply[:100]}...")
     return reply
