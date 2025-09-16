@@ -455,7 +455,7 @@ export default function RogaSessionsPage() {
                     {/* Debug info */}
                     {process.env.NODE_ENV === 'development' && (
                       <div className="mt-2 text-xs text-red-500">
-                        Debug: characterReply = "{turn.characterReply}" (length: {turn.characterReply?.length || 0})
+                        Debug: characterReply = &quot;{turn.characterReply}&quot; (length: {turn.characterReply?.length || 0})
                       </div>
                     )}
                   </div>
