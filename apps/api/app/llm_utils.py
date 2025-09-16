@@ -72,13 +72,16 @@ Focus Area: {target_skill}
 
 The person asked: "{user_q}"
 
-Provide a thoughtful mentor response that:
-- Shares specific insights or examples from experience
-- Gives them something concrete to think about
-- Helps them understand the topic more deeply
-- Is encouraging but realistic
+IMPORTANT: Your response must directly address their specific question. Base your mentoring advice on the exact question they asked, not generic advice.
 
-Respond naturally as a mentor would, sharing wisdom and perspective.'''
+Provide a thoughtful mentor response that:
+- Directly answers or addresses their specific question about: "{user_q}"
+- Shares specific insights or examples from experience related to their question
+- Gives them something concrete to think about regarding their specific situation
+- Helps them understand their particular topic more deeply
+- Is encouraging but realistic about their specific concern
+
+Respond naturally as a mentor would, but make sure to reference and build on their actual question. Do not give generic advice - tailor everything to what they specifically asked.'''
 
     # First attempt
     try:
