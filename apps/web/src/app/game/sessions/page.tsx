@@ -644,7 +644,7 @@ export default function RogaSessionsPage() {
             <Card className="p-6 text-center">
               <h3 className="font-bold text-xl mb-4">Session Complete!</h3>
               <p className="text-gray-600 mb-6">
-                You've completed all {session?.roundsPlanned || 5} rounds. Review your conversation above and click below to see your overall performance.
+                You&apos;ve completed all {session?.roundsPlanned || 5} rounds. Review your conversation above and click below to see your overall performance.
               </p>
               <Button
                 onClick={completeSession}
