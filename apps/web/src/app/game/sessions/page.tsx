@@ -232,8 +232,19 @@ export default function RogaSessionsPage() {
         context: currentScenario?.context,
         error: error instanceof Error ? error.message : error
       });
+
+      // Check if it's a session not found error (404)
+      if (error instanceof Error && error.message.includes('404')) {
+        // Session was lost, offer to restart
+        const restart = confirm('Your session was lost (possibly due to a server restart). Would you like to start a new session?');
+        if (restart) {
+          resetSession();
+          return;
+        }
+      }
+
       // Show user-friendly error
-      alert(`Error submitting question: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(`Error submitting question: ${error instanceof Error ? error.message : 'Unknown error'}. You may need to start a new session.`);
     } finally {
       setIsLoading(false);
     }

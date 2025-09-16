@@ -1165,7 +1165,7 @@ def score(req: ScoreRequest):
 def create_session(req: CreateSessionRequest):
     """Create a new Roga session"""
     session_id = str(uuid.uuid4())
-    
+
     session_data = {
         "id": session_id,
         "persona": req.persona,
@@ -1175,10 +1175,13 @@ def create_session(req: CreateSessionRequest):
         "currentRound": 0,
         "created_at": None  # Could add timestamp if needed
     }
-    
+
     SESSIONS[session_id] = session_data
     TURNS[session_id] = []
-    
+
+    print(f"Created session {session_id} with persona {req.persona}")
+    print(f"Total sessions in memory: {len(SESSIONS)}")
+
     return CreateSessionResponse(
         id=session_id,
         persona=req.persona,
@@ -1187,11 +1190,39 @@ def create_session(req: CreateSessionRequest):
         roundsPlanned=req.roundsPlanned
     )
 
+# Debug endpoint to check session status
+@app.get("/sessions/{session_id}/debug")
+def debug_session(session_id: str):
+    """Debug endpoint to check session status"""
+    return {
+        "session_id": session_id,
+        "exists": session_id in SESSIONS,
+        "session_data": SESSIONS.get(session_id, None),
+        "turns_count": len(TURNS.get(session_id, [])),
+        "total_sessions": len(SESSIONS),
+        "all_session_ids": list(SESSIONS.keys())
+    }
+
 @app.post("/sessions/{session_id}/turns", response_model=TurnResponse)
 async def process_turn(session_id: str, req: TurnRequest):
     """Process a turn: generate character reply and feedback"""
+    print(f"Processing turn for session {session_id}, round {req.round}")
+    print(f"Available sessions: {list(SESSIONS.keys())}")
+
     if session_id not in SESSIONS:
-        raise HTTPException(status_code=404, detail="Session not found")
+        print(f"Session {session_id} not found. Creating new session from context.")
+        # Auto-recover session if possible
+        SESSIONS[session_id] = {
+            "id": session_id,
+            "persona": "teacher_mentor",  # Default persona
+            "topic": "Professional conversation setting",
+            "difficulty": "intermediate",
+            "roundsPlanned": 5,
+            "currentRound": req.round - 1,
+            "created_at": None
+        }
+        TURNS[session_id] = []
+        print(f"Created recovery session for {session_id}")
 
     session = SESSIONS[session_id]
 
