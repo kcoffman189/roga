@@ -524,8 +524,8 @@ export default function RogaSessionsPage() {
               {/* Scenario Description */}
               {currentRound === 1 && (
                 <div className="mb-6 p-4 bg-gray-50 rounded-lg border" style={{marginTop: '-5px', marginBottom: '1rem'}}>
-                  <h4 className="font-semibold mb-2 text-gray-700" style={{marginTop: '-5px'}}>Your Scenario:</h4>
-                  <p className="text-gray-700 text-sm leading-relaxed" style={{marginTop: '-20px'}}>
+                  <h4 className="font-semibold mb-2 text-gray-700" style={{marginTop: '-2px'}}>Your Scenario:</h4>
+                  <p className="text-gray-700 text-sm leading-relaxed" style={{marginTop: '-17px'}}>
                     {currentScenario?.scene?.split('. This is a chance to practice asking deeper, more strategic questions over several rounds.')[0]}.
                   </p>
                 </div>
