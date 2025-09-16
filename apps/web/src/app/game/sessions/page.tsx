@@ -440,15 +440,13 @@ export default function RogaSessionsPage() {
                 </div>
 
                 {/* Character reply */}
-                <div className="flex justify-start">
-                  <div className="bg-white rounded-2xl rounded-tl-md px-4 py-3 max-w-2xl border shadow-sm">
-                    <div className="text-xs text-gray-500 mb-1">
-                      {session?.persona === "teacher_mentor" ? "Mentor's response:" :
-                       session?.persona === "business_coach" ? "Coach's response:" :
-                       `${currentScenario?.title}:`}
-                    </div>
-                    <div style={{margin: '3px'}}>{turn.characterReply}</div>
+                <div className="mb-4">
+                  <div className="text-xs text-gray-500 mb-2">
+                    {session?.persona === "teacher_mentor" ? "Mentor's response:" :
+                     session?.persona === "business_coach" ? "Coach's response:" :
+                     `${currentScenario?.title}:`}
                   </div>
+                  <div className="text-gray-700">{turn.characterReply}</div>
                 </div>
 
                 {/* Feedback section */}
