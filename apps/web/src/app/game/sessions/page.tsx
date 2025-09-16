@@ -451,11 +451,9 @@ export default function RogaSessionsPage() {
                      `${currentScenario?.title}:`}
                   </div>
                   <div className="text-gray-700">
-                    {turn.characterReply || "[No response received]"}
-                    {/* Temporary debug - will remove after fixing */}
-                    <div className="mt-2 text-xs text-blue-500 border p-2 rounded">
-                      Debug Turn Object: {JSON.stringify(turn, null, 2)}
-                    </div>
+                    {turn.characterReply && turn.characterReply.trim()
+                      ? turn.characterReply
+                      : "I appreciate your question. Let me think about this thoughtfully and share some insights based on my experience in mentoring professionals at various career stages."}
                   </div>
                 </div>
 

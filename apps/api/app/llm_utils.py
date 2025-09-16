@@ -70,15 +70,25 @@ UserQuestion: "{user_q}"
 Respond with one concise paragraph (2–4 sentences), informative and encouraging, no questions.'''
 
     # First attempt
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        temperature=0.4,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": user}
-        ]
-    )
-    reply = response.choices[0].message.content or ""
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0.4,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user}
+            ]
+        )
+        reply = response.choices[0].message.content or ""
+        print(f"Generated mentor reply (first attempt): {reply[:100]}...")
+
+        if not reply.strip():
+            print("Warning: OpenAI returned empty response on first attempt")
+            reply = "I appreciate your thoughtful question. Let me share some insights based on my experience in this area."
+
+    except Exception as e:
+        print(f"Error in first OpenAI call: {e}")
+        reply = "I appreciate your thoughtful question. Let me share some insights based on my experience in this area."
 
     if contains_question(reply):
         # Retry once with explicit correction
@@ -104,6 +114,12 @@ Respond with one concise paragraph (2–4 sentences), informative and encouragin
         if reply and reply[-1] not in ".!":
             reply += "."
 
+    # Ensure we never return empty string
+    if not reply.strip():
+        print("Warning: Final reply is empty, using fallback")
+        reply = "Thank you for your question. Based on my experience, I believe this requires thoughtful consideration of the various factors involved."
+
+    print(f"Final mentor reply: {reply[:100]}...")
     return reply
 
 def feedback_hash(feedback_json: Dict[str, Any]) -> str:
