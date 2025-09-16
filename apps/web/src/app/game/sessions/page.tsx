@@ -398,8 +398,8 @@ export default function RogaSessionsPage() {
         <h1 className="text-3xl font-bold mb-2" style={{fontFamily: 'Georgia, serif', color: '#1D1B20'}}>
           {currentScenario?.title}
         </h1>
-        <p className="text-base text-coal/80 mb-4 max-w-3xl mx-auto">
-          {currentScenario?.scene}
+        <p className="text-base text-coal/70 mb-4" style={{marginTop: '-3px'}}>
+          This is a chance to practice asking deeper, more strategic questions over several rounds.
         </p>
         <div className="text-lg text-coal/70">
           Round {currentRound} of {session?.roundsPlanned || 5}
