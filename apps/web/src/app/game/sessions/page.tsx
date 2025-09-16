@@ -204,11 +204,15 @@ export default function RogaSessionsPage() {
 
       setTurns(prev => {
         console.log('Updating turns array, current length:', prev.length);
+        console.log('Raw turnData from API:', turnData);
+        console.log('characterReply value:', turnData.characterReply);
+        console.log('characterReply type:', typeof turnData.characterReply);
         // Ensure the user's question is preserved in the turn data
         const turnWithQuestion = {
           ...turnData,
           question: question
         };
+        console.log('Final turn data:', turnWithQuestion);
         return [...prev, turnWithQuestion];
       });
       setQuestion("");
@@ -446,7 +450,15 @@ export default function RogaSessionsPage() {
                      session?.persona === "business_coach" ? "Coach's response:" :
                      `${currentScenario?.title}:`}
                   </div>
-                  <div className="text-gray-700">{turn.characterReply}</div>
+                  <div className="text-gray-700">
+                    {turn.characterReply || "[No response received]"}
+                    {/* Debug info */}
+                    {process.env.NODE_ENV === 'development' && (
+                      <div className="mt-2 text-xs text-red-500">
+                        Debug: characterReply = "{turn.characterReply}" (length: {turn.characterReply?.length || 0})
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Feedback section */}
