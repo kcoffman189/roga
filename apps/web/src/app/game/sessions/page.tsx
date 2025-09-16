@@ -431,8 +431,8 @@ export default function RogaSessionsPage() {
           {turns.map((turn, index) => (
             <div key={index} className="space-y-4">
               {/* User question */}
-              <div className="flex justify-end">
-                <div className="bg-teal text-white rounded-2xl rounded-tr-md px-4 py-3 max-w-2xl">
+              <div className="flex justify-start">
+                <div className="bg-teal text-white rounded-2xl rounded-tl-md px-4 py-3 max-w-2xl">
                   <div className="text-xs opacity-80 mb-1">You asked:</div>
                   <div>{turn.question}</div>
                 </div>
