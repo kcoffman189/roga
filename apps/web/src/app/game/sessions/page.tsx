@@ -206,16 +206,12 @@ export default function RogaSessionsPage() {
       }
 
       setTurns(prev => {
-        console.log('Updating turns array, current length:', prev.length);
-        console.log('Raw turnData from API:', turnData);
-        console.log('characterReply value:', turnData.characterReply);
-        console.log('characterReply type:', typeof turnData.characterReply);
         // Ensure the user's question is preserved in the turn data
         const turnWithQuestion = {
           ...turnData,
           question: question
         };
-        console.log('Final turn data:', turnWithQuestion);
+        console.log('Turn added:', {round: turnWithQuestion.round, hasReply: !!turnWithQuestion.characterReply});
         return [...prev, turnWithQuestion];
       });
       setQuestion("");
@@ -450,24 +446,32 @@ export default function RogaSessionsPage() {
             <Card key={index} className="p-6">
               <div className="space-y-4">
                 {/* User question */}
-                <div className="flex justify-start">
-                  <div className="bg-teal text-white rounded-2xl rounded-tl-md px-4 py-3 max-w-2xl">
-                    <div className="text-xs opacity-80 mb-1">You asked:</div>
-                    <div>{turn.question}</div>
+                <div className="mb-4">
+                  <div className="border-2 border-teal-500 rounded-lg p-4 bg-teal-50">
+                    <div className="text-xs text-teal-700 mb-2 font-semibold">You asked:</div>
+                    <div className="text-gray-800">{turn.question}</div>
                   </div>
                 </div>
 
                 {/* Character reply */}
                 <div className="mb-4">
-                  <div className="text-xs text-gray-500 mb-2">
-                    {session?.persona === "teacher_mentor" ? "Mentor's response:" :
-                     session?.persona === "business_coach" ? "Coach's response:" :
-                     `${currentScenario?.title}:`}
-                  </div>
-                  <div className="text-gray-700">
-                    {turn.characterReply && turn.characterReply.trim()
-                      ? turn.characterReply
-                      : "That's a thoughtful question that touches on some important considerations. In my experience, the most successful professionals are those who actively seek clarity and take ownership of their development. I've found that the best outcomes often come from combining strategic thinking with practical action steps."}
+                  <div className="border-2 border-blue-500 rounded-lg p-4 bg-blue-50">
+                    <div className="text-xs text-blue-700 mb-2 font-semibold">
+                      {session?.persona === "teacher_mentor" ? "Mentor's response:" :
+                       session?.persona === "business_coach" ? "Coach's response:" :
+                       `${currentScenario?.title}:`}
+                    </div>
+                    <div className="text-gray-800">
+                      {turn.characterReply && turn.characterReply.trim()
+                        ? turn.characterReply
+                        : `[Round ${turn.round}] That's a thoughtful question that touches on some important considerations. In my experience, the most successful professionals are those who actively seek clarity and take ownership of their development. I've found that the best outcomes often come from combining strategic thinking with practical action steps.`}
+                    </div>
+                    {/* Temporary debug for rounds 2+ */}
+                    {turn.round > 1 && (
+                      <div className="text-xs text-red-600 mt-2">
+                        Debug: Round {turn.round}, Reply length: {turn.characterReply?.length || 0}, Empty: {!turn.characterReply?.trim()}
+                      </div>
+                    )}
                   </div>
                 </div>
 
