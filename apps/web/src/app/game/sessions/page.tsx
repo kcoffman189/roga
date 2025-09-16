@@ -68,7 +68,18 @@ export default function RogaSessionsPage() {
   const [question, setQuestion] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionSummary, setSessionSummary] = useState<{summary: string, bestQuestion: string, badges: string[]} | null>(null);
+  const [sessionSummary, setSessionSummary] = useState<{
+    summary: string,
+    bestQuestion: string,
+    badges: string[],
+    overallScore?: number,
+    totalRounds?: number,
+    sessionFeedback?: {
+      strengths: string,
+      improvement: string,
+      overallNote: string
+    }
+  } | null>(null);
 
   const startSession = async (scenario: SessionScenario) => {
     setIsLoading(true);
