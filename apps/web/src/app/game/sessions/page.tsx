@@ -452,12 +452,10 @@ export default function RogaSessionsPage() {
                   </div>
                   <div className="text-gray-700">
                     {turn.characterReply || "[No response received]"}
-                    {/* Debug info */}
-                    {process.env.NODE_ENV === 'development' && (
-                      <div className="mt-2 text-xs text-red-500">
-                        Debug: characterReply = &quot;{turn.characterReply}&quot; (length: {turn.characterReply?.length || 0})
-                      </div>
-                    )}
+                    {/* Temporary debug - will remove after fixing */}
+                    <div className="mt-2 text-xs text-blue-500 border p-2 rounded">
+                      Debug Turn Object: {JSON.stringify(turn, null, 2)}
+                    </div>
                   </div>
                 </div>
 
