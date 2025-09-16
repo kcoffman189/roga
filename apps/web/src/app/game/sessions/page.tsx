@@ -204,7 +204,12 @@ export default function RogaSessionsPage() {
 
       setTurns(prev => {
         console.log('Updating turns array, current length:', prev.length);
-        return [...prev, turnData];
+        // Ensure the user's question is preserved in the turn data
+        const turnWithQuestion = {
+          ...turnData,
+          question: question
+        };
+        return [...prev, turnWithQuestion];
       });
       setQuestion("");
       
@@ -441,7 +446,7 @@ export default function RogaSessionsPage() {
                      session?.persona === "business_coach" ? "Coach's response:" :
                      `${currentScenario?.title}:`}
                   </div>
-                  <div>{turn.characterReply}</div>
+                  <div style={{margin: '3px'}}>{turn.characterReply}</div>
                 </div>
               </div>
               
