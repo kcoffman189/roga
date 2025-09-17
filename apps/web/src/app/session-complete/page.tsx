@@ -1,8 +1,9 @@
 "use client";
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import SessionComplete from '@/components/SessionComplete';
 
-export default function SessionCompletePage() {
+function SessionCompleteContent() {
   const searchParams = useSearchParams();
 
   // Get data from URL params or use defaults for demo
@@ -34,5 +35,18 @@ export default function SessionCompletePage() {
       growth={growth}
       bestQuestion={bestQuestion}
     />
+  );
+}
+
+export default function SessionCompletePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-fog flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-teal mx-auto mb-4"></div>
+        <p className="text-coal/70">Loading your session results...</p>
+      </div>
+    </div>}>
+      <SessionCompleteContent />
+    </Suspense>
   );
 }

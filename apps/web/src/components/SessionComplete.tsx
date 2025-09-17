@@ -102,7 +102,7 @@ export default function SessionComplete({
               <Image src="/icons/star.svg" alt="" width={20} height={20} className="w-5 h-5" />
               <h3 className="font-display font-bold">Best Question of the Session</h3>
             </div>
-            <blockquote className="italic text-coal/90">"{bestQuestion}"</blockquote>
+            <blockquote className="italic text-coal/90">&ldquo;{bestQuestion}&rdquo;</blockquote>
           </div>
         </section>
       )}

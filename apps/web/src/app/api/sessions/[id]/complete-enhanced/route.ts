@@ -5,10 +5,11 @@ const API_BASE_URL = process.env.API_BASE_URL || 'https://roga-api.fly.dev';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const sessionId = params.id;
+    const resolvedParams = await params;
+    const sessionId = resolvedParams.id;
 
     const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/complete-enhanced`, {
       method: 'POST',
