@@ -29,7 +29,7 @@ export async function POST(
 
     // Return fallback enhanced completion data on error
     return NextResponse.json({
-      rounds: 5,
+      rounds: 3,
       avgScore: 75,
       levelLabel: "Level 2 • Skilled",
       streak: 3,

@@ -77,7 +77,7 @@ class CreateSessionRequest(BaseModel):
     persona: PersonaType
     topic: Optional[str] = "Career guidance and strategic thinking"
     difficulty: Optional[str] = "intermediate"
-    roundsPlanned: int = Field(default=5, ge=1, le=10)
+    roundsPlanned: int = Field(default=3, ge=1, le=10)
 
 class CreateSessionResponse(BaseModel):
     id: str
@@ -1420,7 +1420,7 @@ async def process_turn(session_id: str, req: TurnRequest):
             "persona": recovered_persona,
             "topic": recovered_topic,
             "difficulty": "intermediate",
-            "roundsPlanned": 5,
+            "roundsPlanned": 3,
             "currentRound": req.round - 1,
             "created_at": None
         }

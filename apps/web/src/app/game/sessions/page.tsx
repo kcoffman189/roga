@@ -227,8 +227,8 @@ export default function RogaSessionsPage() {
       });
       setQuestion("");
 
-      if (currentRound >= 5) {
-        // After round 5, show the feedback but don't auto-complete session
+      if (currentRound >= 3) {
+        // After round 3, show the feedback but don't auto-complete session
         // User can manually end session or we can add a "Complete Session" button
         setCurrentRound(prev => prev + 1); // This will hide the input form
       } else {
@@ -352,7 +352,7 @@ export default function RogaSessionsPage() {
         {/* TITLE */}
         <div className="text-center" style={{marginTop: '50px', marginBottom: '40px'}}>
           <h1 className="text-4xl font-bold" style={{fontFamily: 'Georgia, serif', color: '#1D1B20'}}>Roga Sessions</h1>
-          <p className="text-lg text-coal/70 mt-2">Choose your conversation scenario for a 5-round dialogue</p>
+          <p className="text-lg text-coal/70 mt-2">Choose your conversation scenario for a 3-round dialogue</p>
         </div>
 
         {/* SCENARIO SELECTION */}

@@ -17,7 +17,7 @@ type Props = {
 };
 
 export default function SessionComplete({
-  rounds = 5,
+  rounds = 3,
   avgScore = 62,
   levelLabel = "Level 1 • Explorer",
   streak = 3,
