@@ -125,6 +125,22 @@ class QIScore(BaseModel):
     relevance: int = Field(ge=1, le=5)
     empathy: int = Field(ge=1, le=5)
 
+# MVP 5-Part Feedback Structure Models
+class MVPRubricScore(BaseModel):
+    clarity: int = Field(ge=0, le=100)
+    depth: int = Field(ge=0, le=100)
+    curiosity: int = Field(ge=0, le=100)
+    relevance: int = Field(ge=0, le=100)
+    empathy: int = Field(ge=0, le=100)
+
+class MVPScoreCardFeedback(BaseModel):
+    positive_reinforcement: str = Field(max_length=200, description="Highlight what the user did well")
+    dimension_focus: str = Field(max_length=150, description="Call out 1-2 QI dimensions needing improvement")
+    pro_tip: str = Field(max_length=120, description="Short, actionable coaching advice")
+    suggested_upgrade: str = Field(max_length=250, description="Rewrite of user's question showing stronger version")
+    score: int = Field(ge=0, le=100, description="Overall question quality score")
+    rubric: MVPRubricScore
+
 class TechniqueSpotlight(BaseModel):
     name: str
     description: str
@@ -213,6 +229,13 @@ class DailyChallengeFeedbackResponse(BaseModel):
     scenario_id: Optional[int]
     user_question: str
     feedback: DailyChallengeCoachFeedback
+    meta: CoachMeta
+
+class MVPScoreCardResponse(BaseModel):
+    schema: str = "roga.mvp_scorecard.v1"
+    scenario_id: Optional[int]
+    user_question: str
+    feedback: MVPScoreCardFeedback
     meta: CoachMeta
 
 SCHEMA = {
@@ -398,6 +421,56 @@ DAILY_COACH_SCHEMA = {
     }
 }
 
+# MVP 5-Part Feedback Schema
+MVP_SCORECARD_SCHEMA = {
+    "name": "roga_mvp_scorecard_v1",
+    "schema": {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "positive_reinforcement": {
+                "type": "string",
+                "maxLength": 200,
+                "description": "Highlight what the user did well"
+            },
+            "dimension_focus": {
+                "type": "string",
+                "maxLength": 150,
+                "description": "Call out 1-2 QI dimensions needing improvement"
+            },
+            "pro_tip": {
+                "type": "string",
+                "maxLength": 120,
+                "description": "Short, actionable coaching advice"
+            },
+            "suggested_upgrade": {
+                "type": "string",
+                "maxLength": 250,
+                "description": "Rewrite of user's question showing stronger version"
+            },
+            "score": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Overall question quality score"
+            },
+            "rubric": {
+                "type": "object",
+                "properties": {
+                    "clarity": {"type": "integer", "minimum": 0, "maximum": 100},
+                    "depth": {"type": "integer", "minimum": 0, "maximum": 100},
+                    "curiosity": {"type": "integer", "minimum": 0, "maximum": 100},
+                    "relevance": {"type": "integer", "minimum": 0, "maximum": 100},
+                    "empathy": {"type": "integer", "minimum": 0, "maximum": 100}
+                },
+                "required": ["clarity", "depth", "curiosity", "relevance", "empathy"],
+                "additionalProperties": False
+            }
+        },
+        "required": ["positive_reinforcement", "dimension_focus", "pro_tip", "suggested_upgrade", "score", "rubric"]
+    }
+}
+
 # Coaching Engine Prompts Library
 COACHING_PROMPTS = {
     "qi_classifier": """You are a QI Skills classifier. Analyze the user's question and identify 1-3 relevant QI skills.
@@ -453,7 +526,7 @@ TASK: Provide comprehensive coaching feedback with these elements:
 
 1. QI SCORE (1-5 for each):
    - Overall: Holistic question quality
-   - Clarity: How specific and well-articulated 
+   - Clarity: How specific and well-articulated
    - Depth: How much it probes beyond surface level
    - Relevance: How well it fits the scenario context
    - Empathy: How much it considers others' perspectives
@@ -470,7 +543,42 @@ TASK: Provide comprehensive coaching feedback with these elements:
 
 7. PROGRESS_MESSAGE: Gamified encouragement tied to skill development (≤150 chars)
 
-Be supportive yet challenging, educational yet practical. Focus on building QI skills."""
+Be supportive yet challenging, educational yet practical. Focus on building QI skills.""",
+
+    "mvp_scorecard": """You are Roga's MVP ScoreCard coach providing the new 5-part feedback structure. Your role is to teach Question Intelligence (QI), not just grade it.
+
+CONTEXT:
+User Question: "{question}"
+Scenario: {scenario_title} - {scenario_text}
+
+CRITICAL REQUIREMENT: You MUST reference the user's actual words throughout your feedback. Quote or paraphrase their specific language to make feedback feel personal and contextual.
+
+TASK: Provide coaching-first feedback with these five components:
+
+1. POSITIVE REINFORCEMENT: Highlight what the user did well in their question. Quote their actual words and be specific about the QI skill they demonstrated. Examples: "I love how you asked about [their specific words]..." or "Your instinct to focus on [quote from their question] shows..." (≤200 chars)
+
+2. DIMENSION FOCUS: Call out 1-2 QI dimensions that need improvement. Reference their specific question and explain why these dimensions need work in their context. (≤150 chars)
+
+3. PRO TIP: Short, actionable coaching advice tied directly to their specific question and scenario. Reference their actual situation, not generic advice. (≤120 chars)
+
+4. SUGGESTED UPGRADE: Rewrite their question to show a stronger version. MUST build from their actual words and context while demonstrating better QI techniques. Keep their voice and situation. (≤250 chars)
+
+5. SCORE + RUBRIC: Overall 0-100 score plus individual dimension scores (0-100) for clarity, depth, curiosity, relevance, empathy.
+
+COACHING LEXICON - Use warm, supportive, mentor-like tone:
+- "I love how you asked about [their words]..."
+- "When you mentioned [quote], you're onto something important..."
+- "Your focus on [their specific concern] shows..."
+- "What if we sharpened your question about [their topic] by..."
+- "Try targeting the specific [part they mentioned]..."
+
+CONTEXTUALIZATION RULES:
+- Always quote or reference their exact words in positive reinforcement
+- In suggested upgrade, build directly from their question structure
+- Connect all advice to their specific scenario and word choices
+- Make it feel like you're responding to THEIR unique question, not giving generic feedback
+
+Be a mentor, not a judge. Make every piece of feedback feel personal to their specific question."""
 }
 
 # Coaching Engine Schema for OpenAI
@@ -991,6 +1099,49 @@ def coach(req: CoachIn):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Coaching pipeline failed: {e}")
 
+def generate_mvp_scorecard_feedback(question: str, scenario_title: str = "", scenario_text: str = "") -> MVPScoreCardFeedback:
+    """Generate MVP 5-part ScoreCard feedback using the new coaching structure"""
+    try:
+        # Format the prompt with context
+        prompt = COACHING_PROMPTS["mvp_scorecard"].format(
+            question=question,
+            scenario_title=scenario_title,
+            scenario_text=scenario_text
+        )
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0.3,
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_schema", "json_schema": MVP_SCORECARD_SCHEMA}
+        )
+
+        feedback_data = json.loads(response.choices[0].message.content)
+
+        # Create the structured response
+        rubric_score = MVPRubricScore(**feedback_data["rubric"])
+
+        return MVPScoreCardFeedback(
+            positive_reinforcement=feedback_data["positive_reinforcement"],
+            dimension_focus=feedback_data["dimension_focus"],
+            pro_tip=feedback_data["pro_tip"],
+            suggested_upgrade=feedback_data["suggested_upgrade"],
+            score=feedback_data["score"],
+            rubric=rubric_score
+        )
+
+    except Exception as e:
+        print(f"Error generating MVP scorecard feedback: {e}")
+        # Return fallback MVP feedback
+        return MVPScoreCardFeedback(
+            positive_reinforcement="I love how you're thinking about this situation and taking the initiative to ask for clarity.",
+            dimension_focus="Let's focus on clarity and depth—being more specific about what exactly you need to understand.",
+            pro_tip="Try targeting the specific part that's unclear rather than asking generally about the whole thing.",
+            suggested_upgrade=f'Instead of "{question[:50]}...", try: "What specific information do I need about [the unclear part] to move forward successfully?"',
+            score=75,
+            rubric=MVPRubricScore(clarity=70, depth=60, curiosity=80, relevance=85, empathy=75)
+        )
+
 def generate_enhanced_feedback(question: str, scenario_title: str = "", scenario_text: str = "") -> EnhancedCoachFeedback:
     """Generate enhanced coaching feedback using the new v2 structure"""
     try:
@@ -1044,12 +1195,49 @@ def generate_enhanced_feedback(question: str, scenario_title: str = "", scenario
             progress_message="🌟 Good start! Keep practicing to sharpen your questioning skills."
         )
 
+@app.post("/coach/mvp", response_model=MVPScoreCardResponse)
+def mvp_scorecard_coach(req: CoachIn):
+    """MVP ScoreCard endpoint with new 5-part feedback structure"""
+    if not req.user_question or not req.user_question.strip():
+        raise HTTPException(status_code=400, detail="Missing user question")
+
+    try:
+        # Generate MVP ScoreCard feedback
+        mvp_feedback = generate_mvp_scorecard_feedback(
+            question=req.user_question,
+            scenario_title=req.scenario_title or '',
+            scenario_text=req.scenario_text or ''
+        )
+
+        # Generate metadata
+        feedback_content = f"{mvp_feedback.positive_reinforcement} {mvp_feedback.dimension_focus} {mvp_feedback.pro_tip}"
+        content_hash = hashlib.sha256(feedback_content.encode()).hexdigest()[:16]
+
+        meta = CoachMeta(
+            brand_check=True,  # MVP feedback is pre-validated
+            length_ok=True,
+            banned_content=[],
+            hash=content_hash
+        )
+
+        return MVPScoreCardResponse(
+            schema="roga.mvp_scorecard.v1",
+            scenario_id=req.scenario_id,
+            user_question=req.user_question.strip(),
+            feedback=mvp_feedback,
+            meta=meta
+        )
+
+    except Exception as e:
+        print(f"Error in MVP scorecard endpoint: {e}")
+        raise HTTPException(status_code=500, detail="Internal MVP scorecard error")
+
 @app.post("/coach/enhanced", response_model=EnhancedCoachResponse)
 def enhanced_coach(req: CoachIn):
     """Enhanced coaching endpoint with comprehensive v2 feedback structure"""
     if not req.user_question or not req.user_question.strip():
         raise HTTPException(status_code=400, detail="Missing user question")
-    
+
     try:
         # Generate enhanced feedback
         enhanced_feedback = generate_enhanced_feedback(
@@ -1057,18 +1245,18 @@ def enhanced_coach(req: CoachIn):
             scenario_title=req.scenario_title or '',
             scenario_text=req.scenario_text or ''
         )
-        
+
         # Generate metadata
         feedback_content = f"{enhanced_feedback.strengths} {enhanced_feedback.improvement} {enhanced_feedback.coaching_moment}"
         content_hash = hashlib.sha256(feedback_content.encode()).hexdigest()[:16]
-        
+
         meta = CoachMeta(
             brand_check=True,  # Enhanced feedback is pre-validated
             length_ok=True,
             banned_content=[],
             hash=content_hash
         )
-        
+
         return EnhancedCoachResponse(
             schema="roga.feedback.v2",
             scenario_id=req.scenario_id,
@@ -1077,7 +1265,7 @@ def enhanced_coach(req: CoachIn):
             coach_feedback=enhanced_feedback,
             meta=meta
         )
-        
+
     except Exception as e:
         print(f"Error in enhanced coach endpoint: {e}")
         raise HTTPException(status_code=500, detail="Internal enhanced coaching error")

@@ -9,6 +9,7 @@ import Link from "next/link";
 import Image from "next/image";
 import DailyChallengeScoreCard from "@/components/DailyChallengeScoreCard";
 import { getFeedback, type CoachFeedback } from "./actions";
+import type { MVPScoreCardResponse } from "@/types/feedback";
 
 interface Scenario {
   id: number;
@@ -125,7 +126,8 @@ export default function DailyChallengePage() {
   const [coachingFeedback, setCoachingFeedback] = useState<CoachingFeedbackData | null>(null);
   const [enhancedFeedback, setEnhancedFeedback] = useState<EnhancedCoachingFeedbackData | null>(null);
   const [dailyChallengeFeedback, setDailyChallengeFeedback] = useState<CoachFeedback | null>(null);
-  const [useCoachingMode, setUseCoachingMode] = useState("v3"); // "v3", "enhanced", "legacy", "original"
+  const [mvpFeedback, setMvpFeedback] = useState<MVPScoreCardResponse | null>(null);
+  const [useCoachingMode, setUseCoachingMode] = useState("mvp"); // "mvp", "v3", "enhanced", "legacy", "original"
   const [isLoading, setIsLoading] = useState(false);
   const [currentScenario, setCurrentScenario] = useState<Scenario>(() => {
     // Start with a random scenario
@@ -142,6 +144,30 @@ export default function DailyChallengePage() {
       setCoachingFeedback(null);
       setEnhancedFeedback(null);
       setDailyChallengeFeedback(null);
+      setMvpFeedback(null);
+
+      if (useCoachingMode === 'mvp') {
+        // Use the new MVP ScoreCard feedback system
+        const response = await fetch('/api/coach/mvp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_question: question,
+            scenario_id: currentScenario.id,
+            scenario_title: currentScenario.title,
+            scenario_text: currentScenario.text
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setMvpFeedback(data);
+          setShowFeedback(true);
+          return;
+        }
+      }
 
       if (useCoachingMode === 'v3') {
         // Use the new Daily Challenge feedback system
@@ -315,6 +341,7 @@ export default function DailyChallengePage() {
     setCoachingFeedback(null);
     setEnhancedFeedback(null);
     setDailyChallengeFeedback(null);
+    setMvpFeedback(null);
   };
 
   const onNewScenario = () => {
@@ -329,6 +356,7 @@ export default function DailyChallengePage() {
     setCoachingFeedback(null);
     setEnhancedFeedback(null);
     setDailyChallengeFeedback(null);
+    setMvpFeedback(null);
   };
 
   return (
@@ -384,6 +412,16 @@ export default function DailyChallengePage() {
 
             {/* Mode Toggle */}
             <div className="mt-4 flex justify-center gap-2 flex-wrap">
+              <button
+                onClick={() => setUseCoachingMode("mvp")}
+                className={`text-sm px-4 py-2 rounded-lg transition-colors ${
+                  useCoachingMode === "mvp"
+                    ? "bg-emerald-100 text-emerald-700 border-2 border-emerald-300 font-bold"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                MVP ScoreCard 🎯
+              </button>
               <button
                 onClick={() => setUseCoachingMode("v3")}
                 className={`text-sm px-4 py-2 rounded-lg transition-colors ${
@@ -457,6 +495,86 @@ export default function DailyChallengePage() {
         <div>
           {showFeedback && (
             <div style={{width: '600px'}}>
+              {/* MVP ScoreCard Feedback */}
+              {mvpFeedback && (
+                <Card className="p-6">
+                  <h3 className="font-bold text-emerald-600 mb-4 text-center">MVP ScoreCard</h3>
+
+                  {/* Overall Score */}
+                  <div className="text-center mb-6">
+                    <div className="text-4xl font-bold text-emerald-600 mb-2">{mvpFeedback.feedback.score}/100</div>
+                    <div className="text-sm text-gray-600 mb-3">Question Intelligence Score</div>
+                  </div>
+
+                  {/* Rubric Breakdown */}
+                  <div className="grid grid-cols-5 gap-4 mb-6">
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-blue-600">{mvpFeedback.feedback.rubric.clarity}</div>
+                      <div className="text-xs text-gray-500">Clarity</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-green-600">{mvpFeedback.feedback.rubric.depth}</div>
+                      <div className="text-xs text-gray-500">Depth</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-purple-600">{mvpFeedback.feedback.rubric.curiosity}</div>
+                      <div className="text-xs text-gray-500">Curiosity</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-orange-600">{mvpFeedback.feedback.rubric.relevance}</div>
+                      <div className="text-xs text-gray-500">Relevance</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-pink-600">{mvpFeedback.feedback.rubric.empathy}</div>
+                      <div className="text-xs text-gray-500">Empathy</div>
+                    </div>
+                  </div>
+
+                  {/* Positive Reinforcement */}
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2 text-emerald-700">✨ What You Did Well:</h4>
+                    <p className="text-coal/80 text-sm leading-relaxed bg-emerald-50 p-3 rounded">
+                      {mvpFeedback.feedback.positive_reinforcement}
+                    </p>
+                  </div>
+
+                  {/* Dimension Focus */}
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2 text-orange-700">🎯 Focus Area:</h4>
+                    <p className="text-coal/80 text-sm leading-relaxed bg-orange-50 p-3 rounded">
+                      {mvpFeedback.feedback.dimension_focus}
+                    </p>
+                  </div>
+
+                  {/* Pro Tip */}
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2 text-blue-700">💡 Pro Tip:</h4>
+                    <p className="text-coal/80 text-sm leading-relaxed bg-blue-50 p-3 rounded">
+                      {mvpFeedback.feedback.pro_tip}
+                    </p>
+                  </div>
+
+                  {/* Suggested Upgrade */}
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2 text-purple-700">⚡ Suggested Upgrade:</h4>
+                    <div className="bg-purple-50 p-3 rounded">
+                      <p className="text-sm text-purple-800 italic">
+                        &ldquo;{mvpFeedback.feedback.suggested_upgrade}&rdquo;
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Meta Info */}
+                  <div className="mt-6 text-center">
+                    <div className="text-xs text-gray-500">
+                      MVP ScoreCard v1 • Quality: {mvpFeedback.meta.brand_check ? '✓ Brand' : '✗ Brand'} •
+                      {mvpFeedback.meta.length_ok ? ' ✓ Length' : ' ✗ Length'} •
+                      Hash: {mvpFeedback.meta.hash}
+                    </div>
+                  </div>
+                </Card>
+              )}
+
               {/* Daily Challenge v3 Feedback */}
               {dailyChallengeFeedback && (
                 <DailyChallengeScoreCard
@@ -467,7 +585,7 @@ export default function DailyChallengePage() {
               )}
 
               {/* Legacy feedback modes */}
-              {!dailyChallengeFeedback && (
+              {!dailyChallengeFeedback && !mvpFeedback && (
                 <Card className="p-6">
                   <h3 className="font-bold text-violet mb-4 text-center">Your Feedback</h3>
 
