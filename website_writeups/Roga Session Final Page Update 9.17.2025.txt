@@ -1,0 +1,207 @@
+1) Assets to export / prep
+
+Icons (SVG): check-circle.svg, leaf.svg (or spark), star.svg (for Best Question), confetti.svg (optional BG sprinkle).
+
+Logo (SVG) already done.
+
+Colors & fonts: use the tokens we shipped (teal, coral, violet, coal, fog; Poppins/Inter/Merriweather).
+
+2) Add a confetti effect (celebration burst)
+
+Option A (tiny, no deps): use canvas-confetti
+.
+
+npm i canvas-confetti
+
+// components/ConfettiBurst.tsx
+"use client";
+import { useEffect } from "react";
+import confetti from "canvas-confetti";
+
+export default function ConfettiBurst() {
+  useEffect(() => {
+    const end = Date.now() + 600;
+    const frame = () => {
+      confetti({ particleCount: 60, startVelocity: 45, spread: 65, origin:{ y: .2 } });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    };
+    frame();
+  }, []);
+  return null;
+}
+
+3) Circular score meter (SVG, no dependency)
+// components/CircleMeter.tsx
+type Props = { value: number; size?: number; label?: string; };
+export default function CircleMeter({ value, size = 96, label }: Props) {
+  const r = 42, c = 2 * Math.PI * r, pct = Math.max(0, Math.min(100, value));
+  const dash = (pct / 100) * c;
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" aria-label={`Score ${pct}/100`}>
+      <circle cx="50" cy="50" r={r} fill="none" stroke="#EEE" strokeWidth="10"/>
+      <circle cx="50" cy="50" r={r} fill="none" stroke="#00BFA6" strokeWidth="10"
+        strokeDasharray={`${dash} ${c-dash}`} strokeLinecap="round" transform="rotate(-90 50 50)"/>
+      <text x="50" y="52" textAnchor="middle" fontSize="18" fontFamily="Inter" fill="#2E2E2E" fontWeight="700">
+        {pct}
+      </text>
+      {label && <text x="50" y="70" textAnchor="middle" fontSize="8" fill="#7B61FF">{label}</text>}
+    </svg>
+  );
+}
+
+4) Session Complete component (drop-in)
+// app/session-complete/page.tsx  (or components/SessionComplete.tsx)
+"use client";
+import ConfettiBurst from "@/components/ConfettiBurst";
+import CircleMeter from "@/components/CircleMeter";
+
+type StrengthOrGrowth = { title: string; bullets: string[] };
+type Props = {
+  rounds: number;
+  avgScore: number;              // 0..100
+  levelLabel: string;            // e.g., "Level 1 • Explorer"
+  streak?: number;               // e.g., 3
+  strengths: StrengthOrGrowth;
+  growth: StrengthOrGrowth;
+  bestQuestion?: string;
+};
+
+export default function SessionCompletePage({
+  rounds = 5,
+  avgScore = 62,
+  levelLabel = "Level 1 • Explorer",
+  streak = 3,
+  strengths = { title: "Strengths", bullets: ["Curious follow-ups", "Stayed on topic"] },
+  growth = { title: "Areas for growth", bullets: ["Tighten clarity", "Ask for specifics"] },
+  bestQuestion = "What would success look like from your perspective next week?"
+}: Partial<Props>) {
+
+  return (
+    <main className="min-h-screen bg-fog text-coal">
+      <ConfettiBurst />
+
+      {/* Top banner */}
+      <section className="bg-teal">
+        <div className="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between text-white">
+          <div className="flex items-center gap-3">
+            <img src="/brand/roga-logo.svg" alt="Roga" className="h-8 w-8" />
+            <h1 className="font-bold text-xl">Session Complete</h1>
+          </div>
+          <div className="flex gap-3">
+            <a href="/daily-challenge" className="rounded-2xl border border-white/40 px-4 py-2 hover:bg-white/10">New Session</a>
+            <a href="/" className="rounded-2xl border border-white/40 px-4 py-2 hover:bg-white/10">Back to Home</a>
+          </div>
+        </div>
+      </section>
+
+      {/* Hero summary */}
+      <section className="max-w-4xl mx-auto px-6 pt-8 text-center">
+        <h2 className="font-serif text-3xl md:text-4xl text-coal">You did it! 🚀</h2>
+        <p className="text-coal/80 mt-2">
+          Completed {rounds} rounds. Your Question Intelligence leveled up.
+        </p>
+        <div className="mt-6 flex items-center justify-center gap-6">
+          <CircleMeter value={avgScore} label="Score" />
+          <div className="text-left">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 shadow-card">
+              <span className="text-violet font-semibold">{levelLabel}</span>
+              {typeof streak === "number" && <span className="text-coral">🔥 {streak}-day streak</span>}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Strengths & Growth cards */}
+      <section className="max-w-5xl mx-auto px-6 mt-8 grid gap-6 md:grid-cols-2">
+        <div className="bg-white rounded-2xl shadow-card p-6 border-l-4 border-teal">
+          <div className="flex items-center gap-2 mb-2">
+            <img src="/icons/check-circle.svg" alt="" className="w-5 h-5" />
+            <h3 className="font-display font-bold">Strengths</h3>
+          </div>
+          <ul className="list-disc ml-5 text-coal/85">
+            {strengths.bullets.map((b, i) => <li key={i}>{b}</li>)}
+          </ul>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-card p-6 border-l-4 border-coral">
+          <div className="flex items-center gap-2 mb-2">
+            <img src="/icons/leaf.svg" alt="" className="w-5 h-5" />
+            <h3 className="font-display font-bold">Areas for Growth</h3>
+          </div>
+          <ul className="list-disc ml-5 text-coal/85">
+            {growth.bullets.map((b, i) => <li key={i}>{b}</li>)}
+          </ul>
+        </div>
+      </section>
+
+      {/* Best question highlight */}
+      {bestQuestion && (
+        <section className="max-w-5xl mx-auto px-6 mt-6">
+          <div className="bg-white rounded-2xl shadow-card p-6 border border-black/10">
+            <div className="flex items-center gap-2 mb-2">
+              <img src="/icons/star.svg" alt="" className="w-5 h-5" />
+              <h3 className="font-display font-bold">Best Question of the Session</h3>
+            </div>
+            <blockquote className="italic text-coal/90">“{bestQuestion}”</blockquote>
+          </div>
+        </section>
+      )}
+
+      {/* CTAs */}
+      <section className="max-w-5xl mx-auto px-6 py-8 flex flex-wrap gap-4 justify-center">
+        <a href="/daily-challenge" className="rounded-2xl bg-teal px-6 py-3 font-semibold text-white hover:bg-violet transition-colors">
+          Try Another Challenge
+        </a>
+        <a href="/streaks" className="rounded-2xl bg-white px-6 py-3 font-semibold text-coal border border-black/10 hover:bg-fog">
+          Explore Streaks & Badges
+        </a>
+        <a href="/" className="rounded-2xl text-coal/70 hover:underline px-3 py-3">Back to Home</a>
+      </section>
+
+      {/* footer */}
+      <footer className="bg-fog border-t border-black/5">
+        <div className="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between text-sm text-coal/70">
+          <p>MVP • v0</p>
+          <nav className="flex gap-4">
+            <a href="/privacy" className="hover:underline">Privacy</a>
+            <a href="/terms" className="hover:underline">Terms</a>
+            <a href="/contact" className="hover:underline">Contact</a>
+          </nav>
+        </div>
+      </footer>
+    </main>
+  );
+}
+
+5) API → UI contract (simple JSON)
+
+Have your backend return something like:
+
+{
+  "rounds": 5,
+  "avgScore": 62,
+  "levelLabel": "Level 1 • Explorer",
+  "streak": 3,
+  "strengths": ["Curious follow-ups", "Stayed on topic"],
+  "growth": ["Tighten clarity", "Ask for specifics"],
+  "bestQuestion": "What would success look like from your perspective next week?"
+}
+
+
+Map directly into the component props.
+
+6) Tailwind notes
+
+Cards: bg-white rounded-2xl shadow-card p-6
+
+Headline serif: apply your font-serif/Merriweather class to H2/H3 where you want that flavor.
+
+Colors/hover states match homepage: teal primary, violet hover, coral accents.
+
+7) A11y & polish
+
+Ensure all icons have alt="" (decorative), labels on SVG meter via aria-label.
+
+Respect prefers-reduced-motion—skip confetti if set.
+
+Keep language encouraging; avoid harsh scores alone—pair with level label.

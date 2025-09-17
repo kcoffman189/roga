@@ -265,31 +265,55 @@ export default function RogaSessionsPage() {
     if (!session) return;
 
     try {
-      const res = await fetch(`/api/sessions/${session.id}/complete`, {
+      // Call the enhanced completion endpoint
+      const res = await fetch(`/api/sessions/${session.id}/complete-enhanced`, {
         method: 'POST'
       });
 
-      const summary = await res.json();
+      if (res.ok) {
+        const enhancedData = await res.json();
 
-      // Calculate overall session feedback similar to individual rounds
-      const avgScore = Math.round(turns.reduce((sum, turn) => sum + (turn.feedback?.score || 0), 0) / Math.max(turns.length, 1));
+        // Redirect to the new session complete page with data
+        const urlParams = new URLSearchParams({
+          rounds: enhancedData.rounds.toString(),
+          avgScore: enhancedData.avgScore.toString(),
+          levelLabel: enhancedData.levelLabel,
+          streak: enhancedData.streak?.toString() || '3',
+          strengths: enhancedData.strengths.join('|'),
+          growth: enhancedData.growth.join('|'),
+          bestQuestion: enhancedData.bestQuestion
+        });
 
-      // Create comprehensive session feedback
-      const enhancedSummary = {
-        ...summary,
-        overallScore: avgScore,
-        totalRounds: turns.length,
-        sessionFeedback: {
-          strengths: "You demonstrated consistent engagement and thoughtful questioning throughout the session.",
-          improvement: "Continue practicing to develop even deeper inquiry skills and follow-up techniques.",
-          overallNote: `Completed ${turns.length} rounds with an average score of ${avgScore}/100. Your questioning skills are developing well.`
-        }
-      };
+        window.location.href = `/session-complete?${urlParams.toString()}`;
+      } else {
+        // Fallback to legacy completion if enhanced endpoint fails
+        const fallbackRes = await fetch(`/api/sessions/${session.id}/complete`, {
+          method: 'POST'
+        });
+        const summary = await fallbackRes.json();
 
-      setSessionSummary(enhancedSummary);
-      setGameState('completed');
+        // Calculate overall session feedback similar to individual rounds
+        const avgScore = Math.round(turns.reduce((sum, turn) => sum + (turn.feedback?.score || 0), 0) / Math.max(turns.length, 1));
+
+        // Create comprehensive session feedback
+        const enhancedSummary = {
+          ...summary,
+          overallScore: avgScore,
+          totalRounds: turns.length,
+          sessionFeedback: {
+            strengths: "You demonstrated consistent engagement and thoughtful questioning throughout the session.",
+            improvement: "Continue practicing to develop even deeper inquiry skills and follow-up techniques.",
+            overallNote: `Completed ${turns.length} rounds with an average score of ${avgScore}/100. Your questioning skills are developing well.`
+          }
+        };
+
+        setSessionSummary(enhancedSummary);
+        setGameState('completed');
+      }
     } catch (error) {
       console.error('Failed to complete session:', error);
+      // Show legacy completion interface as fallback
+      setGameState('completed');
     }
   };
 

@@ -1,0 +1,87 @@
+📄 Roga MVP Development Brief: ScoreCard & Coaching
+🎯 Purpose
+
+Refine the ScoreCard system to deliver coaching-first feedback that teaches Question Intelligence (QI), not just grades it. This is Roga’s core differentiator and must feel sharp, supportive, and growth-oriented by MVP launch.
+
+🔑 Current State
+
+Backend returns: score, rubric breakdown, Pro Tip, Suggested Upgrade, badge.
+
+Tone: sometimes generic, not consistently tied to user’s actual question.
+
+Latency: ~5–8 seconds, acceptable but noticeable.
+
+Error handling: basic.
+
+🛠️ Required Enhancements
+1. Feedback Structure (Backend Prompt Engineering)
+
+Every ScoreCard must return these five components:
+
+Positive Reinforcement → Highlight what the user did well.
+
+Dimension Focus → Call out 1–2 QI dimensions needing improvement.
+
+Pro Tip → Short, actionable coaching advice.
+
+Suggested Upgrade → Rewrite of the user’s question showing a stronger version.
+
+Score + Rubric Breakdown → 0–100 score + ratings across clarity, depth, curiosity, relevance, empathy.
+
+2. Contextualization (Backend + CLO Input)
+
+Feedback must reference the user’s actual words in both reinforcement and Suggested Upgrade.
+
+CLO to provide sub-criteria for each QI dimension so feedback feels specific (e.g., Clarity = concise + avoids jargon).
+
+Backend prompt must tie feedback explicitly to at least one QI dimension.
+
+3. Tone & Variety (Backend + Editor Input)
+
+Editor to draft a Coaching Lexicon (approved phrases for encouragement, pro tips, upgrades).
+
+Backend should randomize among phrasing templates to avoid repetition.
+
+Tone must be warm, constructive, and conversational (mentor, not judge).
+
+4. Technical Enhancements (CTO Lead)
+
+Enforce strict JSON schema with fields: {reinforcement, dimensions, pro_tip, suggested_upgrade, score, rubric}.
+
+Add prompt instructions to ensure dimension coverage.
+
+Add multiple Pro Tip templates to backend prompt for variety.
+
+Future-ready: allow dimension weighting if we expand scoring model.
+
+5. Testing & QA
+
+Founder review of 10–15 sample ScoreCards.
+
+Must feel like coaching, not grading.
+
+If feedback feels generic → refine prompt.
+
+If Suggested Upgrade doesn’t use user’s words → reject and fix.
+
+📚 Role Breakdown
+
+CTO → Backend prompt structure, JSON enforcement, integration.
+
+CLO → Expand QI dimension definitions into sub-criteria.
+
+Editor → Build Coaching Lexicon + Pro Tip variations.
+
+Founder → Final review for “does this feel like coaching?”
+
+🚀 MVP Success Criteria
+
+Every ScoreCard consistently delivers the 5-part structure.
+
+Feedback feels specific, contextual, and encouraging.
+
+Suggested Upgrade always shows a clearer, stronger question.
+
+Rubric breakdown ties directly to the 5 QI dimensions.
+
+Tone is distinctly Roga: modern, approachable, mentor-like.

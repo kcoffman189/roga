@@ -110,6 +110,15 @@ class CompleteSessionResponse(BaseModel):
     bestQuestion: str
     badges: List[str]
 
+class EnhancedCompleteSessionResponse(BaseModel):
+    rounds: int
+    avgScore: int
+    levelLabel: str
+    streak: Optional[int] = None
+    strengths: List[str]
+    growth: List[str]
+    bestQuestion: str
+
 # Coaching Engine Models (v1.0)
 QISkill = Literal[
     "clarifying", "probing", "criteria-setting", "perspective-taking", 
@@ -1592,6 +1601,103 @@ def complete_session(session_id: str):
         summary=summary,
         bestQuestion=best_question,
         badges=badges
+    )
+
+@app.post("/sessions/{session_id}/complete-enhanced", response_model=EnhancedCompleteSessionResponse)
+def complete_session_enhanced(session_id: str):
+    """Complete a session and provide enhanced summary with strengths and growth analysis"""
+    if session_id not in SESSIONS:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    session = SESSIONS[session_id]
+    turns = TURNS.get(session_id, [])
+
+    if not turns:
+        raise HTTPException(status_code=400, detail="No turns found for this session")
+
+    # Calculate metrics
+    scores = [t["feedback"]["score"] for t in turns]
+    avg_score = int(sum(scores) / len(scores))
+    total_rounds = len(turns)
+
+    # Find best question (highest score)
+    best_turn = max(turns, key=lambda t: t["feedback"]["score"])
+    best_question = best_turn["question"]
+
+    # Determine level based on average score
+    if avg_score >= 90:
+        level_label = "Level 3 • Master"
+    elif avg_score >= 75:
+        level_label = "Level 2 • Skilled"
+    else:
+        level_label = "Level 1 • Explorer"
+
+    # Analyze strengths based on feedback patterns
+    strengths = []
+    good_rubric_items = []
+
+    for turn in turns:
+        rubric = turn["feedback"].get("rubric", [])
+        for item in rubric:
+            if item.get("status") == "good":
+                good_rubric_items.append(item["key"])
+
+    # Count frequency of good dimensions
+    from collections import Counter
+    good_counts = Counter(good_rubric_items)
+
+    if good_counts.get("clarity", 0) >= total_rounds * 0.6:
+        strengths.append("Clear and specific questioning")
+    if good_counts.get("depth", 0) >= total_rounds * 0.6:
+        strengths.append("Deep analytical thinking")
+    if good_counts.get("insight", 0) >= total_rounds * 0.6:
+        strengths.append("Insightful perspectives")
+    if good_counts.get("openness", 0) >= total_rounds * 0.6:
+        strengths.append("Open-ended exploration")
+
+    # Fallback strengths if none identified
+    if not strengths:
+        if avg_score >= 70:
+            strengths = ["Curious questioning approach", "Stayed engaged throughout"]
+        else:
+            strengths = ["Willingness to ask questions", "Completed the full session"]
+
+    # Analyze growth areas based on warn/bad rubric items
+    growth = []
+    weak_rubric_items = []
+
+    for turn in turns:
+        rubric = turn["feedback"].get("rubric", [])
+        for item in rubric:
+            if item.get("status") in ["warn", "bad"]:
+                weak_rubric_items.append(item["key"])
+
+    weak_counts = Counter(weak_rubric_items)
+
+    if weak_counts.get("clarity", 0) >= total_rounds * 0.5:
+        growth.append("Focus on specificity and clear language")
+    if weak_counts.get("depth", 0) >= total_rounds * 0.5:
+        growth.append("Probe deeper beneath surface level")
+    if weak_counts.get("insight", 0) >= total_rounds * 0.5:
+        growth.append("Explore non-obvious angles and connections")
+    if weak_counts.get("openness", 0) >= total_rounds * 0.5:
+        growth.append("Ask more open-ended questions")
+
+    # Fallback growth areas if none identified
+    if not growth:
+        growth = ["Continue practicing question variety", "Experiment with different QI techniques"]
+
+    # Simulate streak (would come from user data in real implementation)
+    streak = 3  # This would be calculated from user's session history
+
+    return EnhancedCompleteSessionResponse(
+        rounds=total_rounds,
+        avgScore=avg_score,
+        levelLabel=level_label,
+        streak=streak,
+        strengths=strengths,
+        growth=growth,
+        bestQuestion=best_question
     )
 
 # Daily Challenge Coaching Upgrade - Helper Functions
