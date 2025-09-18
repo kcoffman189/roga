@@ -1,6 +1,5 @@
 "use client";
 import ConfettiBurst from "@/components/ConfettiBurst";
-import CircleMeter from "@/components/CircleMeter";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -27,110 +26,124 @@ export default function SessionComplete({
 }: Partial<Props>) {
 
   return (
-    <main className="min-h-screen bg-fog text-coal">
+    <main className="min-h-screen bg-teal text-white">
       <ConfettiBurst />
 
-      {/* Top banner */}
-      <section className="bg-teal">
-        <div className="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between text-white">
-          <div className="flex items-center gap-3">
-            <Image src="/brand/roga-logo.svg" alt="Roga" width={32} height={32} className="h-8 w-8" />
-            <h1 className="font-bold text-xl">Session Complete</h1>
+      {/* Mobile-optimized header with logo and confetti stars */}
+      <section className="bg-teal relative px-4 py-6">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Decorative stars/confetti */}
+          <div className="absolute top-4 left-8 text-yellow-400 text-lg">✨</div>
+          <div className="absolute top-8 right-12 text-yellow-400 text-sm">⭐</div>
+          <div className="absolute top-12 left-16 text-yellow-400 text-xs">✨</div>
+          <div className="absolute top-6 right-20 text-yellow-400 text-lg">⭐</div>
+          <div className="absolute top-16 left-24 text-yellow-400 text-sm">✨</div>
+          <div className="absolute top-20 right-8 text-yellow-400 text-xs">⭐</div>
+        </div>
+
+        <div className="relative z-10 text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="w-6 h-6 bg-white rounded flex items-center justify-center text-teal font-bold text-sm">?</div>
+            <span className="font-serif text-lg">roga</span>
           </div>
-          <div className="flex gap-3">
-            <Link href="/game/sessions" className="rounded-2xl border border-white/40 px-4 py-2 hover:bg-white/10 transition-colors">
-              New Session
-            </Link>
-            <Link href="/" className="rounded-2xl border border-white/40 px-4 py-2 hover:bg-white/10 transition-colors">
-              Back to Home
-            </Link>
+
+          <h1 className="font-serif text-2xl mb-2">You did it!</h1>
+          <p className="text-white/90 text-sm">
+            Your Question Intelligence<br />just leveled up.
+          </p>
+
+          {/* Score and streak info */}
+          <div className="mt-4 flex items-center justify-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-12 h-12 relative">
+                <svg viewBox="0 0 40 40" className="w-12 h-12 transform -rotate-90">
+                  <circle cx="20" cy="20" r="16" stroke="#ffffff40" strokeWidth="3" fill="none" />
+                  <circle
+                    cx="20" cy="20" r="16"
+                    stroke="#22c55e"
+                    strokeWidth="3"
+                    fill="none"
+                    strokeDasharray={`${(avgScore/100) * 100.53} 100.53`}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-xs font-bold text-white">{avgScore}%</span>
+                </div>
+              </div>
+              <div className="text-left text-xs">
+                <div className="font-semibold">{levelLabel}</div>
+              </div>
+            </div>
+
+            {typeof streak === "number" && (
+              <div className="bg-white/20 rounded-full px-3 py-1">
+                <span className="text-xs font-semibold">🔥 {streak}-day streak!</span>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Hero summary */}
-      <section className="max-w-4xl mx-auto px-6 pt-8 text-center">
-        <h2 className="font-serif text-3xl md:text-4xl text-coal">You did it! 🚀</h2>
-        <p className="text-coal/80 mt-2">
-          Completed {rounds} rounds. Your Question Intelligence leveled up.
-        </p>
-        <div className="mt-6 flex items-center justify-center gap-6">
-          <CircleMeter value={avgScore} label="Score" />
-          <div className="text-left">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 shadow-card">
-              <span className="text-violet font-semibold">{levelLabel}</span>
-              {typeof streak === "number" && (
-                <span className="text-coral">🔥 {streak}-day streak</span>
-              )}
+      {/* Compact content section with white background */}
+      <section className="bg-white text-coal px-4 py-6 mx-4 mt-6 rounded-t-3xl">
+        {/* Strengths & Growth cards */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs">✓</span>
+              </div>
+              <h3 className="font-semibold text-sm text-green-800">Strengths</h3>
+            </div>
+            <div className="text-xs text-green-700 space-y-1">
+              {strengths.bullets.map((b, i) => (
+                <div key={i}>• {b}</div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs">!</span>
+              </div>
+              <h3 className="font-semibold text-sm text-red-800">Growth Areas</h3>
+            </div>
+            <div className="text-xs text-red-700 space-y-1">
+              {growth.bullets.map((b, i) => (
+                <div key={i}>• {b}</div>
+              ))}
             </div>
           </div>
         </div>
-      </section>
 
-      {/* Strengths & Growth cards */}
-      <section className="max-w-5xl mx-auto px-6 mt-8 grid gap-6 md:grid-cols-2">
-        <div className="bg-white rounded-2xl shadow-card p-6 border-l-4 border-teal">
-          <div className="flex items-center gap-2 mb-2">
-            <Image src="/icons/check-circle.svg" alt="" width={20} height={20} className="w-5 h-5" />
-            <h3 className="font-display font-bold">Strengths</h3>
-          </div>
-          <ul className="list-disc ml-5 text-coal/85">
-            {strengths.bullets.map((b, i) => (
-              <li key={i}>{b}</li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-card p-6 border-l-4 border-coral">
-          <div className="flex items-center gap-2 mb-2">
-            <Image src="/icons/leaf.svg" alt="" width={20} height={20} className="w-5 h-5" />
-            <h3 className="font-display font-bold">Areas for Growth</h3>
-          </div>
-          <ul className="list-disc ml-5 text-coal/85">
-            {growth.bullets.map((b, i) => (
-              <li key={i}>{b}</li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* Best question highlight */}
-      {bestQuestion && (
-        <section className="max-w-5xl mx-auto px-6 mt-6">
-          <div className="bg-white rounded-2xl shadow-card p-6 border border-black/10">
+        {/* Best question highlight */}
+        {bestQuestion && (
+          <div className="bg-purple-50 rounded-xl p-4 mb-6 border border-purple-200">
             <div className="flex items-center gap-2 mb-2">
-              <Image src="/icons/star.svg" alt="" width={20} height={20} className="w-5 h-5" />
-              <h3 className="font-display font-bold">Best Question of the Session</h3>
+              <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs">⭐</span>
+              </div>
+              <h3 className="font-semibold text-sm text-purple-800">Best Question of the Session</h3>
             </div>
-            <blockquote className="italic text-coal/90">&ldquo;{bestQuestion}&rdquo;</blockquote>
+            <blockquote className="text-xs text-purple-700 italic">&ldquo;{bestQuestion}&rdquo;</blockquote>
           </div>
-        </section>
-      )}
+        )}
 
-      {/* CTAs */}
-      <section className="max-w-5xl mx-auto px-6 py-8 flex flex-wrap gap-4 justify-center">
-        <Link href="/game" className="rounded-2xl bg-teal px-6 py-3 font-semibold text-white hover:bg-violet transition-colors">
-          Try Another Challenge
-        </Link>
-        <Link href="/streaks" className="rounded-2xl bg-white px-6 py-3 font-semibold text-coal border border-black/10 hover:bg-fog transition-colors">
-          Explore Streaks & Badges
-        </Link>
-        <Link href="/" className="rounded-2xl text-coal/70 hover:underline px-3 py-3">
-          Back to Home
-        </Link>
-      </section>
-
-      {/* footer */}
-      <footer className="bg-fog border-t border-black/5">
-        <div className="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between text-sm text-coal/70">
-          <p>MVP • v0</p>
-          <nav className="flex gap-4">
-            <Link href="/privacy" className="hover:underline">Privacy</Link>
-            <Link href="/terms" className="hover:underline">Terms</Link>
-            <Link href="/contact" className="hover:underline">Contact</Link>
-          </nav>
+        {/* Action buttons */}
+        <div className="space-y-3">
+          <Link href="/game" className="block w-full bg-teal text-white text-center py-3 rounded-xl font-semibold text-sm hover:bg-teal/90 transition-colors">
+            Try Another Challenge
+          </Link>
+          <Link href="/streaks" className="block w-full bg-gray-100 text-coal text-center py-3 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors">
+            View Streaks & Badges
+          </Link>
         </div>
-      </footer>
+
+        {/* Keep your streak alive text */}
+        <p className="text-center text-xs text-gray-600 mt-4">Keep your streak alive!</p>
+      </section>
     </main>
   );
 }
