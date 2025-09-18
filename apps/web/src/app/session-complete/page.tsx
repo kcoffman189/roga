@@ -7,7 +7,6 @@ function SessionCompleteContent() {
   const searchParams = useSearchParams();
 
   // Get data from URL params or use defaults for demo
-  const rounds = parseInt(searchParams.get('rounds') || '3');
   const avgScore = parseInt(searchParams.get('avgScore') || '75');
   const levelLabel = searchParams.get('levelLabel') || 'Level 1 • Explorer';
   const streak = searchParams.get('streak') ? parseInt(searchParams.get('streak')!) : 3;
@@ -27,7 +26,6 @@ function SessionCompleteContent() {
 
   return (
     <SessionComplete
-      rounds={rounds}
       avgScore={avgScore}
       levelLabel={levelLabel}
       streak={streak}
