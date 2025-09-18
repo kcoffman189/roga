@@ -1,5 +1,6 @@
 "use client";
 import ConfettiBurst from "@/components/ConfettiBurst";
+import BrandMark from "@/components/ui/BrandMark";
 import Link from "next/link";
 
 type StrengthOrGrowth = { title: string; bullets: string[] };
@@ -23,37 +24,31 @@ export default function SessionComplete({
 }: Partial<Props>) {
 
   return (
-    <main className="min-h-screen bg-teal text-white">
+    <main className="min-h-screen bg-white">
       <ConfettiBurst />
 
-      {/* Mobile-optimized header with logo and confetti stars */}
-      <section className="bg-teal relative px-4 py-6">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Decorative stars/confetti */}
-          <div className="absolute top-4 left-8 text-yellow-400 text-lg">✨</div>
-          <div className="absolute top-8 right-12 text-yellow-400 text-sm">⭐</div>
-          <div className="absolute top-12 left-16 text-yellow-400 text-xs">✨</div>
-          <div className="absolute top-6 right-20 text-yellow-400 text-lg">⭐</div>
-          <div className="absolute top-16 left-24 text-yellow-400 text-sm">✨</div>
-          <div className="absolute top-20 right-8 text-yellow-400 text-xs">⭐</div>
+      {/* Header section matching home page style - 1/3 screen height */}
+      <section className="min-h-[33vh] relative px-6 py-6" style={{backgroundColor: '#20B2AA'}}>
+        {/* Logo positioned like home page */}
+        <div className="absolute top-8 flex items-center gap-4" style={{left: '86px'}}>
+          <BrandMark size={50} />
+          <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '3rem', color: 'white'}}>roga</span>
         </div>
 
-        <div className="relative z-10 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-6 h-6 bg-white rounded flex items-center justify-center text-teal font-bold text-sm">?</div>
-            <span className="font-serif text-lg">roga</span>
-          </div>
-
-          <h1 className="font-serif text-2xl mb-2">You did it!</h1>
-          <p className="text-white/90 text-sm">
-            Your Question Intelligence<br />just leveled up.
+        {/* Centered hero content */}
+        <div className="flex flex-col items-center justify-center min-h-[25vh] text-center space-y-4 max-w-4xl mx-auto">
+          <h1 className="text-white text-4xl md:text-5xl leading-tight" style={{fontFamily: 'Georgia, serif', color: 'white'}}>
+            You did it!
+          </h1>
+          <p className="text-white text-lg md:text-xl max-w-2xl mx-auto" style={{fontFamily: 'Georgia, serif', color: 'white'}}>
+            Your Question Intelligence just leveled up.
           </p>
 
           {/* Score and streak info */}
-          <div className="mt-4 flex items-center justify-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-12 h-12 relative">
-                <svg viewBox="0 0 40 40" className="w-12 h-12 transform -rotate-90">
+          <div className="mt-4 flex items-center justify-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-16 h-16 relative">
+                <svg viewBox="0 0 40 40" className="w-16 h-16 transform -rotate-90">
                   <circle cx="20" cy="20" r="16" stroke="#ffffff40" strokeWidth="3" fill="none" />
                   <circle
                     cx="20" cy="20" r="16"
@@ -65,25 +60,25 @@ export default function SessionComplete({
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xs font-bold text-white">{avgScore}%</span>
+                  <span className="text-sm font-bold text-white">{avgScore}%</span>
                 </div>
               </div>
-              <div className="text-left text-xs">
-                <div className="font-semibold">{levelLabel}</div>
+              <div className="text-left text-white">
+                <div className="font-semibold text-lg" style={{fontFamily: 'Georgia, serif'}}>{levelLabel}</div>
               </div>
             </div>
 
             {typeof streak === "number" && (
-              <div className="bg-white/20 rounded-full px-3 py-1">
-                <span className="text-xs font-semibold">🔥 {streak}-day streak!</span>
+              <div className="bg-white/20 rounded-full px-4 py-2">
+                <span className="text-sm font-semibold text-white" style={{fontFamily: 'Georgia, serif'}}>🔥 {streak}-day streak!</span>
               </div>
             )}
           </div>
         </div>
       </section>
 
-      {/* Compact content section with white background */}
-      <section className="bg-white text-coal px-4 py-6 mx-4 mt-6 rounded-t-3xl">
+      {/* Content section */}
+      <section className="bg-white text-coal px-6 py-8 max-w-4xl mx-auto">
         {/* Strengths & Growth cards */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <div className="bg-green-50 rounded-xl p-4 border border-green-200">
