@@ -29,24 +29,24 @@ export default function SessionComplete({
         {/* Static confetti decoration */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {/* Yellow confetti pieces */}
-          <div className="absolute top-12 left-16 w-2 h-2 bg-yellow-400 rounded-full"></div>
-          <div className="absolute top-16 right-20 w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
-          <div className="absolute top-8 left-32 w-1 h-1 bg-yellow-400 rounded-full"></div>
-          <div className="absolute top-20 right-12 w-2 h-2 bg-yellow-400 rounded-full"></div>
-          <div className="absolute top-6 left-48 w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
-          <div className="absolute top-14 right-32 w-1 h-1 bg-yellow-400 rounded-full"></div>
+          <div className="absolute top-12 left-16 w-3 h-3 bg-yellow-300 rounded-full shadow-sm"></div>
+          <div className="absolute top-16 right-20 w-2 h-2 bg-yellow-400 rounded-full"></div>
+          <div className="absolute top-8 left-32 w-2 h-2 bg-yellow-300 rounded-full"></div>
+          <div className="absolute top-20 right-12 w-3 h-3 bg-yellow-400 rounded-full shadow-sm"></div>
+          <div className="absolute top-6 left-48 w-2 h-2 bg-yellow-300 rounded-full"></div>
+          <div className="absolute top-14 right-32 w-2 h-2 bg-yellow-400 rounded-full"></div>
 
-          {/* Teal confetti pieces */}
-          <div className="absolute top-10 left-24 w-1.5 h-1.5 bg-teal-300 rounded-full"></div>
-          <div className="absolute top-18 right-16 w-1 h-1 bg-teal-300 rounded-full"></div>
-          <div className="absolute top-4 left-40 w-2 h-2 bg-teal-300 rounded-full"></div>
-          <div className="absolute top-22 right-28 w-1.5 h-1.5 bg-teal-300 rounded-full"></div>
+          {/* Light blue/cyan confetti pieces */}
+          <div className="absolute top-10 left-24 w-2 h-2 bg-cyan-300 rounded-full"></div>
+          <div className="absolute top-[4.5rem] right-16 w-2 h-2 bg-cyan-200 rounded-full"></div>
+          <div className="absolute top-4 left-40 w-3 h-3 bg-cyan-300 rounded-full shadow-sm"></div>
+          <div className="absolute top-[5.5rem] right-28 w-2 h-2 bg-cyan-200 rounded-full"></div>
 
           {/* Pink/coral confetti pieces */}
-          <div className="absolute top-14 left-20 w-1 h-1 bg-pink-400 rounded-full"></div>
-          <div className="absolute top-8 right-24 w-1.5 h-1.5 bg-pink-400 rounded-full"></div>
-          <div className="absolute top-20 left-36 w-2 h-2 bg-pink-400 rounded-full"></div>
-          <div className="absolute top-12 right-8 w-1 h-1 bg-pink-400 rounded-full"></div>
+          <div className="absolute top-14 left-20 w-2 h-2 bg-pink-300 rounded-full"></div>
+          <div className="absolute top-8 right-24 w-2 h-2 bg-pink-400 rounded-full"></div>
+          <div className="absolute top-20 left-36 w-3 h-3 bg-pink-300 rounded-full shadow-sm"></div>
+          <div className="absolute top-12 right-8 w-2 h-2 bg-pink-400 rounded-full"></div>
         </div>
 
         {/* Logo positioned like home page */}
