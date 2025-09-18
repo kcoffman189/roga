@@ -1,5 +1,4 @@
 "use client";
-import ConfettiBurst from "@/components/ConfettiBurst";
 import BrandMark from "@/components/ui/BrandMark";
 import Link from "next/link";
 
@@ -25,10 +24,31 @@ export default function SessionComplete({
 
   return (
     <main className="min-h-screen bg-white">
-      <ConfettiBurst />
-
       {/* Header section matching home page style - 1/3 screen height */}
       <section className="min-h-[33vh] relative px-6 py-6" style={{backgroundColor: '#20B2AA'}}>
+        {/* Static confetti decoration */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Yellow confetti pieces */}
+          <div className="absolute top-12 left-16 w-2 h-2 bg-yellow-400 rounded-full"></div>
+          <div className="absolute top-16 right-20 w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
+          <div className="absolute top-8 left-32 w-1 h-1 bg-yellow-400 rounded-full"></div>
+          <div className="absolute top-20 right-12 w-2 h-2 bg-yellow-400 rounded-full"></div>
+          <div className="absolute top-6 left-48 w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
+          <div className="absolute top-14 right-32 w-1 h-1 bg-yellow-400 rounded-full"></div>
+
+          {/* Teal confetti pieces */}
+          <div className="absolute top-10 left-24 w-1.5 h-1.5 bg-teal-300 rounded-full"></div>
+          <div className="absolute top-18 right-16 w-1 h-1 bg-teal-300 rounded-full"></div>
+          <div className="absolute top-4 left-40 w-2 h-2 bg-teal-300 rounded-full"></div>
+          <div className="absolute top-22 right-28 w-1.5 h-1.5 bg-teal-300 rounded-full"></div>
+
+          {/* Pink/coral confetti pieces */}
+          <div className="absolute top-14 left-20 w-1 h-1 bg-pink-400 rounded-full"></div>
+          <div className="absolute top-8 right-24 w-1.5 h-1.5 bg-pink-400 rounded-full"></div>
+          <div className="absolute top-20 left-36 w-2 h-2 bg-pink-400 rounded-full"></div>
+          <div className="absolute top-12 right-8 w-1 h-1 bg-pink-400 rounded-full"></div>
+        </div>
+
         {/* Logo positioned like home page */}
         <div className="absolute top-8 flex items-center gap-4" style={{left: '86px'}}>
           <BrandMark size={50} />
