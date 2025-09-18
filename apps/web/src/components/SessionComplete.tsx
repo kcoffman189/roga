@@ -1,12 +1,10 @@
 "use client";
 import ConfettiBurst from "@/components/ConfettiBurst";
 import Link from "next/link";
-import Image from "next/image";
 
 type StrengthOrGrowth = { title: string; bullets: string[] };
 
 type Props = {
-  rounds: number;
   avgScore: number;              // 0..100
   levelLabel: string;            // e.g., "Level 1 • Explorer"
   streak?: number;               // e.g., 3
@@ -16,7 +14,6 @@ type Props = {
 };
 
 export default function SessionComplete({
-  rounds = 3,
   avgScore = 62,
   levelLabel = "Level 1 • Explorer",
   streak = 3,
