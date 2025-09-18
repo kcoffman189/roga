@@ -29,7 +29,9 @@ export default function Home() {
             </Link>
             <Link href="/game/sessions">
               <Button className="text-lg px-8 py-4 border-0">
-                Roga Sessions
+                <span className="text-center leading-tight">
+                  Roga Session -<br />Under Construction
+                </span>
               </Button>
             </Link>
           </div>
