@@ -148,7 +148,13 @@ export default function SessionComplete({
           <Link href="/game" className="block w-full bg-teal text-white text-center py-3 rounded-xl font-semibold text-sm hover:bg-teal/90 transition-colors">
             Try Another Challenge
           </Link>
-          <Link href="/streaks" className="block w-full bg-gray-100 text-coal text-center py-3 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors">
+          <Link href="/game/sessions" className="block w-full bg-violet text-white text-center py-3 rounded-xl font-semibold text-sm hover:bg-violet/90 transition-colors">
+            Start New Session
+          </Link>
+          <Link href="/" className="block w-full bg-gray-100 text-coal text-center py-3 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors">
+            Back to Home
+          </Link>
+          <Link href="/streaks" className="block w-full border border-gray-300 text-coal text-center py-3 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors">
             View Streaks & Badges
           </Link>
         </div>
