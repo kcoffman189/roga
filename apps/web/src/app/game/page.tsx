@@ -564,14 +564,6 @@ export default function DailyChallengePage() {
                     </div>
                   </div>
 
-                  {/* Meta Info */}
-                  <div className="mt-6 text-center">
-                    <div className="text-xs text-gray-500">
-                      MVP ScoreCard v1 • Quality: {mvpFeedback.meta.brand_check ? '✓ Brand' : '✗ Brand'} •
-                      {mvpFeedback.meta.length_ok ? ' ✓ Length' : ' ✗ Length'} •
-                      Hash: {mvpFeedback.meta.hash}
-                    </div>
-                  </div>
                 </Card>
               )}
 
