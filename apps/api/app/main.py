@@ -532,14 +532,10 @@ EVALUATOR_V3_SCHEMA = {
                 "required": ["clarity", "depth", "relevance", "empathy"],
                 "additionalProperties": False
             },
-            "qiSkillDetected": {
-                "type": "object",
-                "properties": {
-                    "name": {"type": "string", "maxLength": 50},
-                    "strength": {"type": "string", "maxLength": 100}
-                },
-                "required": ["name", "strength"],
-                "additionalProperties": False
+            "skillDetected": {
+                "type": "string",
+                "maxLength": 80,
+                "description": "QI Skill name with quality rating (e.g., 'Clarifying (attempted, but vague)')"
             },
             "strengths": {"type": "string", "maxLength": 120, "description": "What the user did well"},
             "improvementArea": {"type": "string", "maxLength": 120, "description": "Key area for improvement"},
@@ -562,8 +558,83 @@ EVALUATOR_V3_SCHEMA = {
                 "description": "Follow-up question ideas"
             }
         },
-        "required": ["overallScore", "subscores", "qiSkillDetected", "strengths", "improvementArea", "coachingNugget", "exampleUpgrades", "progressNote"],
+        "required": ["overallScore", "subscores", "skillDetected", "strengths", "improvementArea", "coachingNugget", "exampleUpgrades", "progressNote"],
         "additionalProperties": False
+    }
+}
+
+# QI Library - Curated coaching content for consistency
+QI_LIBRARY = {
+    "coaching_nuggets": {
+        "clarifying": [
+            "Strong clarifiers reduce uncertainty when they point to the missing detail, not the whole message.",
+            "Effective clarifying questions target specific gaps rather than asking for everything to be repeated.",
+            "The best clarifiers help others understand exactly what's confusing you."
+        ],
+        "probing": [
+            "Deep probing questions uncover the 'why' behind the surface answer.",
+            "Great probing moves from 'what happened' to 'what caused it' to 'what does this mean'.",
+            "The strongest probes invite people to think beyond their first response."
+        ],
+        "criteria_setting": [
+            "Clear criteria turn vague goals into measurable targets that everyone can understand.",
+            "Strong criteria-setting questions establish what 'good enough' looks like before you start.",
+            "The best criteria questions help teams align on standards before diving into the work."
+        ],
+        "hypothesizing": [
+            "Powerful hypotheses connect visible symptoms to possible underlying causes.",
+            "The strongest hypothetical questions test assumptions rather than confirm them.",
+            "Great hypothesizing opens multiple paths to explore, not just one."
+        ]
+    },
+    "progress_notes": {
+        "level_1": [
+            "🌟 Clarifier Level 1 → Add one specific detail to move toward Level 2.",
+            "🎯 Prober Level 1 → Try asking 'why' to unlock Level 2.",
+            "📋 Criteria-setter Level 1 → Define one clear standard to advance.",
+            "🔍 Hypothesis Level 1 → Test one assumption to level up."
+        ],
+        "level_2": [
+            "⭐ Clarifier Level 2 → Pinpoint the exact confusion to reach Level 3.",
+            "🎯 Prober Level 2 → Dig into root causes for Level 3.",
+            "📋 Criteria-setter Level 2 → Add measurable details for Level 3.",
+            "🔍 Hypothesis Level 2 → Connect evidence to theory for Level 3."
+        ],
+        "level_3": [
+            "🌟 Strong questioning! Keep practicing to sharpen your edge.",
+            "⚡ Nice work! You're building solid questioning instincts.",
+            "🚀 Good questioning technique! Ready for more complex scenarios."
+        ]
+    },
+    "example_upgrades": {
+        "clarifying": [
+            "Could you clarify the part about [specific detail]?",
+            "Which sections do we need to complete first?",
+            "What does the final product need to include?",
+            "Can you walk me through the [specific step] again?",
+            "What exactly happens during the [specific phase]?"
+        ],
+        "probing": [
+            "What do you think is causing this pattern?",
+            "How does this connect to what we discussed earlier?",
+            "What would happen if we tried a different approach?",
+            "Why do you think this keeps happening?",
+            "What assumptions are we making here?"
+        ],
+        "criteria_setting": [
+            "What would 'done well' look like for this project?",
+            "How will we know if this approach is working?",
+            "What standards should we use to evaluate this?",
+            "What are the must-haves versus nice-to-haves?",
+            "How do we define success for this initiative?"
+        ],
+        "hypothesizing": [
+            "What if the real issue is [alternative cause]?",
+            "Could this be connected to [related factor]?",
+            "What would we expect to see if [hypothesis] is true?",
+            "How would this look different if [assumption] wasn't the case?",
+            "What other explanations might fit this pattern?"
+        ]
     }
 }
 
@@ -1293,27 +1364,31 @@ def generate_enhanced_feedback(question: str, scenario_title: str = "", scenario
 
 # Evaluator v3 Functions
 def evaluator_system_prompt_v3(context_hint: Optional[str] = None, tone_hint: Optional[str] = None) -> str:
-    """Generate Evaluator v3 system prompt with context awareness"""
-    base_prompt = """You are Roga's advanced QI coaching system providing comprehensive feedback on questions.
+    """Generate Evaluator v3 system prompt - V2 with stricter Roga voice"""
+    base_prompt = """You are Roga's V2 coaching system enforcing strict quality standards and consistent voice.
 
-Your role: Analyze the user's question and provide structured coaching feedback using the 6-part framework.
+SCORING RULES (V2 - STRICTER):
+1-2 = Weak (vague, closed, trivial) → Cap at ≤40/100 overall
+3 = Okay (surface-level but workable)
+4 = Strong (clear, specific, open-ended)
+5 = Excellent (precise, layered, invites deep insight)
 
-Voice: Direct, encouraging, instructional, modern, concise. No sugarcoating, no walls of text, no jargon, no hollow praise.
+ROGA VOICE (MANDATORY):
+• Direct → Call out weaknesses clearly, no sugarcoating
+• Encouraging → Normalize mistakes, push for practice
+• Instructional → Always show HOW to fix the issue
+• Modern & approachable → Conversational, not academic
+• Concise → ≤120 words total across ALL sections
 
-Scoring:
-- Subscores: 1-5 scale for clarity, depth, relevance, empathy
-- Overall: 0-100 derived from subscores (with caps for vague/closed questions)
-- Apply caps: too_vague or too_closed → overall ≤ 40
+6-PART FRAMEWORK (REQUIRED ORDER):
+1. Skill Detected: "[QI Skill] (quality rating)" e.g. "Clarifying (attempted, but vague)"
+2. Strengths: One specific positive element from their question
+3. Improvement Area: Name the gap, tied to QI taxonomy
+4. Coaching Nugget: 1-2 sentences mini-teaching (pull from QI knowledge)
+5. Example Upgrades: 2-3 concrete alternatives (always questions)
+6. Progress Note: Motivational + gamified hook
 
-Template (6 parts):
-1. QI Skill: Identify primary skill demonstrated + strength shown
-2. Strengths: What they did well (specific to their question)
-3. Improvement: One key area to strengthen
-4. Coaching Nugget: Educational insight
-5. Example Upgrades: 2-3 concrete alternatives
-6. Progress Note: Gamified encouragement
-
-Total length: ≤120 words across all parts."""
+CRITICAL: Be direct about weaknesses. No polite deflection. If it's weak, say so and explain why."""
 
     if context_hint:
         context_mapping = {
@@ -1354,44 +1429,79 @@ async def evaluate_question_v3(client: OpenAI, system_msg: str, user_msg: str) -
         raw = response.choices[0].message.content
         feedback = json.loads(raw or "{}")
 
-        # Apply scoring caps for vague/closed questions
-        if is_too_vague_or_closed(user_msg):
-            feedback["overallScore"] = min(feedback.get("overallScore", 40), 40)
+        # Apply V2 stricter scoring caps
+        feedback = apply_strict_scoring_caps(feedback, user_msg.split("USER QUESTION: ")[-1].split("\n")[0] if "USER QUESTION:" in user_msg else user_msg)
 
         return feedback
 
     except Exception as e:
         print(f"Evaluator v3 error: {e}")
-        # Fallback v3 response
+        # Fallback v3 response with V2 schema
         return {
-            "overallScore": 65,
-            "subscores": {"clarity": 3, "depth": 3, "relevance": 4, "empathy": 3},
-            "qiSkillDetected": {"name": "Clarifying", "strength": "Shows curiosity"},
-            "strengths": "You're asking for information to better understand the situation.",
-            "improvementArea": "Be more specific about what exactly needs clarification.",
-            "coachingNugget": "Targeted questions get targeted answers.",
+            "overallScore": 30,  # V2 stricter fallback scoring
+            "subscores": {"clarity": 2, "depth": 2, "relevance": 3, "empathy": 2},
+            "skillDetected": "Clarifying (attempted, but vague)",
+            "strengths": "You showed curiosity by asking for help.",
+            "improvementArea": "Your question was too vague — be specific about what's confusing.",
+            "coachingNugget": "Strong clarifiers point to the exact missing detail, not the whole message.",
             "exampleUpgrades": [
-                "What specific part of [topic] needs more detail?",
-                "Which aspect of this is unclear to you?"
+                "What specific part of [topic] is unclear?",
+                "Which step in the process needs more explanation?"
             ],
-            "progressNote": "Keep refining your questions to get better answers!"
+            "progressNote": "🌟 Clarifier Level 1 → Add one specific detail to move toward Level 2."
         }
 
 def is_too_vague_or_closed(question: str) -> bool:
-    """Check if question is too vague or closed for scoring caps"""
+    """Check if question is too vague or closed for scoring caps - V2 Stricter Rules"""
     question_lower = question.lower().strip()
-    vague_patterns = ["what", "how", "why", "tell me", "explain"]
-    closed_patterns = ["is", "are", "can", "will", "should", "do you"]
 
-    # Very short questions are often vague
-    if len(question.strip()) < 20:
+    # Very short questions are often vague (stricter threshold)
+    if len(question.strip()) < 15:
         return True
 
-    # Check for overly vague patterns
-    if any(pattern in question_lower for pattern in ["what about", "how about", "what's up with"]):
+    # Overly vague patterns
+    vague_patterns = [
+        "what about", "how about", "what's up with", "tell me about",
+        "wait, what", "huh", "what do you mean", "i don't get it",
+        "explain this", "what is this", "help me understand"
+    ]
+    if any(pattern in question_lower for pattern in vague_patterns):
+        return True
+
+    # Closed question patterns (yes/no, binary)
+    closed_patterns = [
+        "is this", "are these", "can i", "should i", "will this",
+        "do you think", "would you", "could you", "did i"
+    ]
+    if any(pattern in question_lower for pattern in closed_patterns):
+        return True
+
+    # Single word questions
+    if len(question.strip().split()) <= 2:
         return True
 
     return False
+
+def apply_strict_scoring_caps(scores: dict, question: str) -> dict:
+    """Apply V2 stricter scoring rules with caps for weak/closed questions"""
+    if is_too_vague_or_closed(question):
+        # Cap all subscores at 2 (weak level)
+        capped_subscores = {
+            "clarity": min(scores.get("clarity", 1), 2),
+            "depth": min(scores.get("depth", 1), 2),
+            "relevance": min(scores.get("relevance", 1), 2),
+            "empathy": min(scores.get("empathy", 1), 2)
+        }
+        # Overall score capped at 40/100 (2/5 * 20)
+        overall_score = min(scores.get("overallScore", 20), 40)
+
+        return {
+            **scores,
+            "subscores": capped_subscores,
+            "overallScore": overall_score
+        }
+
+    return scores
 
 def to_status(n: int) -> str:
     """Helper to map 1-5 subscores to legacy status"""
@@ -1509,8 +1619,8 @@ async def score(req: ScoreRequest):
                 rubric=legacy_rubric,
                 proTip=feedback.get("coachingNugget"),
                 suggestedUpgrade=(feedback.get("exampleUpgrades") or [None])[0],
-                badge={"name": "QI Coach", "label": feedback["qiSkillDetected"]["name"]},
-                # NEW rich coaching fields (Sessions parity)
+                badge={"name": "QI Coach", "label": feedback["skillDetected"]},
+                # NEW rich coaching fields (Sessions parity with V2 schema)
                 coachV3=feedback
             )
 

@@ -24,10 +24,7 @@ export type RogaFeedback = {
       relevance: number;
       empathy: number;
     };
-    qiSkillDetected: {
-      name: string;
-      strength: string;
-    };
+    skillDetected: string;  // V2 schema - simplified skill detection
     strengths?: string;
     improvementArea?: string;
     coachingNugget?: string;
@@ -109,7 +106,7 @@ export default function ScoreCard({ data }: { data: RogaFeedback }) {
             </span>
           </div>
 
-          <p><strong>QI Skill:</strong> {data.coachV3.qiSkillDetected.name} ({data.coachV3.qiSkillDetected.strength})</p>
+          <p><strong>QI Skill:</strong> {data.coachV3.skillDetected}</p>
           {data.coachV3.strengths && <p><strong>Strengths:</strong> {data.coachV3.strengths}</p>}
           {data.coachV3.improvementArea && <p><strong>Improvement:</strong> {data.coachV3.improvementArea}</p>}
           {data.coachV3.coachingNugget && <p><strong>Coaching Nugget:</strong> {data.coachV3.coachingNugget}</p>}
