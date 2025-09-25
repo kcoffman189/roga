@@ -538,7 +538,7 @@ EVALUATOR_V3_SCHEMA = {
                 "description": "QI Skill name with quality rating (e.g., 'Clarifying (attempted, but vague)')"
             },
             "strengths": {"type": "string", "maxLength": 120, "description": "What the user did well"},
-            "improvementArea": {"type": "string", "maxLength": 120, "description": "Key area for improvement"},
+            "improvementArea": {"type": "string", "maxLength": 200, "description": "Key area for improvement with specific guidance"},
             "coachingNugget": {"type": "string", "maxLength": 120, "description": "Educational insight"},
             "exampleUpgrades": {
                 "type": "array",
@@ -1378,12 +1378,12 @@ ROGA VOICE (MANDATORY):
 • Encouraging → Normalize mistakes, push for practice
 • Instructional → Always show HOW to fix the issue
 • Modern & approachable → Conversational, not academic
-• Concise → ≤120 words total across ALL sections
+• Concise → ≤150 words total across ALL sections (expanded for detailed improvement area)
 
 6-PART FRAMEWORK (REQUIRED ORDER):
 1. Skill Detected: "[QI Skill] (quality rating)" e.g. "Clarifying (attempted, but vague)"
 2. Strengths: One specific positive element from their question
-3. Improvement Area: Name the gap, tied to QI taxonomy
+3. Improvement Area: Name the gap + specific guidance on how to fix it. Use 2-3 sentences for depth.
 4. Coaching Nugget: 1-2 sentences mini-teaching (pull from QI knowledge)
 5. Example Upgrades: 2-3 concrete alternatives (always questions)
 6. Progress Note: Motivational + gamified hook
@@ -1442,7 +1442,7 @@ async def evaluate_question_v3(client: OpenAI, system_msg: str, user_msg: str) -
             "subscores": {"clarity": 2, "depth": 2, "relevance": 3, "empathy": 2},
             "skillDetected": "Clarifying (attempted, but vague)",
             "strengths": "You showed curiosity by asking for help.",
-            "improvementArea": "Your question was too vague — be specific about what's confusing.",
+            "improvementArea": "Your question was too vague — be specific about what's confusing. Instead of asking about the whole topic, pinpoint the exact part that needs clarification. This helps others give you targeted, useful answers.",
             "coachingNugget": "Strong clarifiers point to the exact missing detail, not the whole message.",
             "exampleUpgrades": [
                 "What specific part of [topic] is unclear?",
