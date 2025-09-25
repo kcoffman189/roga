@@ -539,6 +539,17 @@ EVALUATOR_V3_SCHEMA = {
             },
             "strengths": {"type": "string", "maxLength": 120, "description": "What the user did well"},
             "improvementArea": {"type": "string", "maxLength": 200, "description": "Key area for improvement with specific guidance"},
+            "skillFeedback": {
+                "type": "object",
+                "properties": {
+                    "clarity": {"type": "string", "maxLength": 100, "description": "Specific clarity feedback"},
+                    "depth": {"type": "string", "maxLength": 100, "description": "Specific depth feedback"},
+                    "relevance": {"type": "string", "maxLength": 100, "description": "Specific relevance feedback"},
+                    "empathy": {"type": "string", "maxLength": 100, "description": "Specific empathy feedback"}
+                },
+                "required": ["clarity", "depth", "relevance", "empathy"],
+                "additionalProperties": False
+            },
             "coachingNugget": {"type": "string", "maxLength": 120, "description": "Educational insight"},
             "exampleUpgrades": {
                 "type": "array",
@@ -558,7 +569,7 @@ EVALUATOR_V3_SCHEMA = {
                 "description": "Follow-up question ideas"
             }
         },
-        "required": ["overallScore", "subscores", "skillDetected", "strengths", "improvementArea", "coachingNugget", "exampleUpgrades", "progressNote"],
+        "required": ["overallScore", "subscores", "skillDetected", "strengths", "improvementArea", "skillFeedback", "coachingNugget", "exampleUpgrades", "progressNote"],
         "additionalProperties": False
     }
 }
@@ -1384,9 +1395,10 @@ ROGA VOICE (MANDATORY):
 1. Skill Detected: "[QI Skill] (quality rating)" e.g. "Clarifying (attempted, but vague)"
 2. Strengths: One specific positive element from their question
 3. Improvement Area: Name the gap + specific guidance on how to fix it. Use 2-3 sentences for depth.
-4. Coaching Nugget: 1-2 sentences mini-teaching (pull from QI knowledge)
-5. Example Upgrades: 2-3 concrete alternatives (always questions)
-6. Progress Note: Motivational + gamified hook
+4. Skill Feedback: Individual feedback for each dimension (clarity, depth, relevance, empathy) - be specific about what worked/didn't work in each area
+5. Coaching Nugget: 1-2 sentences mini-teaching (pull from QI knowledge)
+6. Example Upgrades: 2-3 concrete alternatives (always questions)
+7. Progress Note: Motivational + gamified hook
 
 CRITICAL: Be direct about weaknesses. No polite deflection. If it's weak, say so and explain why."""
 
@@ -1443,6 +1455,12 @@ async def evaluate_question_v3(client: OpenAI, system_msg: str, user_msg: str) -
             "skillDetected": "Clarifying (attempted, but vague)",
             "strengths": "You showed curiosity by asking for help.",
             "improvementArea": "Your question was too vague — be specific about what's confusing. Instead of asking about the whole topic, pinpoint the exact part that needs clarification. This helps others give you targeted, useful answers.",
+            "skillFeedback": {
+                "clarity": "Too vague - needs specific focus on what's unclear",
+                "depth": "Surface-level - doesn't probe into underlying details",
+                "relevance": "Shows awareness of needing help with the topic",
+                "empathy": "Basic request but doesn't consider responder's perspective"
+            },
             "coachingNugget": "Strong clarifiers point to the exact missing detail, not the whole message.",
             "exampleUpgrades": [
                 "What specific part of [topic] is unclear?",
@@ -1603,12 +1621,13 @@ async def score(req: ScoreRequest):
 
             feedback = await evaluate_question_v3(client, sys, usr)
 
-            # Map subscores (1–5) to original rubric labels for UI compatibility
+            # Map subscores (1–5) to original rubric labels with individual skill feedback
+            skill_feedback = feedback.get("skillFeedback", {})
             legacy_rubric = [
-                {"key":"clarity","label":"Clarity","status":to_status(feedback["subscores"]["clarity"]), "note": feedback.get("improvementArea","") or "—"},
-                {"key":"depth","label":"Depth","status":to_status(feedback["subscores"]["depth"]), "note": "—"},
-                {"key":"insight","label":"Relevance","status":to_status(feedback["subscores"]["relevance"]), "note": "—"},
-                {"key":"openness","label":"Empathy","status":to_status(feedback["subscores"]["empathy"]), "note": "—"}
+                {"key":"clarity","label":"Clarity","status":to_status(feedback["subscores"]["clarity"]), "note": skill_feedback.get("clarity", "—")},
+                {"key":"depth","label":"Depth","status":to_status(feedback["subscores"]["depth"]), "note": skill_feedback.get("depth", "—")},
+                {"key":"insight","label":"Relevance","status":to_status(feedback["subscores"]["relevance"]), "note": skill_feedback.get("relevance", "—")},
+                {"key":"openness","label":"Empathy","status":to_status(feedback["subscores"]["empathy"]), "note": skill_feedback.get("empathy", "—")}
             ]
 
             return ScoreResponse(
