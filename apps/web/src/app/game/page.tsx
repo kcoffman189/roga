@@ -191,7 +191,7 @@ export default function DailyChallengePage() {
 
       if (useCoachingMode === 'v3') {
         // Use the new Daily Challenge feedback system
-        const feedback = await getFeedback(currentScenario.text, question);
+        const feedback = await getFeedback(currentScenario.text || currentScenario.prompt || "", question);
         setDailyChallengeFeedback(feedback);
         setShowFeedback(true);
         return;
@@ -412,7 +412,7 @@ export default function DailyChallengePage() {
         <div>
           <Card className="p-6" style={{width: '600px'}}>
             <div className="flex items-center justify-center gap-3 mb-2">
-              <Image src={currentScenario.icon} alt={currentScenario.title} width={24} height={24} />
+              <Image src={currentScenario.icon || "/brand/question_icon.svg"} alt={currentScenario.title} width={24} height={24} />
               <h2 className="font-display font-bold text-xl">{currentScenario.title}</h2>
             </div>
             <p className="font-sans text-coal/80">
@@ -591,7 +591,10 @@ export default function DailyChallengePage() {
               {/* Daily Challenge v3 Feedback */}
               {dailyChallengeFeedback && (
                 <DailyChallengeScoreCard
-                  scenario={currentScenario}
+                  scenario={{
+                    title: currentScenario.title,
+                    text: currentScenario.text || currentScenario.prompt || ""
+                  }}
                   question={question}
                   feedback={dailyChallengeFeedback}
                 />
