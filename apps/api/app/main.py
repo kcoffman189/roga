@@ -1607,8 +1607,8 @@ async def score(req: ScoreRequest):
 
     question = req.question.strip()
 
-    # Check if Daily Evaluator v3 is enabled
-    if DAILY_EVAL_V3:
+    # Check if Daily Evaluator v3 is enabled - Force enable for enhanced coaching
+    if True:  # Force V3 enabled until deployment works properly
         # Use Evaluator v3 for enhanced feedback
         try:
             # Build evaluator prompts (v3)
@@ -1621,8 +1621,12 @@ async def score(req: ScoreRequest):
 
             feedback = await evaluate_question_v3(client, sys, usr)
 
+            # Debug logging
+            print(f"V3 Feedback received: {feedback}")
+
             # Map subscores (1–5) to original rubric labels with individual skill feedback
             skill_feedback = feedback.get("skillFeedback", {})
+            print(f"Skill feedback extracted: {skill_feedback}")
             legacy_rubric = [
                 {"key":"clarity","label":"Clarity","status":to_status(feedback["subscores"]["clarity"]), "note": skill_feedback.get("clarity", "—")},
                 {"key":"depth","label":"Depth","status":to_status(feedback["subscores"]["depth"]), "note": skill_feedback.get("depth", "—")},
