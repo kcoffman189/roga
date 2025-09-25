@@ -24,8 +24,8 @@ ROGA_MIN_EXAMPLES = int(os.environ.get("ROGA_MIN_EXAMPLES", "2"))
 ROGA_MAX_EXAMPLES = int(os.environ.get("ROGA_MAX_EXAMPLES", "3"))
 ROGA_FEEDBACK_MAX_WORDS = int(os.environ.get("ROGA_FEEDBACK_MAX_WORDS", "120"))
 
-# Daily Evaluator v3 Feature Flag
-DAILY_EVAL_V3 = os.environ.get("DAILY_EVAL_V3", "false").lower() == "true"
+# Daily Evaluator v3 Feature Flag - Enable V2 coaching by default
+DAILY_EVAL_V3 = os.environ.get("DAILY_EVAL_V3", "true").lower() == "true"
 
 # Load QI Knowledge Base
 QI_KB = {}

@@ -146,7 +146,7 @@ export default function DailyChallengePage() {
   const [enhancedFeedback, setEnhancedFeedback] = useState<EnhancedCoachingFeedbackData | null>(null);
   const [dailyChallengeFeedback, setDailyChallengeFeedback] = useState<CoachFeedback | null>(null);
   const [mvpFeedback, setMvpFeedback] = useState<MVPScoreCardResponse | null>(null);
-  const [useCoachingMode, setUseCoachingMode] = useState("mvp"); // "mvp", "v3", "enhanced", "legacy", "original"
+  const [useCoachingMode, setUseCoachingMode] = useState("original"); // "mvp", "v3", "enhanced", "legacy", "original"
   const [isLoading, setIsLoading] = useState(false);
   const [currentScenario, setCurrentScenario] = useState<Scenario>(() => {
     // Start with a random scenario
