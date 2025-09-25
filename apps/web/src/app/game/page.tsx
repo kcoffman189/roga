@@ -407,7 +407,7 @@ export default function DailyChallengePage() {
       </div>
 
       {/* CONTENT */}
-      <div className="flex justify-center gap-12" style={{marginLeft: '65px', marginRight: '65px'}}>
+      <div className="flex justify-center" style={{marginLeft: '65px', marginRight: '65px', gap: '50px'}}>
         {/* Left Column - Scenario Card */}
         <div>
           <Card className="p-6" style={{width: '600px'}}>
