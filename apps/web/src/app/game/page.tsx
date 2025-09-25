@@ -513,9 +513,9 @@ export default function DailyChallengePage() {
         </div>
 
         {/* Right Column - Feedback Section */}
-        <div>
+        <div style={{width: '600px'}}>
           {showFeedback && (
-            <div style={{width: '600px'}}>
+            <div>
               {/* MVP ScoreCard Feedback */}
               {mvpFeedback && (
                 <Card className="p-6">
