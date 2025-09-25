@@ -769,7 +769,7 @@ export default function DailyChallengePage() {
                 <>
                   {/* Score */}
                   <div className="text-center mb-6">
-                    <div className="text-4xl font-bold text-teal mb-2">{feedback.score || 0}</div>
+                    <div className="text-4xl font-bold text-teal mb-2">{feedback.score || 0}/100</div>
                     <div className="text-sm text-gray-600">Overall Score</div>
                   </div>
 
@@ -815,7 +815,9 @@ export default function DailyChallengePage() {
                                 {getStatusDots(item.status)}
                               </div>
                             </div>
-                            <p className="text-xs text-coal/70 mt-1">{item.note}</p>
+                            {item.note && item.note !== "—" && (
+                              <p className="text-xs text-coal/70 mt-1 leading-relaxed">{item.note}</p>
+                            )}
                           </div>
                         );
                       })}
