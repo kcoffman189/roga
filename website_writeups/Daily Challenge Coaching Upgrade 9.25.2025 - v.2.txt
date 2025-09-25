@@ -1,0 +1,120 @@
+🛠️ Roga Daily Challenge — Coaching Engine Upgrade
+1. Goal
+
+Strengthen the quality and consistency of coaching feedback by enforcing stricter scoring, applying a universal 6-part coaching framework, and standardizing the “Roga voice.” This ensures that users get credible, instructional, and motivating coaching instead of inflated or overly polite feedback.
+
+2. Key Changes
+A. Enforce Stricter Scoring Rules
+
+Cap vague or closed questions at ≤2/5 (≤40/100 overall).
+
+Scoring scale (apply across all QI skills):
+
+1–2 = Weak (vague, closed, trivial)
+
+3 = Okay (surface-level but workable)
+
+4 = Strong (clear, specific, open-ended)
+
+5 = Excellent (precise, layered, invites deep insight)
+
+Ensure subscores (Clarity, Depth, Relevance, Empathy) cannot exceed the cap if a major flaw is detected.
+
+B. Universal Coaching Framework (6-part arc)
+
+Every feedback response must include these six sections, in this order:
+
+QI Skill Detected → name skill + quality rating
+
+Example: "QI Skill: Clarifying (attempted, but vague)"
+
+Strengths → one positive element from the question
+
+Example: "You showed curiosity by signaling confusion — that’s the first step toward clarifying."
+
+Improvement Area → name the gap, tied to QI taxonomy
+
+Example: "Your clarifier was too broad — the teacher won’t know which part confused you."
+
+Coaching Nugget → 1–2 sentences of mini-teaching (from QI Library)
+
+Example: "Strong clarifiers reduce uncertainty when they point to the missing detail, not the whole message."
+
+Example Upgrades → 2–3 better alternatives, always phrased as questions
+
+Example:
+
+"Could you clarify the part about the project requirements?"
+
+"Which sections do we need to complete first?"
+
+"What does the final product need to include?"
+
+Progress Note → motivational + gamified hook
+
+Example: "🌟 Clarifier Level 1 → Add one specific detail to move toward Level 2."
+
+C. Roga Coaching Voice (apply universally)
+
+Direct → call out weaknesses clearly.
+
+Encouraging → normalize mistakes and encourage practice.
+
+Instructional → always show how to fix the issue.
+
+Modern & approachable → conversational, not academic.
+
+Concise → ≤120 words per full feedback block.
+
+3. Technical Implementation
+A. Feedback Schema (JSON)
+
+Update coaching endpoint to always return feedback in this structure:
+
+{
+  "qi_score": {
+    "overall": 20,
+    "clarity": 1,
+    "depth": 1,
+    "relevance": 3,
+    "empathy": 2
+  },
+  "skill_detected": "Clarifying (attempted, but vague)",
+  "strengths": "You showed curiosity by signaling confusion — that’s the first step toward clarifying.",
+  "improvement_area": "Your clarifier was too vague — the teacher won’t know which part confused you.",
+  "coaching_nugget": "Strong clarifiers reduce uncertainty when they point to the missing detail, not the whole message.",
+  "example_upgrades": [
+    "Could you clarify the part about the project requirements?",
+    "Which sections do we need to complete first?",
+    "What does the final product need to include?"
+  ],
+  "progress_note": "🌟 Clarifier Level 1 → Add one specific detail to move toward Level 2."
+}
+
+B. Logic Layer
+
+Add validation so that weak/closed questions automatically trigger low scores and stricter coaching.
+
+Pull Coaching Nuggets and Progress Notes from a QI Library (content bank) rather than generating ad hoc → ensures consistency.
+
+Randomize Example Upgrades from a curated set so users see variation without drift in quality.
+
+C. Reuse Across Features
+
+Daily Challenge should call the same coaching engine endpoint used in Roga Sessions → one universal coaching pipeline, one consistent voice.
+
+4. QA / Acceptance Criteria
+
+ Weak questions (“Wait, what?”) score ≤2/5 (overall ≤40/100).
+
+ Feedback always includes the six sections in correct order.
+
+ No feedback response exceeds ~120 words.
+
+ At least 2 Example Upgrades always returned.
+
+ Coaching nuggets and progress notes come from a shared library.
+
+ Same structure and voice apply across Daily Challenges and Sessions.
+
+✅ Deliverable: Once implemented, Daily Challenge coaching will shift from “polite feedback” → “direct, instructional coaching”, building user trust and creating a consistent Roga learning voice.

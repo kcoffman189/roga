@@ -236,7 +236,8 @@ export default function DailyChallengePage() {
             rubric: data.rubric,
             proTip: data.proTip,
             suggestedUpgrade: data.suggestedUpgrade,
-            badge: data.badge
+            badge: data.badge,
+            coachV3: data.coachV3  // Include individual skill feedback
           });
         }
         setShowFeedback(true);

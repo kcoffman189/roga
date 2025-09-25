@@ -1,0 +1,203 @@
+Daily Challenge — Coaching Upgrade v1.0 (Parity with Sessions)
+
+Scope: Daily Challenge only (the /score backend path reached via /api/ask).
+Goal: Use the Evaluator v3 template from Sessions for single-turn Daily coaching.
+No API contract break: /api/ask stays the same. We enrich the response while keeping existing fields.
+
+1) Data: add context to Daily scenarios (lightweight)
+
+Add a simple tag in your Daily scenario JSON (business | academic | personal). Example:
+
+{
+  "id": "daily-001",
+  "title": "Standup Clarifier",
+  "text": "In standup, your teammate gave a vague update…",
+  "context": "business"
+}
+
+
+When the Daily page calls /api/ask, pass the context:
+
+await fetch("/api/ask", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    question,
+    scenarioTitle: scenario.title,
+    scenarioText: scenario.text,
+    context: scenario.context    // NEW
+  })
+});
+
+2) Backend: upgrade /score to Evaluator v3
+
+We’ll reuse the same evaluator v3 you implemented for Sessions. Daily has no “character reply,” so we’ll pass a short stub; the model still returns the six parts + subscores.
+
+2.1 Extend request model (FastAPI)
+class ScoreIn(BaseModel):
+    question: str
+    scenarioTitle: Optional[str] = None
+    scenarioText: Optional[str] = None
+    context: Optional[str] = None  # NEW: "business" | "academic" | "personal"
+
+2.2 Use the Sessions evaluator helpers
+
+Reuse these (already added for Sessions):
+
+evaluator_system_prompt_v3(context_hint, tone_hint?)
+
+evaluator_user_prompt_v3(question, prior_summary, coach_reply)
+
+evaluate_question_v3(model_client, system_msg, user_msg)
+
+For Daily:
+
+prior_summary → "none"
+
+coach_reply → "N/A - daily single-turn" (kept short)
+
+2.3 /score handler (core logic)
+@app.post("/score")
+async def score(payload: ScoreIn):
+    question = payload.question.strip()
+    if not question:
+        raise HTTPException(400, "Missing question")
+
+    # Build evaluator prompts (v3)
+    sys = evaluator_system_prompt_v3(context_hint=payload.context)
+    usr = evaluator_user_prompt_v3(
+        question=question,
+        prior_summary="none",
+        coach_reply="N/A - daily single-turn"
+    )
+
+    feedback = await evaluate_question_v3(model_client, sys, usr)
+
+    # Maintain backward-compatible shape fields
+    # Map subscores (1–5) to original rubric labels if your UI still reads them
+    legacy_rubric = [
+        {"key":"clarity","label":"Clarity","status":to_status(feedback["subscores"]["clarity"]), "note": feedback.get("improvementArea","") or "—"},
+        {"key":"depth","label":"Depth","status":to_status(feedback["subscores"]["depth"]), "note": "—"},
+        {"key":"insight","label":"Relevance","status":to_status(feedback["subscores"]["relevance"]), "note": "—"},
+        {"key":"openness","label":"Empathy","status":to_status(feedback["subscores"]["empathy"]), "note": "—"}
+    ]
+
+    return {
+        # legacy fields (kept so ScoreCard doesn’t break)
+        "scenario": { "title": payload.scenarioTitle or "", "text": payload.scenarioText or "" },
+        "question": question,
+        "score": feedback["overallScore"],
+        "rubric": legacy_rubric,
+        "proTip": feedback.get("coachingNugget"),
+        "suggestedUpgrade": (feedback.get("exampleUpgrades") or [None])[0],
+        "badge": { "name": "QI Coach", "label": feedback["qiSkillDetected"]["name"] },
+
+        # NEW rich coaching fields (Sessions parity)
+        "coachV3": feedback
+    }
+
+
+Helper to map 1–5 to legacy status:
+
+def to_status(n: int) -> str:
+    return "bad" if n <= 2 else "warn" if n == 3 else "good"
+
+
+Feature flag (recommended): gate the new behavior behind DAILY_EVAL_V3=true so you can toggle during rollout.
+
+3) Frontend: enrich the Daily ScoreCard (progressive render)
+
+Your current ScoreCard.tsx already renders score, rubric, proTip, suggestedUpgrade, badge. Add optional rendering of coachV3 to show the same six parts users see in Sessions.
+
+// Inside ScoreCard.tsx (Daily and Sessions can share this)
+const v3 = data.coachV3;
+
+{v3 && (
+  <div className="space-y-2 mt-3">
+    <div className="flex items-center justify-between">
+      <span className="badge">QI {v3.overallScore}/100</span>
+      <span className="text-xs text-coal/70">
+        Cl {v3.subscores.clarity}/5 • De {v3.subscores.depth}/5 • Re {v3.subscores.relevance}/5 • Em {v3.subscores.empathy}/5
+      </span>
+    </div>
+
+    <p><strong>QI Skill:</strong> {v3.qiSkillDetected.name} ({v3.qiSkillDetected.strength})</p>
+    {v3.strengths && <p><strong>Strengths:</strong> {v3.strengths}</p>}
+    {v3.improvementArea && <p><strong>Improvement:</strong> {v3.improvementArea}</p>}
+    {v3.coachingNugget && <p><strong>Coaching Nugget:</strong> {v3.coachingNugget}</p>}
+
+    {!!v3.exampleUpgrades?.length && (
+      <div>
+        <strong>Example Upgrades:</strong>
+        <ul className="list-disc pl-5">
+          {v3.exampleUpgrades.slice(0,3).map((x, i) => <li key={i}>{x}</li>)}
+        </ul>
+      </div>
+    )}
+
+    {v3.progressNote && <p><strong>Progress:</strong> {v3.progressNote}</p>}
+    {v3.contextSpecificTip && <p><strong>Context Tip:</strong> {v3.contextSpecificTip}</p>}
+    {v3.likelyResponse && <p><strong>Likely Response:</strong> {v3.likelyResponse}</p>}
+    {!!v3.nextQuestionSuggestions?.length && (
+      <p className="text-sm"><strong>Try next:</strong> {v3.nextQuestionSuggestions.join(" • ")}</p>
+    )}
+  </div>
+)}
+
+
+No UI restructure needed; this is additive.
+
+4) Prompt rules (CLO style) — already embedded in v3
+
+Evaluator v3 system prompt enforces:
+
+Voice: direct, encouraging, instructional, modern, concise.
+
+Template: six parts (QI Skill, Strengths, Improvement, Coaching Nugget, Example Upgrades, Progress Note).
+
+Scoring: 1–5 subscores; caps when too_vague/too_closed → overall 0–100 derived.
+
+Length: ≤120 words total across the six parts (backed by server budget trim).
+
+Tone don’ts: no sugarcoating, no walls of text, no jargon, no hollow praise.
+
+You already used this for Sessions; Daily simply reuses it.
+
+5) Rollout plan
+
+Backend
+
+Add context to daily request model.
+
+Wire /score to Evaluator v3 behind DAILY_EVAL_V3 flag.
+
+Deploy.
+
+Frontend
+
+Pass context from daily scenario to /api/ask.
+
+Extend ScoreCard to render coachV3 fields if present.
+
+Deploy.
+
+Enable flag in prod → observe:
+
+JSON validity,
+
+average feedback word count,
+
+user time-to-next-daily (faster iteration loop, as you wanted).
+
+If anything regresses, flip the flag off; Daily reverts to the prior v1 coach immediately.
+
+6) FAQ
+
+Will this slow down Daily?
+Slightly — evaluator v3 is heavier. Keep it non-streaming and ensure character pass is skipped for Daily to keep it snappy.
+
+Can we A/B test?
+Yes: gate v3 behind DAILY_EVAL_V3 and randomly assign users/buckets.
+
+Does Sessions change?
+No — Sessions already uses v3. You’re just bringing Daily up to parity.

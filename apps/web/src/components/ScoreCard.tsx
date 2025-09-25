@@ -106,6 +106,15 @@ export default function ScoreCard({ data }: { data: RogaFeedback }) {
             </span>
           </div>
 
+          {data.coachV3.skillFeedback && (
+            <div className="space-y-1 text-sm">
+              <div><strong>Clarity:</strong> {data.coachV3.skillFeedback.clarity}</div>
+              <div><strong>Depth:</strong> {data.coachV3.skillFeedback.depth}</div>
+              <div><strong>Relevance:</strong> {data.coachV3.skillFeedback.relevance}</div>
+              <div><strong>Empathy:</strong> {data.coachV3.skillFeedback.empathy}</div>
+            </div>
+          )}
+
           <p><strong>QI Skill:</strong> {data.coachV3.skillDetected}</p>
           {data.coachV3.strengths && <p><strong>Strengths:</strong> {data.coachV3.strengths}</p>}
           {data.coachV3.improvementArea && <p><strong>Improvement:</strong> {data.coachV3.improvementArea}</p>}
