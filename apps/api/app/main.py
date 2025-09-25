@@ -24,6 +24,9 @@ ROGA_MIN_EXAMPLES = int(os.environ.get("ROGA_MIN_EXAMPLES", "2"))
 ROGA_MAX_EXAMPLES = int(os.environ.get("ROGA_MAX_EXAMPLES", "3"))
 ROGA_FEEDBACK_MAX_WORDS = int(os.environ.get("ROGA_FEEDBACK_MAX_WORDS", "120"))
 
+# Daily Evaluator v3 Feature Flag
+DAILY_EVAL_V3 = os.environ.get("DAILY_EVAL_V3", "false").lower() == "true"
+
 # Load QI Knowledge Base
 QI_KB = {}
 try:
@@ -52,6 +55,7 @@ class ScoreRequest(BaseModel):
     scenario_id: Optional[int] = None
     scenarioTitle: Optional[str] = None
     scenarioText: Optional[str] = None
+    context: Optional[str] = None  # NEW: "business" | "academic" | "personal"
     # Session mode fields
     mode: Optional[str] = None
     round: Optional[int] = None
@@ -69,6 +73,31 @@ class ScoreResponse(BaseModel):
     proTip: Optional[str] = None
     suggestedUpgrade: Optional[str] = None
     badge: Optional[Badge] = None
+    coachV3: Optional[dict] = None  # NEW: rich coaching fields (Sessions parity)
+
+# Evaluator v3 Models
+class QISkillDetected(BaseModel):
+    name: str
+    strength: str
+
+class EvaluatorV3Subscores(BaseModel):
+    clarity: int = Field(ge=1, le=5)
+    depth: int = Field(ge=1, le=5)
+    relevance: int = Field(ge=1, le=5)
+    empathy: int = Field(ge=1, le=5)
+
+class EvaluatorV3Response(BaseModel):
+    overallScore: int = Field(ge=0, le=100)
+    subscores: EvaluatorV3Subscores
+    qiSkillDetected: QISkillDetected
+    strengths: Optional[str] = None
+    improvementArea: Optional[str] = None
+    coachingNugget: Optional[str] = None
+    exampleUpgrades: Optional[List[str]] = None
+    progressNote: Optional[str] = None
+    contextSpecificTip: Optional[str] = None
+    likelyResponse: Optional[str] = None
+    nextQuestionSuggestions: Optional[List[str]] = None
 
 # New session models
 PersonaType = Literal["generic_philosopher", "business_coach", "teacher_mentor"]
@@ -477,6 +506,64 @@ MVP_SCORECARD_SCHEMA = {
             }
         },
         "required": ["positive_reinforcement", "dimension_focus", "pro_tip", "suggested_upgrade", "score", "rubric"]
+    }
+}
+
+# Evaluator v3 Schema
+EVALUATOR_V3_SCHEMA = {
+    "name": "evaluator_v3_feedback",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "overallScore": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Overall question quality score"
+            },
+            "subscores": {
+                "type": "object",
+                "properties": {
+                    "clarity": {"type": "integer", "minimum": 1, "maximum": 5},
+                    "depth": {"type": "integer", "minimum": 1, "maximum": 5},
+                    "relevance": {"type": "integer", "minimum": 1, "maximum": 5},
+                    "empathy": {"type": "integer", "minimum": 1, "maximum": 5}
+                },
+                "required": ["clarity", "depth", "relevance", "empathy"],
+                "additionalProperties": False
+            },
+            "qiSkillDetected": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "maxLength": 50},
+                    "strength": {"type": "string", "maxLength": 100}
+                },
+                "required": ["name", "strength"],
+                "additionalProperties": False
+            },
+            "strengths": {"type": "string", "maxLength": 120, "description": "What the user did well"},
+            "improvementArea": {"type": "string", "maxLength": 120, "description": "Key area for improvement"},
+            "coachingNugget": {"type": "string", "maxLength": 120, "description": "Educational insight"},
+            "exampleUpgrades": {
+                "type": "array",
+                "items": {"type": "string", "maxLength": 150},
+                "minItems": 2,
+                "maxItems": 3,
+                "description": "Concrete question upgrades"
+            },
+            "progressNote": {"type": "string", "maxLength": 80, "description": "Gamified encouragement"},
+            "contextSpecificTip": {"type": "string", "maxLength": 100, "description": "Context-specific advice"},
+            "likelyResponse": {"type": "string", "maxLength": 100, "description": "What response this question might get"},
+            "nextQuestionSuggestions": {
+                "type": "array",
+                "items": {"type": "string", "maxLength": 80},
+                "minItems": 2,
+                "maxItems": 3,
+                "description": "Follow-up question ideas"
+            }
+        },
+        "required": ["overallScore", "subscores", "qiSkillDetected", "strengths", "improvementArea", "coachingNugget", "exampleUpgrades", "progressNote"],
+        "additionalProperties": False
     }
 }
 
@@ -1204,6 +1291,112 @@ def generate_enhanced_feedback(question: str, scenario_title: str = "", scenario
             progress_message="🌟 Good start! Keep practicing to sharpen your questioning skills."
         )
 
+# Evaluator v3 Functions
+def evaluator_system_prompt_v3(context_hint: Optional[str] = None, tone_hint: Optional[str] = None) -> str:
+    """Generate Evaluator v3 system prompt with context awareness"""
+    base_prompt = """You are Roga's advanced QI coaching system providing comprehensive feedback on questions.
+
+Your role: Analyze the user's question and provide structured coaching feedback using the 6-part framework.
+
+Voice: Direct, encouraging, instructional, modern, concise. No sugarcoating, no walls of text, no jargon, no hollow praise.
+
+Scoring:
+- Subscores: 1-5 scale for clarity, depth, relevance, empathy
+- Overall: 0-100 derived from subscores (with caps for vague/closed questions)
+- Apply caps: too_vague or too_closed → overall ≤ 40
+
+Template (6 parts):
+1. QI Skill: Identify primary skill demonstrated + strength shown
+2. Strengths: What they did well (specific to their question)
+3. Improvement: One key area to strengthen
+4. Coaching Nugget: Educational insight
+5. Example Upgrades: 2-3 concrete alternatives
+6. Progress Note: Gamified encouragement
+
+Total length: ≤120 words across all parts."""
+
+    if context_hint:
+        context_mapping = {
+            "business": " Focus on professional communication, stakeholder needs, and business outcomes.",
+            "academic": " Focus on learning objectives, research methods, and academic discourse.",
+            "personal": " Focus on self-reflection, relationship dynamics, and personal growth."
+        }
+        base_prompt += context_mapping.get(context_hint, "")
+
+    if tone_hint:
+        base_prompt += f" Tone: {tone_hint}"
+
+    return base_prompt
+
+def evaluator_user_prompt_v3(question: str, prior_summary: str, coach_reply: str) -> str:
+    """Generate Evaluator v3 user prompt"""
+    return f"""USER QUESTION: {question}
+
+PRIOR SUMMARY: {prior_summary}
+
+COACH REPLY: {coach_reply}
+
+Analyze this question and provide comprehensive feedback using the 6-part structure. Focus on the specific question asked and provide actionable coaching."""
+
+async def evaluate_question_v3(client: OpenAI, system_msg: str, user_msg: str) -> Dict[str, Any]:
+    """Evaluate question using v3 system with fallback"""
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0.5,  # Moderate temperature for creative coaching
+            response_format={"type": "json_schema", "json_schema": EVALUATOR_V3_SCHEMA},
+            messages=[
+                {"role": "system", "content": system_msg},
+                {"role": "user", "content": user_msg}
+            ]
+        )
+
+        raw = response.choices[0].message.content
+        feedback = json.loads(raw or "{}")
+
+        # Apply scoring caps for vague/closed questions
+        if is_too_vague_or_closed(user_msg):
+            feedback["overallScore"] = min(feedback.get("overallScore", 40), 40)
+
+        return feedback
+
+    except Exception as e:
+        print(f"Evaluator v3 error: {e}")
+        # Fallback v3 response
+        return {
+            "overallScore": 65,
+            "subscores": {"clarity": 3, "depth": 3, "relevance": 4, "empathy": 3},
+            "qiSkillDetected": {"name": "Clarifying", "strength": "Shows curiosity"},
+            "strengths": "You're asking for information to better understand the situation.",
+            "improvementArea": "Be more specific about what exactly needs clarification.",
+            "coachingNugget": "Targeted questions get targeted answers.",
+            "exampleUpgrades": [
+                "What specific part of [topic] needs more detail?",
+                "Which aspect of this is unclear to you?"
+            ],
+            "progressNote": "Keep refining your questions to get better answers!"
+        }
+
+def is_too_vague_or_closed(question: str) -> bool:
+    """Check if question is too vague or closed for scoring caps"""
+    question_lower = question.lower().strip()
+    vague_patterns = ["what", "how", "why", "tell me", "explain"]
+    closed_patterns = ["is", "are", "can", "will", "should", "do you"]
+
+    # Very short questions are often vague
+    if len(question.strip()) < 20:
+        return True
+
+    # Check for overly vague patterns
+    if any(pattern in question_lower for pattern in ["what about", "how about", "what's up with"]):
+        return True
+
+    return False
+
+def to_status(n: int) -> str:
+    """Helper to map 1-5 subscores to legacy status"""
+    return "bad" if n <= 2 else "warn" if n == 3 else "good"
+
 @app.post("/coach/mvp", response_model=MVPScoreCardResponse)
 def mvp_scorecard_coach(req: CoachIn):
     """MVP ScoreCard endpoint with new 5-part feedback structure"""
@@ -1280,10 +1473,52 @@ def enhanced_coach(req: CoachIn):
         raise HTTPException(status_code=500, detail="Internal enhanced coaching error")
 
 @app.post("/score", response_model=ScoreResponse)
-def score(req: ScoreRequest):
+async def score(req: ScoreRequest):
     if not req.question or not req.question.strip():
         raise HTTPException(status_code=400, detail="Missing question")
 
+    question = req.question.strip()
+
+    # Check if Daily Evaluator v3 is enabled
+    if DAILY_EVAL_V3:
+        # Use Evaluator v3 for enhanced feedback
+        try:
+            # Build evaluator prompts (v3)
+            sys = evaluator_system_prompt_v3(context_hint=req.context)
+            usr = evaluator_user_prompt_v3(
+                question=question,
+                prior_summary="none",
+                coach_reply="N/A - daily single-turn"
+            )
+
+            feedback = await evaluate_question_v3(client, sys, usr)
+
+            # Map subscores (1–5) to original rubric labels for UI compatibility
+            legacy_rubric = [
+                {"key":"clarity","label":"Clarity","status":to_status(feedback["subscores"]["clarity"]), "note": feedback.get("improvementArea","") or "—"},
+                {"key":"depth","label":"Depth","status":to_status(feedback["subscores"]["depth"]), "note": "—"},
+                {"key":"insight","label":"Relevance","status":to_status(feedback["subscores"]["relevance"]), "note": "—"},
+                {"key":"openness","label":"Empathy","status":to_status(feedback["subscores"]["empathy"]), "note": "—"}
+            ]
+
+            return ScoreResponse(
+                # legacy fields (kept so ScoreCard doesn't break)
+                scenario={"title": req.scenarioTitle or "", "text": req.scenarioText or ""},
+                question=question,
+                score=feedback["overallScore"],
+                rubric=legacy_rubric,
+                proTip=feedback.get("coachingNugget"),
+                suggestedUpgrade=(feedback.get("exampleUpgrades") or [None])[0],
+                badge={"name": "QI Coach", "label": feedback["qiSkillDetected"]["name"]},
+                # NEW rich coaching fields (Sessions parity)
+                coachV3=feedback
+            )
+
+        except Exception as e:
+            print(f"Daily Evaluator v3 error, falling back to legacy: {e}")
+            # Fall back to legacy system below
+
+    # Legacy Daily Challenge system (original implementation)
     # Build session context if in session mode
     session_context = None
     if req.mode == "session":
@@ -1298,7 +1533,7 @@ def score(req: ScoreRequest):
 
     scenario_title = req.scenarioTitle or req.sessionTitle or "Today's Scenario"
     scenario_text  = req.scenarioText  or req.sessionScene or ""
-    user_prompt    = build_user_prompt(req.question.strip(), scenario_title, scenario_text, session_context)
+    user_prompt    = build_user_prompt(question, scenario_title, scenario_text, session_context)
 
     try:
         chat = client.chat.completions.create(
@@ -1341,21 +1576,21 @@ def score(req: ScoreRequest):
         suggested = (data.get("suggestedUpgrade") or "").strip() or None
         badge_in = data.get("badge") or None
 
-        # Optional: simple server-side badge if model didn’t return one
+        # Optional: simple server-side badge if model didn't return one
         if not badge_in:
             if score >= 90:   badge_in = {"name":"Clarity Star","label":"Consistently sharp and focused"}
             elif score >= 80: badge_in = {"name":"Insight Spark","label":"Shows promising perspective"}
 
-        out = {
-            "scenario": {"title": scenario_title, "text": scenario_text},
-            "question": req.question.strip(),
-            "score": score,
-            "rubric": normalized_rubric,
-            "proTip": pro_tip,
-            "suggestedUpgrade": suggested,
-            "badge": badge_in
-        }
-        return out
+        return ScoreResponse(
+            scenario={"title": scenario_title, "text": scenario_text},
+            question=question,
+            score=score,
+            rubric=normalized_rubric,
+            proTip=pro_tip,
+            suggestedUpgrade=suggested,
+            badge=badge_in,
+            coachV3=None  # Legacy mode doesn't have v3 data
+        )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Scoring failed: {e}")

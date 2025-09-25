@@ -2,32 +2,37 @@
   {
     "id": 6,
     "title": "Lunch choice",
-    "prompt": "Your friend says, 'Let’s get something different for lunch today,' but doesn’t say what they’re craving. Another friend looks uncertain, clearly wanting to say something but holding back. What question could you ask to uncover what they’re actually in the mood for?"
+    "prompt": "Your friend says, 'Let's get something different for lunch today,' but doesn't say what they're craving. Another friend looks uncertain, clearly wanting to say something but holding back. What question could you ask to uncover what they're actually in the mood for?",
+    "context": "personal"
   },
   {
     "id": 7,
     "title": "Class instructions",
-    "prompt": "Your teacher explains a project, but you’re still not sure what to do. The teacher is about to move on to the next part of class. What question could you ask to make the directions clearer before it’s too late?"
+    "prompt": "Your teacher explains a project, but you're still not sure what to do. The teacher is about to move on to the next part of class. What question could you ask to make the directions clearer before it's too late?",
+    "context": "academic"
   },
   {
     "id": 8,
     "title": "Missed detail",
-    "prompt": "Someone tells a funny story but skips over the part you don’t understand. What simple follow-up question could you ask?"
+    "prompt": "Someone tells a funny story but skips over the part you don't understand. What simple follow-up question could you ask?",
+    "context": "personal"
   },
   {
     "id": 9,
     "title": "New neighbor",
-    "prompt": "A new neighbor moves in and says, 'This neighborhood feels so different from where I used to live.' What open question could you ask to learn more?"
+    "prompt": "A new neighbor moves in and says, 'This neighborhood feels so different from where I used to live.' What open question could you ask to learn more?",
+    "context": "personal"
   },
   {
     "id": 10,
     "title": "Helping out",
-    "prompt": "A teammate says, 'I’m struggling to finish my part of the project.' What question could help you understand how to support them?"
+    "prompt": "A teammate says, 'I'm struggling to finish my part of the project.' What question could help you understand how to support them?",
+    "context": "academic"
   },
   {
-  "id": 11,
-  "title": "Group Science Project",
-  "prompt": "Your teacher assigns a big science project to your group. Everyone is sitting in awkward silence, waiting for someone else to speak. A couple of people look uneasy, and one person is flipping through the assignment sheet without saying anything. What question could you ask to break the ice and get things moving?"
+    "id": 11,
+    "title": "Group Science Project",
+    "prompt": "Your teacher assigns a big science project to your group. Everyone is sitting in awkward silence, waiting for someone else to speak. A couple of people look uneasy, and one person is flipping through the assignment sheet without saying anything. What question could you ask to break the ice and get things moving?",
+    "context": "academic"
   }
-
 ]

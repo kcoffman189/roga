@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
       scenarioId: body.scenarioId ?? body.scenario_id,
       scenarioTitle: body.scenarioTitle,
       scenarioText: body.scenarioText,
+      context: body.context,  // NEW: context field for Daily Evaluator v3
       // Session mode fields
       mode: body.mode,
       round: body.round,

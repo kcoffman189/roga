@@ -10,12 +10,15 @@ import Image from "next/image";
 import DailyChallengeScoreCard from "@/components/DailyChallengeScoreCard";
 import { getFeedback, type CoachFeedback } from "./actions";
 import type { MVPScoreCardResponse } from "@/types/feedback";
+import scenariosData from "@/data/scenarios.json";
 
 interface Scenario {
   id: number;
   title: string;
-  text: string;
-  icon: string;
+  text?: string;  // Make text optional for JSON scenarios
+  prompt?: string; // Add prompt field from JSON
+  context?: string; // NEW: context field for Daily Evaluator v3
+  icon?: string; // Make icon optional
 }
 
 interface FeedbackData {
@@ -86,38 +89,54 @@ interface EnhancedCoachingFeedbackData {
   };
 }
 
-const scenarios: Scenario[] = [
+// Combine hardcoded scenarios with JSON scenarios
+const hardcodedScenarios: Scenario[] = [
   {
     id: 1,
     title: "Class Instructions",
     text: "Your teacher explains a project, but you're still not sure what to do. The teacher is about to move on to the next part of class. What question could you ask to make the directions clearer before it's too late?",
+    context: "academic",
     icon: "/brand/school_icon.svg"
   },
   {
     id: 2,
     title: "Team Meeting",
     text: "Your manager mentions a new initiative in passing during a busy team meeting. You think it might affect your current project, but you're not certain. What question could you ask to understand the impact?",
+    context: "business",
     icon: "/brand/team_icon_icon.svg"
   },
   {
     id: 3,
     title: "Customer Feedback",
     text: "A customer says your product 'doesn't feel right' but won't elaborate further. You need to understand their concern to improve the experience. What question could help you dig deeper?",
+    context: "business",
     icon: "/brand/customer_feedback_icon.svg"
   },
   {
     id: 4,
     title: "Project Deadline",
     text: "Your team lead says the deadline is 'tight but doable' for an important project. You want to understand what resources or support might be needed. What question would help clarify the situation?",
+    context: "business",
     icon: "/brand/project_deadline_icon.svg"
   },
   {
     id: 5,
     title: "Career Discussion",
     text: "During your performance review, your supervisor mentions 'growth opportunities' but doesn't specify what they mean. You want to understand your next steps. What question could help clarify your path forward?",
+    context: "business",
     icon: "/brand/career_growth_icon.svg"
   }
 ];
+
+// Transform JSON scenarios to match our interface
+const jsonScenarios: Scenario[] = scenariosData.map(s => ({
+  ...s,
+  text: s.prompt,
+  icon: "/brand/question_icon.svg" // Default icon for JSON scenarios
+}));
+
+// Combine all scenarios
+const scenarios: Scenario[] = [...hardcodedScenarios, ...jsonScenarios];
 
 export default function DailyChallengePage() {
   const [question, setQuestion] = useState("");
@@ -157,7 +176,8 @@ export default function DailyChallengePage() {
             user_question: question,
             scenario_id: currentScenario.id,
             scenario_title: currentScenario.title,
-            scenario_text: currentScenario.text
+            scenario_text: currentScenario.text || currentScenario.prompt,
+            context: currentScenario.context  // NEW: context for Daily Evaluator v3
           }),
         });
 
@@ -193,7 +213,8 @@ export default function DailyChallengePage() {
           user_question: question,
           scenario_id: currentScenario.id,
           scenario_title: currentScenario.title,
-          scenario_text: currentScenario.text
+          scenario_text: currentScenario.text,
+          context: currentScenario.context  // NEW: context for Daily Evaluator v3
         }),
       });
 
@@ -395,7 +416,7 @@ export default function DailyChallengePage() {
               <h2 className="font-display font-bold text-xl">{currentScenario.title}</h2>
             </div>
             <p className="font-sans text-coal/80">
-              {currentScenario.text}
+              {currentScenario.text || currentScenario.prompt}
             </p>
 
             {/* Input */}

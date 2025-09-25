@@ -16,6 +16,27 @@ export type RogaFeedback = {
   proTip?: string;        // Make optional
   suggestedUpgrade?: string; // Make optional
   badge?: { name: string; label?: string }; // label should also be optional
+  coachV3?: {
+    overallScore: number;
+    subscores: {
+      clarity: number;
+      depth: number;
+      relevance: number;
+      empathy: number;
+    };
+    qiSkillDetected: {
+      name: string;
+      strength: string;
+    };
+    strengths?: string;
+    improvementArea?: string;
+    coachingNugget?: string;
+    exampleUpgrades?: string[];
+    progressNote?: string;
+    contextSpecificTip?: string;
+    likelyResponse?: string;
+    nextQuestionSuggestions?: string[];
+  };
 };
 
 const glyph: Record<RubricItem["status"], string> = {
@@ -75,6 +96,39 @@ export default function ScoreCard({ data }: { data: RogaFeedback }) {
         <div className="badge mt-5 !text-base !px-4 !py-2">
           <div className="text-2xl">🏅</div>
           <div>{data.badge.label} unlocked</div>
+        </div>
+      )}
+
+      {/* Enhanced v3 Coaching Fields (Sessions parity) */}
+      {data.coachV3 && (
+        <div className="space-y-2 mt-6">
+          <div className="flex items-center justify-between">
+            <span className="badge">QI {data.coachV3.overallScore}/100</span>
+            <span className="text-xs text-coal/70">
+              Cl {data.coachV3.subscores.clarity}/5 • De {data.coachV3.subscores.depth}/5 • Re {data.coachV3.subscores.relevance}/5 • Em {data.coachV3.subscores.empathy}/5
+            </span>
+          </div>
+
+          <p><strong>QI Skill:</strong> {data.coachV3.qiSkillDetected.name} ({data.coachV3.qiSkillDetected.strength})</p>
+          {data.coachV3.strengths && <p><strong>Strengths:</strong> {data.coachV3.strengths}</p>}
+          {data.coachV3.improvementArea && <p><strong>Improvement:</strong> {data.coachV3.improvementArea}</p>}
+          {data.coachV3.coachingNugget && <p><strong>Coaching Nugget:</strong> {data.coachV3.coachingNugget}</p>}
+
+          {!!data.coachV3.exampleUpgrades?.length && (
+            <div>
+              <strong>Example Upgrades:</strong>
+              <ul className="list-disc pl-5">
+                {data.coachV3.exampleUpgrades.slice(0,3).map((x, i) => <li key={i}>{x}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {data.coachV3.progressNote && <p><strong>Progress:</strong> {data.coachV3.progressNote}</p>}
+          {data.coachV3.contextSpecificTip && <p><strong>Context Tip:</strong> {data.coachV3.contextSpecificTip}</p>}
+          {data.coachV3.likelyResponse && <p><strong>Likely Response:</strong> {data.coachV3.likelyResponse}</p>}
+          {!!data.coachV3.nextQuestionSuggestions?.length && (
+            <p className="text-sm"><strong>Try next:</strong> {data.coachV3.nextQuestionSuggestions.join(" • ")}</p>
+          )}
         </div>
       )}
     </div>
