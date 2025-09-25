@@ -407,7 +407,7 @@ export default function DailyChallengePage() {
       </div>
 
       {/* CONTENT */}
-      <div className="flex justify-between" style={{marginLeft: '15px', marginRight: '15px'}}>
+      <div className="flex justify-between" style={{marginLeft: '115px', marginRight: '115px'}}>
         {/* Left Column - Scenario Card */}
         <div>
           <Card className="p-6" style={{width: '600px'}}>
