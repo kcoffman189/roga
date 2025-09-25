@@ -33,6 +33,12 @@ export type RogaFeedback = {
     contextSpecificTip?: string;
     likelyResponse?: string;
     nextQuestionSuggestions?: string[];
+    skillFeedback?: {
+      clarity: string;
+      depth: string;
+      relevance: string;
+      empathy: string;
+    };
   };
 };
 
