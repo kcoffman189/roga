@@ -30,7 +30,10 @@ DAILY_EVAL_V3 = os.environ.get("DAILY_EVAL_V3", "true").lower() == "true"
 # Load QI Knowledge Base
 QI_KB = {}
 try:
-    with open("qi_kb_seed.json", "r", encoding="utf-8") as f:
+    # Try loading from the app directory first (for Docker), then fallback to current directory
+    import os
+    json_path = "app/qi_kb_seed.json" if os.path.exists("app/qi_kb_seed.json") else "qi_kb_seed.json"
+    with open(json_path, "r", encoding="utf-8") as f:
         QI_KB = json.load(f)
         print(f"QI_KB loaded successfully with keys: {list(QI_KB.keys())}")
         # Check if skill_feedback was loaded
