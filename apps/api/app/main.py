@@ -32,9 +32,15 @@ QI_KB = {}
 try:
     with open("qi_kb_seed.json", "r", encoding="utf-8") as f:
         QI_KB = json.load(f)
+        print(f"QI_KB loaded successfully with keys: {list(QI_KB.keys())}")
+        # Check if skill_feedback was loaded
+        if "skill_feedback" in QI_KB:
+            print(f"skill_feedback loaded with skills: {list(QI_KB['skill_feedback'].keys())}")
+        else:
+            print("Warning: skill_feedback section not found in QI_KB")
 except FileNotFoundError:
     print("Warning: qi_kb_seed.json not found, using empty KB")
-    QI_KB = {"taxonomy": {}, "feedback_templates": {}, "coaching_nuggets": {}, "example_upgrades": {}, "style_constraints": {}}
+    QI_KB = {"taxonomy": {}, "feedback_templates": {}, "coaching_nuggets": {}, "example_upgrades": {}, "style_constraints": {}, "skill_feedback": {}}
 
 RubricKey = Literal["clarity", "depth", "insight", "openness"]
 RubricStatus = Literal["good", "warn", "bad"]
@@ -2172,13 +2178,28 @@ def get_skill_feedback(scores: Dict[str, int]) -> Dict[str, str]:
     """Generate skill-specific feedback explanations from QI Library"""
     skill_feedback_templates = QI_KB.get("skill_feedback", {})
 
+    # Debug: Log if templates are loaded
+    if not skill_feedback_templates:
+        print("Warning: skill_feedback templates not found in QI_KB")
+        print(f"QI_KB keys: {list(QI_KB.keys())}")
+
     feedback = {}
     for skill in ["clarity", "depth", "relevance", "empathy"]:
         score = scores.get(skill, 3)
         skill_templates = skill_feedback_templates.get(skill, {})
 
-        # Get feedback for the specific score level
-        feedback_text = skill_templates.get(str(score), f"Your {skill} shows room for improvement.")
+        # Get feedback for the specific score level with better fallback
+        if str(score) in skill_templates:
+            feedback_text = skill_templates[str(score)]
+        else:
+            # Improved fallback based on score
+            if score <= 2:
+                feedback_text = f"Your {skill} needs improvement - try being more specific and thoughtful."
+            elif score == 3:
+                feedback_text = f"Your {skill} is decent but could be enhanced with more focus."
+            else:
+                feedback_text = f"Your {skill} shows good strength - keep building on this foundation."
+
         feedback[skill] = feedback_text
 
     return feedback
