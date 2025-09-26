@@ -25,9 +25,18 @@ export type CoachFeedback = {
   progress_message: string;
 };
 
-// New v.2 6-part coaching framework types
+// Individual skill feedback for enhanced breakdown
+export type SkillFeedback = {
+  clarity: string;
+  depth: string;
+  relevance: string;
+  empathy: string;
+};
+
+// New v.2 6-part coaching framework types with enhanced skill breakdown
 export type CoachFeedbackV2 = {
   qi_score: ClassifyResponse["scores"];
+  skill_feedback: SkillFeedback;
   skill_detected: string;
   strengths: string;
   improvement_area: string;
@@ -147,6 +156,12 @@ export async function getFeedbackV2(scenario: string, userQuestion: string): Pro
         depth: 2,
         relevance: 3,
         empathy: 2
+      },
+      skill_feedback: {
+        clarity: "Somewhat vague - it's unclear which part specifically needs explanation.",
+        depth: "Shallow - stays at surface level without exploring underlying factors.",
+        relevance: "Generally relevant but could target more critical elements.",
+        empathy: "Limited empathy - focuses mainly on your own needs without considering others."
       },
       skill_detected: "Clarifying (attempted, but vague)",
       strengths: "You showed curiosity about the situation.",

@@ -8,7 +8,15 @@ type DailyChallengeScoreCardV2Props = {
   feedback: CoachFeedbackV2;
 };
 
-const ScoreIndicator = ({ label, score }: { label: string; score: number }) => {
+const EnhancedScoreIndicator = ({
+  label,
+  score,
+  feedback
+}: {
+  label: string;
+  score: number;
+  feedback: string;
+}) => {
   const getColor = (score: number) => {
     if (score >= 4) return "var(--roga-teal)";
     if (score >= 3) return "var(--roga-amber)";
@@ -29,14 +37,19 @@ const ScoreIndicator = ({ label, score }: { label: string; score: number }) => {
   };
 
   return (
-    <div className="flex items-center justify-between py-2">
-      <span className="text-sm font-medium">{label}</span>
-      <div className="flex items-center gap-1">
-        {getDots(score)}
-        <span className="ml-2 text-sm font-bold" style={{ color: getColor(score) }}>
-          {score}/5
-        </span>
+    <div className="py-3 border-b border-[var(--roga-mist)] last:border-b-0">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-medium">{label}</span>
+        <div className="flex items-center gap-1">
+          {getDots(score)}
+          <span className="ml-2 text-sm font-bold" style={{ color: getColor(score) }}>
+            {score}/5
+          </span>
+        </div>
       </div>
+      <p className="text-xs copy text-[var(--roga-coal)] opacity-80">
+        {feedback}
+      </p>
     </div>
   );
 };
@@ -72,12 +85,33 @@ export default function DailyChallengeScoreCardV2({ scenario, question, feedback
         </div>
       </div>
 
-      {/* Sub-scores */}
-      <div className="mt-4 space-y-1">
-        <ScoreIndicator label="Clarity" score={feedback.qi_score.clarity} />
-        <ScoreIndicator label="Depth" score={feedback.qi_score.depth} />
-        <ScoreIndicator label="Relevance" score={feedback.qi_score.relevance} />
-        <ScoreIndicator label="Empathy" score={feedback.qi_score.empathy} />
+      {/* Enhanced Sub-scores with Detailed Feedback */}
+      <div className="card mt-4 !p-4">
+        <div className="text-sm heading mb-3">
+          <span>📊 Skill Assessment Breakdown</span>
+        </div>
+        <div className="space-y-0">
+          <EnhancedScoreIndicator
+            label="Clarity"
+            score={feedback.qi_score.clarity}
+            feedback={feedback.skill_feedback.clarity}
+          />
+          <EnhancedScoreIndicator
+            label="Depth"
+            score={feedback.qi_score.depth}
+            feedback={feedback.skill_feedback.depth}
+          />
+          <EnhancedScoreIndicator
+            label="Relevance"
+            score={feedback.qi_score.relevance}
+            feedback={feedback.skill_feedback.relevance}
+          />
+          <EnhancedScoreIndicator
+            label="Empathy"
+            score={feedback.qi_score.empathy}
+            feedback={feedback.skill_feedback.empathy}
+          />
+        </div>
       </div>
 
       {/* 1. QI Skill Detected */}

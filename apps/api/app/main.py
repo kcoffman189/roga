@@ -253,9 +253,17 @@ class CoachRequest(BaseModel):
     user_question: str
     classification: ClassifyResponse
 
-# New v.2 6-part coaching framework model
+# Individual skill feedback model for enhanced breakdown
+class SkillFeedback(BaseModel):
+    clarity: str = Field(description="Detailed explanation for clarity score")
+    depth: str = Field(description="Detailed explanation for depth score")
+    relevance: str = Field(description="Detailed explanation for relevance score")
+    empathy: str = Field(description="Detailed explanation for empathy score")
+
+# New v.2 6-part coaching framework model with enhanced skill breakdown
 class DailyChallengeCoachFeedbackV2(BaseModel):
     qi_score: Scores
+    skill_feedback: SkillFeedback = Field(description="Detailed explanations for each QI skill dimension")
     skill_detected: str = Field(description="QI skill name + quality rating")
     strengths: str = Field(max_length=120, description="One positive element from the question")
     improvement_area: str = Field(max_length=120, description="Name the gap, tied to QI taxonomy")
@@ -437,7 +445,7 @@ CLASSIFY_SCHEMA = {
     }
 }
 
-# Updated schema for Daily Challenge Coaching Upgrade v.2 - 6-part framework
+# Updated schema for Daily Challenge Coaching Upgrade v.2 - 6-part framework with enhanced skill breakdown
 DAILY_COACH_SCHEMA_V2 = {
     "name": "roga_daily_coach_v2",
     "schema": {
@@ -456,6 +464,17 @@ DAILY_COACH_SCHEMA_V2 = {
                 "required": ["overall", "clarity", "depth", "relevance", "empathy"],
                 "additionalProperties": False
             },
+            "skill_feedback": {
+                "type": "object",
+                "properties": {
+                    "clarity": {"type": "string", "description": "Detailed explanation for clarity score"},
+                    "depth": {"type": "string", "description": "Detailed explanation for depth score"},
+                    "relevance": {"type": "string", "description": "Detailed explanation for relevance score"},
+                    "empathy": {"type": "string", "description": "Detailed explanation for empathy score"}
+                },
+                "required": ["clarity", "depth", "relevance", "empathy"],
+                "additionalProperties": False
+            },
             "skill_detected": {"type": "string", "description": "QI skill name + quality rating (e.g., 'Clarifying (attempted, but vague)')"},
             "strengths": {"type": "string", "description": "One positive element from the question"},
             "improvement_area": {"type": "string", "description": "Name the gap, tied to QI taxonomy"},
@@ -469,7 +488,7 @@ DAILY_COACH_SCHEMA_V2 = {
             },
             "progress_note": {"type": "string", "description": "Motivational + gamified hook"}
         },
-        "required": ["qi_score", "skill_detected", "strengths", "improvement_area", "coaching_nugget", "example_upgrades", "progress_note"]
+        "required": ["qi_score", "skill_feedback", "skill_detected", "strengths", "improvement_area", "coaching_nugget", "example_upgrades", "progress_note"]
     }
 }
 
@@ -2149,6 +2168,21 @@ def retrieve_assets(skill: str, performance_tier: str) -> Dict[str, Any]:
         "technique": tech
     }
 
+def get_skill_feedback(scores: Dict[str, int]) -> Dict[str, str]:
+    """Generate skill-specific feedback explanations from QI Library"""
+    skill_feedback_templates = QI_KB.get("skill_feedback", {})
+
+    feedback = {}
+    for skill in ["clarity", "depth", "relevance", "empathy"]:
+        score = scores.get(skill, 3)
+        skill_templates = skill_feedback_templates.get(skill, {})
+
+        # Get feedback for the specific score level
+        feedback_text = skill_templates.get(str(score), f"Your {skill} shows room for improvement.")
+        feedback[skill] = feedback_text
+
+    return feedback
+
 def validate_and_cap_scores(scores: Dict[str, int], issues: List[str]) -> Dict[str, int]:
     """Apply rubric rules and caps based on detected issues - Enhanced for v.2 stricter scoring"""
     result = scores.copy()
@@ -2387,6 +2421,10 @@ Return JSON only.'''
     try:
         result = call_llm_json(system_prompt, user_prompt, DAILY_COACH_SCHEMA_V2, temperature=0.5)
 
+        # Generate skill-specific feedback from QI Library
+        skill_feedback = get_skill_feedback(req.classification.scores.dict())
+        result["skill_feedback"] = skill_feedback
+
         # Ensure example_upgrades count is within bounds
         upgrades = result.get("example_upgrades", [])
         if len(upgrades) < ROGA_MIN_EXAMPLES:
@@ -2419,8 +2457,12 @@ Return JSON only.'''
             "What should happen first?"
         ]
 
+        # Generate fallback skill feedback
+        fallback_skill_feedback = get_skill_feedback(req.classification.scores.dict())
+
         return DailyChallengeCoachFeedbackV2(
             qi_score=req.classification.scores,
+            skill_feedback=fallback_skill_feedback,
             skill_detected=f"{primary_skill.title()} (attempted, needs focus)",
             strengths=(assets["feedback_templates"][:1] or ["You showed curiosity by asking."])[0],
             improvement_area="Point to the specific part that's unclear to make your question actionable.",

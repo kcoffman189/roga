@@ -196,6 +196,36 @@
       ]
     }
   },
+  "skill_feedback": {
+    "clarity": {
+      "5": "Your question is crystal clear - anyone could understand exactly what you're asking for.",
+      "4": "Strong clarity - your question targets a specific area with minimal ambiguity.",
+      "3": "Decent clarity, but could be more specific about what you need to know.",
+      "2": "Somewhat vague - it's unclear which part specifically needs explanation.",
+      "1": "Very unclear - too broad or confusing to know how to respond effectively."
+    },
+    "depth": {
+      "5": "Excellent depth - your question digs into underlying factors and invites rich exploration.",
+      "4": "Good depth - goes beyond surface level to explore important aspects.",
+      "3": "Moderate depth - touches on some important elements but could go deeper.",
+      "2": "Shallow - stays at surface level without exploring underlying factors.",
+      "1": "No depth - asks for simple repetition without advancing understanding."
+    },
+    "relevance": {
+      "5": "Perfectly relevant - directly addresses the core issue that matters most.",
+      "4": "Highly relevant - focuses on important aspects of the situation.",
+      "3": "Generally relevant but could target more critical elements.",
+      "2": "Somewhat off-track - misses the main point or priority.",
+      "1": "Not relevant - doesn't address the actual problem or situation."
+    },
+    "empathy": {
+      "5": "Shows excellent awareness of others' perspectives and demonstrates genuine care.",
+      "4": "Good empathy - considers how others might feel or be affected.",
+      "3": "Some empathy shown, but could better consider others' viewpoints.",
+      "2": "Limited empathy - focuses mainly on your own needs without considering others.",
+      "1": "No empathy - completely ignores how others might be affected or feel."
+    }
+  },
   "progress_notes": {
     "clarifying": [
       "🌟 Clarifier Level 1 → Add one specific detail to move toward Level 2.",
