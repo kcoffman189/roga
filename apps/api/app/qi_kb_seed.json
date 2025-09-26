@@ -196,6 +196,44 @@
       ]
     }
   },
+  "progress_notes": {
+    "clarifying": [
+      "🌟 Clarifier Level 1 → Add one specific detail to move toward Level 2.",
+      "🎯 Getting warmer! Name the exact piece you need explained.",
+      "📍 Focus power activated! Now point to what's unclear.",
+      "🔍 Precision mode unlocked → target the missing detail next time."
+    ],
+    "probing": [
+      "🔥 Probe Level 1 → Ask 'why' to unlock deeper insights.",
+      "🕵️ Detective mode engaged! Dig into the reasons behind this.",
+      "💡 Curiosity activated → explore what's driving this situation.",
+      "🧩 Pattern seeker unlocked → uncover the hidden factors."
+    ],
+    "follow_up": [
+      "🚀 Follow-up Level 1 → Build on what was just shared.",
+      "🔗 Connection master! Link back to their previous point.",
+      "📈 Conversation builder activated → extend what they said.",
+      "🎪 Active listener unlocked → show you heard them clearly."
+    ],
+    "comparative": [
+      "⚖️ Compare Level 1 → Contrast two specific options.",
+      "🔄 Analyzer activated! Highlight the key differences.",
+      "📊 Choice evaluator unlocked → reveal what makes each unique.",
+      "🎭 Perspective shifter engaged → explore multiple angles."
+    ],
+    "open_question": [
+      "🌈 Open-ender Level 1 → Remove yes/no constraints.",
+      "🗺️ Explorer mode activated! Invite expansive thinking.",
+      "🎨 Creativity unlocked → make room for multiple possibilities.",
+      "🌟 Possibility generator engaged → open up new pathways."
+    ],
+    "closed_question": [
+      "🎯 Fact-finder Level 1 → Use closed questions strategically.",
+      "📝 Information gatherer activated! Get specific details first.",
+      "🔧 Precision tool unlocked → confirm understanding, then explore.",
+      "⚡ Quick clarifier engaged → nail down the facts, then open up."
+    ]
+  },
   "style_constraints": {
     "banned_topics": ["real_person_names", "ai_evangelism", "political_actors"],
     "voice": "modern, clever, approachable; concise; no jargon",

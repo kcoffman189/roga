@@ -253,6 +253,17 @@ class CoachRequest(BaseModel):
     user_question: str
     classification: ClassifyResponse
 
+# New v.2 6-part coaching framework model
+class DailyChallengeCoachFeedbackV2(BaseModel):
+    qi_score: Scores
+    skill_detected: str = Field(description="QI skill name + quality rating")
+    strengths: str = Field(max_length=120, description="One positive element from the question")
+    improvement_area: str = Field(max_length=120, description="Name the gap, tied to QI taxonomy")
+    coaching_nugget: str = Field(max_length=120, description="1-2 sentences of mini-teaching from QI Library")
+    example_upgrades: List[str] = Field(min_length=2, max_length=3, description="2-3 better alternatives as questions")
+    progress_note: str = Field(max_length=150, description="Motivational + gamified hook")
+
+# Legacy model for backwards compatibility
 class DailyChallengeCoachFeedback(BaseModel):
     qi_score: Scores
     strengths: str
@@ -262,6 +273,15 @@ class DailyChallengeCoachFeedback(BaseModel):
     example_upgrades: List[str] = Field(min_length=2, max_length=3)
     progress_message: str
 
+# New v.2 response model
+class DailyChallengeFeedbackResponseV2(BaseModel):
+    schema: str = "roga.daily_challenge.v2"
+    scenario_id: Optional[int]
+    user_question: str
+    feedback: DailyChallengeCoachFeedbackV2
+    meta: CoachMeta
+
+# Legacy response model for backwards compatibility
 class DailyChallengeFeedbackResponse(BaseModel):
     schema: str = "roga.daily_challenge.v3"
     scenario_id: Optional[int]
@@ -417,6 +437,43 @@ CLASSIFY_SCHEMA = {
     }
 }
 
+# Updated schema for Daily Challenge Coaching Upgrade v.2 - 6-part framework
+DAILY_COACH_SCHEMA_V2 = {
+    "name": "roga_daily_coach_v2",
+    "schema": {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "qi_score": {
+                "type": "object",
+                "properties": {
+                    "overall": {"type": "integer", "minimum": 1, "maximum": 5},
+                    "clarity": {"type": "integer", "minimum": 1, "maximum": 5},
+                    "depth": {"type": "integer", "minimum": 1, "maximum": 5},
+                    "relevance": {"type": "integer", "minimum": 1, "maximum": 5},
+                    "empathy": {"type": "integer", "minimum": 1, "maximum": 5}
+                },
+                "required": ["overall", "clarity", "depth", "relevance", "empathy"],
+                "additionalProperties": False
+            },
+            "skill_detected": {"type": "string", "description": "QI skill name + quality rating (e.g., 'Clarifying (attempted, but vague)')"},
+            "strengths": {"type": "string", "description": "One positive element from the question"},
+            "improvement_area": {"type": "string", "description": "Name the gap, tied to QI taxonomy"},
+            "coaching_nugget": {"type": "string", "description": "1-2 sentences of mini-teaching from QI Library"},
+            "example_upgrades": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 3,
+                "items": {"type": "string"},
+                "description": "2-3 better alternatives, always phrased as questions"
+            },
+            "progress_note": {"type": "string", "description": "Motivational + gamified hook"}
+        },
+        "required": ["qi_score", "skill_detected", "strengths", "improvement_area", "coaching_nugget", "example_upgrades", "progress_note"]
+    }
+}
+
+# Legacy schema for backwards compatibility
 DAILY_COACH_SCHEMA = {
     "name": "roga_daily_coach_v3",
     "schema": {
@@ -2070,9 +2127,10 @@ def complete_session_enhanced(session_id: str):
 
 # Daily Challenge Coaching Upgrade - Helper Functions
 def retrieve_assets(skill: str, performance_tier: str) -> Dict[str, Any]:
-    """Retrieve coaching assets for a specific skill and performance tier"""
+    """Retrieve coaching assets for a specific skill and performance tier - Enhanced for v.2"""
     ft = QI_KB.get("feedback_templates", {}).get(skill, {})
     nuggets = QI_KB.get("coaching_nuggets", {}).get(skill, [])
+    progress_notes = QI_KB.get("progress_notes", {}).get(skill, [])
     examples_data = QI_KB.get("example_upgrades", {}).get(skill, {})
     examples = examples_data.get("medium", []) + examples_data.get("easy", [])
 
@@ -2086,24 +2144,41 @@ def retrieve_assets(skill: str, performance_tier: str) -> Dict[str, Any]:
     return {
         "feedback_templates": ft.get(performance_tier, []),
         "nuggets": nuggets,
+        "progress_notes": progress_notes,  # v.2: Progress notes from QI Library
         "examples": examples[:6],  # Top 6 examples
         "technique": tech
     }
 
 def validate_and_cap_scores(scores: Dict[str, int], issues: List[str]) -> Dict[str, int]:
-    """Apply rubric rules and caps based on detected issues"""
+    """Apply rubric rules and caps based on detected issues - Enhanced for v.2 stricter scoring"""
     result = scores.copy()
 
     if ROGA_STRICT_SCORING:
-        # Apply caps for serious issues
+        # Enhanced v.2 scoring rules: Cap vague or closed questions at ≤2/5 overall
         if "too_vague" in issues or "closed_question" in issues:
             result["overall"] = min(result["overall"], 2)
+            # Also cap sub-scores for consistency with overall weakness
+            result["clarity"] = min(result["clarity"], 2)
+            result["depth"] = min(result["depth"], 2)
 
-        # Additional caps for other issues
+        # Scoring scale enforcement (1-2=Weak, 3=Okay, 4=Strong, 5=Excellent)
+        # Ensure weak questions stay in 1-2 range
+        if len(issues) >= 2:  # Multiple issues indicate weak question
+            result["overall"] = min(result["overall"], 2)
+
+        # Specific issue caps
         if "off_topic" in issues:
             result["relevance"] = min(result["relevance"], 2)
         if "low_empathy" in issues:
             result["empathy"] = min(result["empathy"], 2)
+        if "missing_context" in issues:
+            result["clarity"] = min(result["clarity"], 2)
+
+        # Ensure sub-scores don't exceed overall cap for consistency
+        max_allowed = result["overall"]
+        for subscore in ["clarity", "depth", "relevance", "empathy"]:
+            if result[subscore] > max_allowed:
+                result[subscore] = max_allowed
 
     return result
 
@@ -2260,6 +2335,100 @@ Return JSON only.'''
             progress_message="Keep going—target one detail and you'll level up your questioning skill."
         )
 
+# New v.2 coaching endpoint with 6-part framework
+@app.post("/coach/v2", response_model=DailyChallengeCoachFeedbackV2)
+def coach_question_v2(req: CoachRequest):
+    """Generate v.2 coaching feedback using 6-part framework with QI Library sourcing"""
+    if not req.user_question or not req.user_question.strip():
+        raise HTTPException(status_code=400, detail="Missing user question")
+
+    # Determine primary skill and performance tier
+    skills = req.classification.detected_skills or ["clarifying"]
+    primary_skill = skills[0] if skills else "clarifying"
+    tier = "good" if req.classification.scores.overall >= 4 else "needs_work"
+
+    # Retrieve coaching assets including progress notes
+    assets = retrieve_assets(primary_skill, tier)
+
+    # Build v.2 coaching prompt for 6-part framework
+    system_prompt = """You are Roga's v.2 QI coach using the new 6-part framework. Style: direct, encouraging, instructional, modern & approachable. No real names, no AI themes. Output STRICT JSON matching the v.2 schema.
+
+Voice guidelines:
+- Direct: call out weaknesses clearly
+- Encouraging: normalize mistakes and encourage practice
+- Instructional: always show how to fix the issue
+- Concise: ≤120 words total"""
+
+    user_prompt = f'''Scenario: "{req.scenario_text}"
+UserQuestion: "{req.user_question}"
+
+DetectedSkills: {skills}
+Scores: {req.classification.scores.dict()}
+Issues: {req.classification.issues}
+
+QI Library Assets:
+- FeedbackTemplates: {assets["feedback_templates"]}
+- CoachingNuggets: {assets["nuggets"]}
+- ProgressNotes: {assets["progress_notes"]}
+- ExampleUpgrades: {assets["examples"]}
+
+6-Part Framework Instructions:
+1. skill_detected: Name the skill + quality rating (e.g., "Clarifying (attempted, but vague)")
+2. strengths: Find ONE positive element from their question (1-2 sentences)
+3. improvement_area: Name the specific gap, tied to QI taxonomy (1-2 sentences)
+4. coaching_nugget: Pick ONE nugget from CoachingNuggets list above
+5. example_upgrades: Select 2-3 examples from ExampleUpgrades that address their Issues
+6. progress_note: Pick ONE progress note from ProgressNotes list above
+
+CRITICAL: Use library content directly, don't generate new content. Keep total under {ROGA_FEEDBACK_MAX_WORDS} words.
+
+Return JSON only.'''
+
+    try:
+        result = call_llm_json(system_prompt, user_prompt, DAILY_COACH_SCHEMA_V2, temperature=0.5)
+
+        # Ensure example_upgrades count is within bounds
+        upgrades = result.get("example_upgrades", [])
+        if len(upgrades) < ROGA_MIN_EXAMPLES:
+            # Add fallback examples from assets
+            fallback_examples = assets["examples"][:ROGA_MAX_EXAMPLES]
+            upgrades.extend(fallback_examples)
+        upgrades = upgrades[:ROGA_MAX_EXAMPLES]
+        result["example_upgrades"] = upgrades
+
+        # Fallback for missing nugget/progress_note - select from library
+        if not result.get("coaching_nugget") and assets["nuggets"]:
+            result["coaching_nugget"] = assets["nuggets"][0]
+        if not result.get("progress_note") and assets["progress_notes"]:
+            result["progress_note"] = assets["progress_notes"][0]
+
+        # Check content filters
+        all_text = f"{result.get('strengths', '')} {result.get('improvement_area', '')} {result.get('coaching_nugget', '')}"
+        banned_content = check_content_filters(all_text)
+        if banned_content:
+            print(f"Content filter issues: {banned_content}")
+
+        return DailyChallengeCoachFeedbackV2(**result)
+
+    except Exception as e:
+        print(f"v.2 Coaching generation failed: {e}")
+        # Fallback v.2 coaching response using library content
+        examples = assets["examples"][:ROGA_MAX_EXAMPLES] if assets["examples"] else [
+            "What exactly needs clarification?",
+            "Which step is unclear?",
+            "What should happen first?"
+        ]
+
+        return DailyChallengeCoachFeedbackV2(
+            qi_score=req.classification.scores,
+            skill_detected=f"{primary_skill.title()} (attempted, needs focus)",
+            strengths=(assets["feedback_templates"][:1] or ["You showed curiosity by asking."])[0],
+            improvement_area="Point to the specific part that's unclear to make your question actionable.",
+            coaching_nugget=(assets["nuggets"][:1] or ["Strong clarifiers point to the exact missing detail, not the whole message."])[0],
+            example_upgrades=examples,
+            progress_note=(assets["progress_notes"][:1] or ["🌟 Clarifier Level 1 → Add one specific detail to move toward Level 2."])[0]
+        )
+
 @app.post("/daily-challenge-feedback", response_model=DailyChallengeFeedbackResponse)
 def get_daily_challenge_feedback(req: ClassifyRequest):
     """Complete Daily Challenge feedback pipeline (classify + coach)"""
@@ -2302,3 +2471,47 @@ def get_daily_challenge_feedback(req: ClassifyRequest):
     except Exception as e:
         print(f"Daily challenge feedback pipeline failed: {e}")
         raise HTTPException(status_code=500, detail=f"Feedback generation failed: {e}")
+
+# New v.2 complete pipeline with 6-part framework
+@app.post("/daily-challenge-feedback/v2", response_model=DailyChallengeFeedbackResponseV2)
+def get_daily_challenge_feedback_v2(req: ClassifyRequest):
+    """Complete Daily Challenge v.2 feedback pipeline with 6-part framework"""
+    try:
+        # Step 1: Classify the question
+        classification = classify_question(req)
+
+        # Step 2: Generate v.2 coaching feedback
+        coach_req = CoachRequest(
+            scenario_text=req.scenario_text,
+            user_question=req.user_question,
+            classification=classification
+        )
+        feedback = coach_question_v2(coach_req)
+
+        # Generate metadata
+        feedback_content = f"{feedback.strengths} {feedback.improvement_area} {feedback.coaching_nugget}"
+        content_hash = hashlib.sha256(feedback_content.encode()).hexdigest()[:16]
+
+        # Check content and length
+        word_count = len(feedback_content.split())
+        length_ok = word_count <= ROGA_FEEDBACK_MAX_WORDS
+        banned_content = check_content_filters(feedback_content)
+
+        meta = CoachMeta(
+            brand_check=len(banned_content) == 0,
+            length_ok=length_ok,
+            banned_content=banned_content,
+            hash=content_hash
+        )
+
+        return DailyChallengeFeedbackResponseV2(
+            schema="roga.daily_challenge.v2",
+            scenario_id=None,
+            user_question=req.user_question.strip(),
+            feedback=feedback,
+            meta=meta
+        )
+
+    except Exception as e:
+        print(f"Daily challenge v.2 feedback pipeline failed: {e}")
+        raise HTTPException(status_code=500, detail=f"v.2 Feedback generation failed: {e}")
