@@ -198,32 +198,32 @@
   },
   "skill_feedback": {
     "clarity": {
-      "5": "Your question is crystal clear - anyone could understand exactly what you're asking for.",
-      "4": "Strong clarity - your question targets a specific area with minimal ambiguity.",
-      "3": "Decent clarity, but could be more specific about what you need to know.",
-      "2": "Somewhat vague - it's unclear which part specifically needs explanation.",
-      "1": "Very unclear - too broad or confusing to know how to respond effectively."
+      "5": "Your question is crystal clear - anyone could understand exactly what you're asking for. Clarity in QI means being specific about what information you need and targeting the precise gap in understanding.",
+      "4": "Strong clarity - your question targets a specific area with minimal ambiguity. Good clarity helps others know exactly how to help you by pointing to what's unclear.",
+      "3": "Decent clarity, but could be more specific about what you need to know. Clarity improves when you name the exact piece, step, or concept that needs explanation.",
+      "2": "Somewhat vague - it's unclear which part specifically needs explanation. Strong clarity requires pointing to the specific detail or concept that's confusing rather than expressing general confusion.",
+      "1": "Very unclear - too broad or confusing to know how to respond effectively. Clarity means helping others understand exactly what information would resolve your uncertainty."
     },
     "depth": {
-      "5": "Excellent depth - your question digs into underlying factors and invites rich exploration.",
-      "4": "Good depth - goes beyond surface level to explore important aspects.",
-      "3": "Moderate depth - touches on some important elements but could go deeper.",
-      "2": "Shallow - stays at surface level without exploring underlying factors.",
-      "1": "No depth - asks for simple repetition without advancing understanding."
+      "5": "Excellent depth - your question digs into underlying factors and invites rich exploration. Depth in QI means going beyond surface information to explore causes, implications, and hidden factors.",
+      "4": "Good depth - goes beyond surface level to explore important aspects. Strong depth probes into the 'why' behind situations and uncovers assumptions or trade-offs.",
+      "3": "Moderate depth - touches on some important elements but could go deeper. Depth improves when you explore underlying reasons, constraints, or implications rather than just requesting information.",
+      "2": "Shallow - stays at surface level without exploring underlying factors. Greater depth comes from asking 'why' questions and probing into causes, motivations, or hidden dynamics.",
+      "1": "No depth - asks for simple repetition without advancing understanding. Depth in questioning means seeking to understand the reasoning, context, or factors behind what's being discussed."
     },
     "relevance": {
-      "5": "Perfectly relevant - directly addresses the core issue that matters most.",
-      "4": "Highly relevant - focuses on important aspects of the situation.",
-      "3": "Generally relevant but could target more critical elements.",
-      "2": "Somewhat off-track - misses the main point or priority.",
-      "1": "Not relevant - doesn't address the actual problem or situation."
+      "5": "Perfectly relevant - directly addresses the core issue that matters most. Relevance in QI means focusing on what will actually impact decisions or outcomes in this specific situation.",
+      "4": "Highly relevant - focuses on important aspects of the situation. Strong relevance targets the information that truly matters for moving forward effectively.",
+      "3": "Generally relevant but could target more critical elements. Relevance improves when you focus on the most important factors for this specific context rather than general information.",
+      "2": "Somewhat off-track - misses the main point or priority. Better relevance comes from identifying what information would actually be most useful for this particular situation.",
+      "1": "Not relevant - doesn't address the actual problem or situation. Relevance means connecting your question directly to what matters most in the current context or decision."
     },
     "empathy": {
-      "5": "Shows excellent awareness of others' perspectives and demonstrates genuine care.",
-      "4": "Good empathy - considers how others might feel or be affected.",
-      "3": "Some empathy shown, but could better consider others' viewpoints.",
-      "2": "Limited empathy - focuses mainly on your own needs without considering others.",
-      "1": "No empathy - completely ignores how others might be affected or feel."
+      "5": "Shows excellent awareness of others' perspectives and demonstrates genuine care. Empathy in QI means considering how your question affects others and acknowledging their viewpoint or constraints.",
+      "4": "Good empathy - considers how others might feel or be affected. Strong empathy shows awareness of others' perspectives and demonstrates understanding of their position or challenges.",
+      "3": "Some empathy shown, but could better consider others' viewpoints. Empathy improves when you acknowledge others' situations or show awareness of how your question impacts them.",
+      "2": "Limited empathy - focuses mainly on your own needs without considering others. Greater empathy comes from recognizing others' perspectives, constraints, or feelings when framing your question.",
+      "1": "No empathy - completely ignores how others might be affected or feel. Empathy in questioning means showing awareness of others' viewpoints and demonstrating care for their experience or situation."
     }
   },
   "progress_notes": {
