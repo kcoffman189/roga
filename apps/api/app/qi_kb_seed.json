@@ -2,44 +2,111 @@
   "taxonomy": {
     "clarifying": {
       "definition": "Reduce ambiguity by targeting what's unclear.",
-      "do": ["ask 'what exactly…'", "refer to the missing piece"],
-      "dont": ["'wait, what?'", "broad 'can you repeat?'"],
-      "stems": ["What specifically…", "Which part…", "Could you clarify…"]
+      "do": [
+        "ask 'what exactly…'",
+        "refer to the missing piece"
+      ],
+      "dont": [
+        "'wait, what?'",
+        "broad 'can you repeat?'"
+      ],
+      "stems": [
+        "What specifically…",
+        "Which part…",
+        "Could you clarify…"
+      ]
     },
     "probing": {
       "definition": "Dig into reasons/assumptions.",
-      "do": ["ask why", "explore causation", "uncover trade-offs"],
-      "dont": ["surface-level questions", "yes/no probes"],
-      "stems": ["Why…", "What led…", "What's the trade-off…"]
+      "do": [
+        "ask why",
+        "explore causation",
+        "uncover trade-offs"
+      ],
+      "dont": [
+        "surface-level questions",
+        "yes/no probes"
+      ],
+      "stems": [
+        "Why…",
+        "What led…",
+        "What's the trade-off…"
+      ]
     },
     "follow_up": {
       "definition": "Extend what was just said.",
-      "do": ["build on previous statements", "ask for elaboration"],
-      "dont": ["repeat what was said", "change topics abruptly"],
-      "stems": ["You mentioned…could you say more about…", "Following up on that…"]
+      "do": [
+        "build on previous statements",
+        "ask for elaboration"
+      ],
+      "dont": [
+        "repeat what was said",
+        "change topics abruptly"
+      ],
+      "stems": [
+        "You mentioned…could you say more about…",
+        "Following up on that…"
+      ]
     },
     "comparative": {
       "definition": "Contrast options to reveal differences.",
-      "do": ["compare alternatives", "highlight differences", "explore relative merits"],
-      "dont": ["make assumptions about preferences", "limit to binary choices"],
-      "stems": ["How does this differ from…", "Compared to…", "What makes this better than…"]
+      "do": [
+        "compare alternatives",
+        "highlight differences",
+        "explore relative merits"
+      ],
+      "dont": [
+        "make assumptions about preferences",
+        "limit to binary choices"
+      ],
+      "stems": [
+        "How does this differ from…",
+        "Compared to…",
+        "What makes this better than…"
+      ]
     },
     "open_question": {
       "definition": "Invite expansive, thoughtful responses.",
-      "do": ["use open-ended words", "encourage exploration"],
-      "dont": ["limit to yes/no", "constrain response options"],
-      "stems": ["How might…", "What would happen if…", "Tell me about…"]
+      "do": [
+        "use open-ended words",
+        "encourage exploration"
+      ],
+      "dont": [
+        "limit to yes/no",
+        "constrain response options"
+      ],
+      "stems": [
+        "How might…",
+        "What would happen if…",
+        "Tell me about…"
+      ]
     },
     "closed_question": {
       "definition": "Seek specific, factual information.",
-      "do": ["ask for specific data", "confirm understanding"],
-      "dont": ["overuse", "limit exploration"],
-      "stems": ["Is this…", "Did you…", "When will…"]
+      "do": [
+        "ask for specific data",
+        "confirm understanding"
+      ],
+      "dont": [
+        "overuse",
+        "limit exploration"
+      ],
+      "stems": [
+        "Is this…",
+        "Did you…",
+        "When will…"
+      ]
     }
   },
   "rubric_rules": {
-    "closed_or_vague": { "overall_cap": 2 },
-    "excellent_requires": ["clear_target", "non_yes_no", "context_anchor"]
+    "closed_or_vague": {
+      "overall_cap": 2
+    },
+    "excellent_requires": [
+      "clear_target",
+      "non_yes_no",
+      "context_anchor"
+    ]
   },
   "feedback_templates": {
     "clarifying": {
@@ -265,9 +332,72 @@
     ]
   },
   "style_constraints": {
-    "banned_topics": ["real_person_names", "ai_evangelism", "political_actors"],
+    "banned_topics": [
+      "real_person_names",
+      "ai_evangelism",
+      "political_actors"
+    ],
     "voice": "modern, clever, approachable; concise; no jargon",
     "max_words": 120,
     "tone": "encouraging but honest, supportive but direct"
+  },
+  "enhanced_coaching_templates": {
+    "6_part_framework": {
+      "skill_detected_formats": {
+        "clarifying": "Clarifying ({quality_rating})",
+        "probing": "Probing ({quality_rating})",
+        "follow_up": "Follow-up ({quality_rating})",
+        "comparative": "Comparative ({quality_rating})",
+        "open_question": "Open Question ({quality_rating})",
+        "closed_question": "Closed Question ({quality_rating})"
+      },
+      "quality_ratings": {
+        "5": "excellent execution",
+        "4": "strong attempt",
+        "3": "decent effort",
+        "2": "attempted, but needs work",
+        "1": "attempted, but very basic"
+      },
+      "strengths_starters": [
+        "You showed curiosity by",
+        "You demonstrated",
+        "You attempted to",
+        "You recognized that",
+        "You tried to"
+      ],
+      "improvement_starters": [
+        "To strengthen this",
+        "The main gap is",
+        "Your question needs",
+        "To improve clarity",
+        "The key missing piece is"
+      ]
+    }
+  },
+  "scoring_rules_v2": {
+    "strict_caps": {
+      "too_vague": {
+        "overall_max": 2,
+        "clarity_max": 2
+      },
+      "closed_question": {
+        "overall_max": 2,
+        "depth_max": 2
+      },
+      "too_broad": {
+        "overall_max": 2,
+        "clarity_max": 2
+      },
+      "no_context": {
+        "relevance_max": 2
+      }
+    },
+    "score_meanings": {
+      "1": "Weak (vague, closed, trivial)",
+      "2": "Below average (has issues but some merit)",
+      "3": "Okay (surface-level but workable)",
+      "4": "Strong (clear, specific, open-ended)",
+      "5": "Excellent (precise, layered, invites deep insight)"
+    }
   }
 }

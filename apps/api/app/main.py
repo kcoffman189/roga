@@ -313,6 +313,31 @@ class MVPScoreCardResponse(BaseModel):
     feedback: MVPScoreCardFeedback
     meta: CoachMeta
 
+# Enhanced Daily Challenge Coaching v3 - Complete 6-part framework with skill-specific feedback
+class EnhancedSkillFeedback(BaseModel):
+    clarity: str = Field(description="Detailed explanation for clarity score with specific guidance")
+    depth: str = Field(description="Detailed explanation for depth score with specific guidance")
+    relevance: str = Field(description="Detailed explanation for relevance score with specific guidance")
+    empathy: str = Field(description="Detailed explanation for empathy score with specific guidance")
+
+class DailyChallengeCoachFeedbackV3(BaseModel):
+    qi_score: Scores = Field(description="1-5 scores for each QI dimension")
+    skill_feedback: EnhancedSkillFeedback = Field(description="Detailed skill-specific explanations")
+    skill_detected: str = Field(description="QI skill name + quality rating (e.g., 'Clarifying (attempted, but vague)')")
+    strengths: str = Field(max_length=120, description="One positive element from the question")
+    improvement_area: str = Field(max_length=120, description="Name the gap, tied to QI taxonomy")
+    coaching_nugget: str = Field(max_length=120, description="1-2 sentences of mini-teaching from QI Library")
+    example_upgrades: List[str] = Field(min_length=2, max_length=3, description="2-3 better alternatives, always as questions")
+    progress_note: str = Field(max_length=150, description="Motivational + gamified hook with emojis")
+
+class DailyChallengeFeedbackResponseV3(BaseModel):
+    schema: str = "roga.daily_challenge.v3"
+    scenario_id: Optional[int]
+    user_question: str
+    feedback: DailyChallengeCoachFeedbackV3
+    meta: CoachMeta
+
+
 SCHEMA = {
     "name": "roga_scorecard_v1",
     "schema": {
@@ -2581,3 +2606,267 @@ def get_daily_challenge_feedback_v2(req: ClassifyRequest):
     except Exception as e:
         print(f"Daily challenge v.2 feedback pipeline failed: {e}")
         raise HTTPException(status_code=500, detail=f"v.2 Feedback generation failed: {e}")
+
+
+# Enhanced v3 coaching endpoint with comprehensive 6-part framework
+
+# Enhanced v3 helper functions
+def validate_and_cap_scores_v3(scores: Dict[str, int], issues: List[str]) -> Dict[str, int]:
+    """Enhanced v3 scoring validation with stricter rules"""
+    result = scores.copy()
+
+    # Load enhanced scoring rules from QI_KB
+    scoring_rules = QI_KB.get("scoring_rules_v2", {})
+    strict_caps = scoring_rules.get("strict_caps", {})
+
+    if ROGA_STRICT_SCORING:
+        # Apply strict caps from QI knowledge base
+        for issue in issues:
+            if issue in strict_caps:
+                caps = strict_caps[issue]
+                for dimension, max_score in caps.items():
+                    if dimension in result:
+                        result[dimension] = min(result[dimension], max_score)
+
+    return result
+
+def get_enhanced_skill_feedback(scores: Dict[str, int]) -> Dict[str, str]:
+    """Generate enhanced skill-specific feedback with detailed guidance"""
+    skill_feedback_templates = QI_KB.get("skill_feedback", {})
+
+    feedback = {}
+    for skill in ["clarity", "depth", "relevance", "empathy"]:
+        score = scores.get(skill, 3)
+        skill_templates = skill_feedback_templates.get(skill, {})
+
+        # Get detailed feedback for the specific score level
+        if str(score) in skill_templates:
+            feedback_text = skill_templates[str(score)]
+        else:
+            # Enhanced fallback with more detailed guidance
+            feedback_text = get_detailed_fallback_feedback(skill, score)
+
+        feedback[skill] = feedback_text
+
+    return feedback
+
+def get_detailed_fallback_feedback(skill: str, score: int) -> str:
+    """Generate detailed fallback feedback for each skill dimension"""
+    fallbacks = {
+        "clarity": {
+            1: "Very unclear - help others understand exactly what information you need by pointing to the specific detail or concept that's confusing.",
+            2: "Somewhat vague - it's unclear which part specifically needs explanation. Strong clarity requires targeting the precise gap in understanding.",
+            3: "Decent clarity, but could be more specific about what you need to know. Clarity improves when you name the exact piece that needs explanation.",
+            4: "Strong clarity - your question targets a specific area with minimal ambiguity. Good clarity helps others know exactly how to help you.",
+            5: "Crystal clear - anyone could understand exactly what you're asking for. Excellent clarity targets the precise gap in understanding."
+        },
+        "depth": {
+            1: "No depth - asks for simple repetition without advancing understanding. Depth in questioning means seeking underlying reasons or factors.",
+            2: "Shallow - stays at surface level without exploring underlying factors. Greater depth comes from asking 'why' questions and probing causes.",
+            3: "Moderate depth - touches on some important elements but could go deeper. Depth improves when you explore underlying reasons or implications.",
+            4: "Good depth - goes beyond surface level to explore important aspects. Strong depth probes into the 'why' behind situations.",
+            5: "Excellent depth - digs into underlying factors and invites rich exploration. Depth means exploring causes, implications, and hidden factors."
+        },
+        "relevance": {
+            1: "Not relevant - doesn't address the actual problem or situation. Relevance means connecting directly to what matters most in the current context.",
+            2: "Somewhat off-track - misses the main point or priority. Better relevance comes from identifying what would actually be most useful.",
+            3: "Generally relevant but could target more critical elements. Relevance improves when you focus on the most important factors for this context.",
+            4: "Highly relevant - focuses on important aspects of the situation. Strong relevance targets information that truly matters for moving forward.",
+            5: "Perfectly relevant - directly addresses the core issue that matters most. Relevance means focusing on what will actually impact decisions."
+        },
+        "empathy": {
+            1: "No empathy - completely ignores how others might be affected or feel. Empathy in questioning means showing awareness of others' viewpoints.",
+            2: "Limited empathy - focuses mainly on your own needs without considering others. Greater empathy comes from recognizing others' perspectives.",
+            3: "Some empathy shown, but could better consider others' viewpoints. Empathy improves when you acknowledge others' situations.",
+            4: "Good empathy - considers how others might feel or be affected. Strong empathy shows awareness of others' perspectives and challenges.",
+            5: "Excellent empathy awareness - shows genuine care and considers others' perspectives. Empathy means acknowledging their viewpoint and constraints."
+        }
+    }
+
+    return fallbacks.get(skill, {}).get(score, f"Your {skill} shows room for improvement.")
+
+def get_quality_rating(overall_score: int) -> str:
+    """Get quality rating text for skill_detected field"""
+    quality_ratings = QI_KB.get("enhanced_coaching_templates", {}).get("6_part_framework", {}).get("quality_ratings", {})
+    return quality_ratings.get(str(overall_score), "attempted, needs focus")
+
+def generate_strengths(user_question: str, primary_skill: str, assets: Dict) -> str:
+    """Generate strengths feedback using QI library templates"""
+    starters = QI_KB.get("enhanced_coaching_templates", {}).get("6_part_framework", {}).get("strengths_starters", [])
+
+    # Get positive templates for the skill
+    good_templates = assets.get("feedback_templates", [])
+
+    if good_templates:
+        return good_templates[0]
+    elif starters:
+        starter = starters[0]
+        return f"{starter} asking a {primary_skill} question."
+    else:
+        return "You showed curiosity by asking this question."
+
+def generate_improvement_area(issues: List[str], primary_skill: str, assets: Dict) -> str:
+    """Generate improvement area feedback based on detected issues"""
+    starters = QI_KB.get("enhanced_coaching_templates", {}).get("6_part_framework", {}).get("improvement_starters", [])
+    needs_work_templates = assets.get("feedback_templates", [])
+
+    if needs_work_templates:
+        return needs_work_templates[0] if needs_work_templates else "Focus on being more specific."
+
+    # Generate based on issues
+    if "too_vague" in issues:
+        return "Your question is too vague - point to the exact part that needs explanation."
+    elif "closed_question" in issues:
+        return "This limits responses - try opening it up to invite more expansive thinking."
+    elif starters:
+        starter = starters[0]
+        return f"{starter}, add more specificity to guide a helpful response."
+    else:
+        return "Focus on making your question more specific and actionable."
+
+def retrieve_assets_v3(skill: str, performance_tier: str) -> Dict:
+    """Enhanced asset retrieval for v3 with better fallbacks"""
+    assets = retrieve_assets(skill, performance_tier)  # Use existing function
+
+    # Ensure we have progress notes
+    if not assets.get("progress_notes"):
+        progress_notes = QI_KB.get("progress_notes", {}).get(skill, [])
+        assets["progress_notes"] = progress_notes
+
+    return assets
+
+def get_default_nugget(skill: str) -> str:
+    """Get default coaching nugget for a skill"""
+    nuggets = QI_KB.get("coaching_nuggets", {}).get(skill, [])
+    return nuggets[0] if nuggets else f"Strong {skill} questions are specific and actionable."
+
+def get_default_examples(skill: str) -> List[str]:
+    """Get default example upgrades for a skill"""
+    examples = QI_KB.get("example_upgrades", {}).get(skill, {})
+    all_examples = examples.get("easy", []) + examples.get("medium", [])
+    return all_examples[:3] if all_examples else ["What exactly needs clarification?", "Which step is unclear?", "What should happen first?"]
+
+def get_default_progress_note(skill: str) -> str:
+    """Get default progress note for a skill"""
+    progress_notes = QI_KB.get("progress_notes", {}).get(skill, [])
+    return progress_notes[0] if progress_notes else f"🌟 {skill.title()} Level 1 → Keep practicing to level up!"
+
+def create_v3_fallback_response(primary_skill: str, scores: Dict[str, int], assets: Dict) -> 'DailyChallengeCoachFeedbackV3':
+    """Create a comprehensive v3 fallback response"""
+    enhanced_skill_feedback = get_enhanced_skill_feedback(scores)
+    quality_rating = get_quality_rating(scores["overall"])
+
+    return DailyChallengeCoachFeedbackV3(
+        qi_score=Scores(**scores),
+        skill_feedback=EnhancedSkillFeedback(**enhanced_skill_feedback),
+        skill_detected=f"{primary_skill.title()} ({quality_rating})",
+        strengths="You showed curiosity by asking this question.",
+        improvement_area="Focus on being more specific to guide a helpful response.",
+        coaching_nugget=get_default_nugget(primary_skill),
+        example_upgrades=get_default_examples(primary_skill),
+        progress_note=get_default_progress_note(primary_skill)
+    )
+
+def classify_question_v3(req: ClassifyRequest) -> 'ClassifyResponse':
+    """Enhanced v3 classification with stricter validation"""
+    # For now, use the existing classify_question function
+    # Could be enhanced further with v3-specific logic
+    return classify_question(req)
+
+
+@app.post("/coach/v3", response_model=DailyChallengeCoachFeedbackV3)
+def coach_question_v3(req: CoachRequest):
+    """Generate v3 enhanced coaching feedback with comprehensive skill-specific feedback"""
+    if not req.user_question or not req.user_question.strip():
+        raise HTTPException(status_code=400, detail="Missing user question")
+
+    # Apply enhanced strict scoring and validation
+    validated_scores = validate_and_cap_scores_v3(
+        req.classification.scores.dict(),
+        req.classification.issues
+    )
+
+    # Determine primary skill and performance tier
+    skills = req.classification.detected_skills or ["clarifying"]
+    primary_skill = skills[0] if skills else "clarifying"
+    tier = "good" if validated_scores["overall"] >= 4 else "needs_work"
+
+    # Retrieve coaching assets
+    assets = retrieve_assets_v3(primary_skill, tier)
+
+    # Generate enhanced skill feedback with specific guidance
+    enhanced_skill_feedback = get_enhanced_skill_feedback(validated_scores)
+
+    # Build skill_detected with quality rating
+    quality_rating = get_quality_rating(validated_scores["overall"])
+    skill_detected = f"{primary_skill.title()} ({quality_rating})"
+
+    # Generate 6-part framework content
+    try:
+        # Use template-based generation for consistency
+        strengths = generate_strengths(req.user_question, primary_skill, assets)
+        improvement_area = generate_improvement_area(req.classification.issues, primary_skill, assets)
+        coaching_nugget = assets["nuggets"][0] if assets["nuggets"] else get_default_nugget(primary_skill)
+        example_upgrades = assets["examples"][:3] if assets["examples"] else get_default_examples(primary_skill)
+        progress_note = assets["progress_notes"][0] if assets["progress_notes"] else get_default_progress_note(primary_skill)
+
+        return DailyChallengeCoachFeedbackV3(
+            qi_score=Scores(**validated_scores),
+            skill_feedback=EnhancedSkillFeedback(**enhanced_skill_feedback),
+            skill_detected=skill_detected,
+            strengths=strengths,
+            improvement_area=improvement_area,
+            coaching_nugget=coaching_nugget,
+            example_upgrades=example_upgrades,
+            progress_note=progress_note
+        )
+
+    except Exception as e:
+        print(f"v3 Coaching generation failed: {e}")
+        # Enhanced fallback with all required fields
+        return create_v3_fallback_response(primary_skill, validated_scores, assets)
+
+# Enhanced v3 complete pipeline
+@app.post("/daily-challenge-feedback/v3", response_model=DailyChallengeFeedbackResponseV3)
+def get_daily_challenge_feedback_v3(req: ClassifyRequest):
+    """Complete Daily Challenge v3 enhanced feedback pipeline"""
+    try:
+        # Step 1: Classify with enhanced validation
+        classification = classify_question_v3(req)
+
+        # Step 2: Generate v3 enhanced coaching feedback
+        coach_req = CoachRequest(
+            scenario_text=req.scenario_text,
+            user_question=req.user_question,
+            classification=classification
+        )
+        feedback = coach_question_v3(coach_req)
+
+        # Enhanced metadata generation
+        feedback_content = f"{feedback.strengths} {feedback.improvement_area} {feedback.coaching_nugget}"
+        content_hash = hashlib.sha256(feedback_content.encode()).hexdigest()[:16]
+
+        # Check content and length with v3 standards
+        word_count = len(feedback_content.split())
+        length_ok = word_count <= ROGA_FEEDBACK_MAX_WORDS
+        banned_content = check_content_filters(feedback_content)
+
+        meta = CoachMeta(
+            brand_check=len(banned_content) == 0,
+            length_ok=length_ok,
+            banned_content=banned_content,
+            hash=content_hash
+        )
+
+        return DailyChallengeFeedbackResponseV3(
+            schema="roga.daily_challenge.v3_enhanced",
+            scenario_id=None,
+            user_question=req.user_question.strip(),
+            feedback=feedback,
+            meta=meta
+        )
+
+    except Exception as e:
+        print(f"Daily challenge v3 enhanced feedback pipeline failed: {e}")
+        raise HTTPException(status_code=500, detail=f"v3 Enhanced feedback generation failed: {e}")
+
