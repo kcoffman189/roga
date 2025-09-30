@@ -2751,6 +2751,67 @@ def get_default_progress_note(skill: str) -> str:
     progress_notes = QI_KB.get("progress_notes", {}).get(skill, [])
     return progress_notes[0] if progress_notes else f"🌟 {skill.title()} Level 1 → Keep practicing to level up!"
 
+def generate_scenario_specific_upgrades(scenario_text: str, user_question: str, skill: str, issues: List[str]) -> List[str]:
+    """Generate scenario-specific example upgrade questions using LLM"""
+
+    # Get generic examples as reference style
+    generic_examples = get_default_examples(skill)
+
+    system_prompt = f"""You are a Question Intelligence coach. Generate 2-3 improved question alternatives that are:
+1. Specific to the given scenario context
+2. Demonstrate better {skill} technique
+3. Address the identified issues
+4. Always phrased as questions (end with ?)
+
+Keep questions concise (10-15 words max). Use the generic examples only as style reference."""
+
+    user_prompt = f"""Scenario: {scenario_text}
+
+User's Question: "{user_question}"
+
+Detected Issues:
+{chr(10).join(f"- {issue}" for issue in issues)}
+
+Generic {skill} examples (for style reference only):
+{chr(10).join(f"- {ex}" for ex in generic_examples[:2])}
+
+Generate 2-3 improved questions that are SPECIFIC to this scenario and address these issues. Return ONLY the questions as a JSON array of strings."""
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.7,
+            max_tokens=200
+        )
+
+        result = json.loads(response.choices[0].message.content)
+
+        # Extract questions from various possible JSON structures
+        if isinstance(result, dict):
+            upgrades = result.get("questions") or result.get("upgrades") or result.get("examples") or []
+        elif isinstance(result, list):
+            upgrades = result
+        else:
+            upgrades = []
+
+        # Ensure we have 2-3 questions that end with ?
+        valid_upgrades = [q.strip() for q in upgrades if isinstance(q, str) and q.strip().endswith('?')]
+
+        if len(valid_upgrades) >= 2:
+            return valid_upgrades[:3]
+        else:
+            # Fallback to generic examples if LLM fails
+            return generic_examples[:3]
+
+    except Exception as e:
+        print(f"Error generating scenario-specific upgrades: {e}")
+        return generic_examples[:3]
+
 def create_v3_fallback_response(primary_skill: str, scores: Dict[str, int], assets: Dict) -> 'DailyChallengeCoachFeedbackV3':
     """Create a comprehensive v3 fallback response"""
     enhanced_skill_feedback = get_enhanced_skill_feedback(scores)
@@ -2807,7 +2868,15 @@ def coach_question_v3(req: CoachRequest):
         strengths = generate_strengths(req.user_question, primary_skill, assets)
         improvement_area = generate_improvement_area(req.classification.issues, primary_skill, assets)
         coaching_nugget = assets["nuggets"][0] if assets["nuggets"] else get_default_nugget(primary_skill)
-        example_upgrades = assets["examples"][:3] if assets["examples"] else get_default_examples(primary_skill)
+
+        # Generate scenario-specific example upgrades
+        example_upgrades = generate_scenario_specific_upgrades(
+            req.scenario_text,
+            req.user_question,
+            primary_skill,
+            req.classification.issues
+        )
+
         progress_note = assets["progress_notes"][0] if assets["progress_notes"] else get_default_progress_note(primary_skill)
 
         return DailyChallengeCoachFeedbackV3(
