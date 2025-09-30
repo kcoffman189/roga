@@ -67,7 +67,7 @@ export default function LibraryPage() {
         {filtered.length === 0 ? (
           <p className="text-coal/70">No papers match your filters yet.</p>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-row flex-wrap justify-center items-stretch" style={{gap: '20px'}}>
             {filtered.map((p, i) => (
               <PaperCard
                 key={p.id}

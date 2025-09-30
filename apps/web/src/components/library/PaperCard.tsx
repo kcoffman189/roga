@@ -20,7 +20,7 @@ export default function PaperCard({
 }: Props) {
   return (
     <a href={href} className="block">
-      <article className="card text-center py-8 px-4 transition-shadow hover:shadow-lg" style={{minHeight: '215px'}}>
+      <article className="card text-center py-8 px-4 w-40 transition-shadow hover:shadow-lg" style={{minHeight: '215px', width: '160px'}}>
         <div className="h-16 mb-4 flex items-center justify-center">
           {/* Placeholder icon; replace with SVG under /public/icons if desired */}
           <span className="text-5xl">📖</span>
