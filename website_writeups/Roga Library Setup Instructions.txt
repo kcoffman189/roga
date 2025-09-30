@@ -1,0 +1,344 @@
+📘 Roga QI Library — Implementation Doc
+
+Stack assumed: Next.js (app router) + Tailwind with Roga tokens already configured.
+
+1) Route & file structure
+app/
+  library/
+    page.tsx            # Library page
+components/
+  library/
+    LibraryFilters.tsx  # Filter/search controls
+    PaperCard.tsx       # Card UI
+    TagBadge.tsx        # Tag pill
+data/
+  papers.ts             # Source-of-truth for papers (can swap to CMS/API later)
+public/brand/           # (existing)
+public/icons/           # simple SVGs for card art (optional)
+
+2) Data model (extensible)
+// data/papers.ts
+export type Paper = {
+  id: string;
+  title: string;
+  subtitle?: string;
+  abstract: string;
+  topic: "Question Intelligence" | "Leadership" | "Education" | "Curiosity" | "Empathy" | "Clarity";
+  tags: string[];
+  date: string;        // ISO string
+  popularity?: number; // simple metric for sorting
+  href: string;        // URL to PDF or article route
+};
+
+export const PAPERS: Paper[] = [
+  {
+    id: "qi-5-dimensions",
+    title: "The 5 Dimensions of Question Intelligence",
+    subtitle: "A practical framework for sharper thinking",
+    abstract:
+      "Define, measure, and train Question Intelligence with clarity, depth, curiosity, relevance, and empathy.",
+    topic: "Question Intelligence",
+    tags: ["Framework", "Roga Originals"],
+    date: "2025-01-05",
+    popularity: 98,
+    href: "/docs/roga-5-dimensions.pdf"
+  },
+  {
+    id: "why-questions-beat-answers",
+    title: "Why Better Questions Beat Better Answers",
+    abstract:
+      "A research-backed look at how questions drive insight, alignment, and better decisions.",
+    topic: "Leadership",
+    tags: ["Research", "Decision-making"],
+    date: "2025-01-20",
+    popularity: 91,
+    href: "/docs/why-questions.pdf"
+  },
+  // add more…
+];
+
+
+Later, replace PAPERS with CMS/API without changing the UI.
+
+3) UI components
+3.1 Tag badge
+// components/library/TagBadge.tsx
+export default function TagBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center rounded-full bg-fog text-coal/80 text-xs font-semibold px-3 py-1">
+      {children}
+    </span>
+  );
+}
+
+3.2 Paper card (matches mock: white card, rounded, shadow, icon, title, abstract, tags, CTA)
+// components/library/PaperCard.tsx
+import TagBadge from "./TagBadge";
+
+type Props = {
+  title: string;
+  subtitle?: string;
+  abstract: string;
+  tags: string[];
+  href: string;
+  accent?: "teal" | "violet" | "coral";
+};
+
+const accentMap = {
+  teal: "bg-teal/10 text-teal",
+  violet: "bg-violet/10 text-violet",
+  coral: "bg-coral/10 text-coral",
+};
+
+export default function PaperCard({
+  title,
+  subtitle,
+  abstract,
+  tags,
+  href,
+  accent = "violet",
+}: Props) {
+  return (
+    <div className="card transition-shadow hover:shadow-lg">
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${accentMap[accent]} mb-4`}>
+        {/* Placeholder icon; replace with SVG under /public/icons if desired */}
+        <span className="text-xl">📖</span>
+      </div>
+
+      <h3 className="font-display font-bold text-lg text-coal">{title}</h3>
+      {subtitle && <p className="text-coal/70 text-sm mt-1">{subtitle}</p>}
+
+      <p className="text-coal/80 text-sm mt-3 line-clamp-3">{abstract}</p>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {tags.map((t) => (
+          <TagBadge key={t}>{t}</TagBadge>
+        ))}
+      </div>
+
+      <div className="mt-5">
+        <a
+          href={href}
+          className="inline-flex items-center gap-2 rounded-2xl bg-teal text-white px-4 py-2 font-semibold hover:bg-violet transition-colors"
+        >
+          Read Now
+          <span>→</span>
+        </a>
+      </div>
+    </div>
+  );
+}
+
+3.3 Filters bar (Topic, Sort by, Search)
+// components/library/LibraryFilters.tsx
+"use client";
+
+import { useMemo } from "react";
+import type { Paper } from "@/data/papers";
+
+type Props = {
+  papers: Paper[];
+  topic: string;
+  setTopic: (v: string) => void;
+  sort: "date" | "popularity";
+  setSort: (v: "date" | "popularity") => void;
+  q: string;
+  setQ: (v: string) => void;
+};
+
+export default function LibraryFilters({ papers, topic, setTopic, sort, setSort, q, setQ }: Props) {
+  const topics = useMemo(
+    () => Array.from(new Set(papers.map((p) => p.topic))).sort(),
+    [papers]
+  );
+
+  return (
+    <div className="bg-white rounded-2xl shadow-card p-4 md:p-5 flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+      <div className="flex gap-3">
+        <select
+          value={topic}
+          onChange={(e) => setTopic(e.target.value)}
+          className="rounded-xl border border-black/10 bg-fog px-3 py-2"
+        >
+          <option value="">All Topics</option>
+          {topics.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as "date" | "popularity")}
+          className="rounded-xl border border-black/10 bg-fog px-3 py-2"
+        >
+          <option value="date">Newest</option>
+          <option value="popularity">Popular</option>
+        </select>
+      </div>
+
+      <div className="flex-1 md:max-w-sm">
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search Roga Originals…"
+          className="w-full rounded-xl border border-black/10 bg-fog px-3 py-2"
+        />
+      </div>
+    </div>
+  );
+}
+
+4) Library page (grid layout + filters + brand copy)
+// app/library/page.tsx
+"use client";
+
+import { useMemo, useState } from "react";
+import { PAPERS, type Paper } from "@/data/papers";
+import LibraryFilters from "@/components/library/LibraryFilters";
+import PaperCard from "@/components/library/PaperCard";
+
+export const metadata = {
+  title: "Roga QI Library",
+  description: "Explore Roga Originals — our growing collection of insights on Question Intelligence.",
+};
+
+export default function LibraryPage() {
+  const [topic, setTopic] = useState<string>("");
+  const [sort, setSort] = useState<"date" | "popularity">("date");
+  const [q, setQ] = useState<string>("");
+
+  const filtered = useMemo(() => {
+    let list: Paper[] = [...PAPERS];
+
+    if (topic) list = list.filter((p) => p.topic === topic);
+    if (q.trim()) {
+      const needle = q.toLowerCase();
+      list = list.filter(
+        (p) =>
+          p.title.toLowerCase().includes(needle) ||
+          p.abstract.toLowerCase().includes(needle) ||
+          p.tags.join(" ").toLowerCase().includes(needle)
+      );
+    }
+    list.sort((a, b) =>
+      sort === "date"
+        ? new Date(b.date).getTime() - new Date(a.date).getTime()
+        : (b.popularity ?? 0) - (a.popularity ?? 0)
+    );
+    return list;
+  }, [topic, sort, q]);
+
+  return (
+    <main className="min-h-screen bg-fog text-coal">
+      {/* Page header */}
+      <section className="bg-teal">
+        <div className="max-w-6xl mx-auto px-6 py-10 text-white">
+          <div className="flex items-center gap-3">
+            <img src="/brand/roga-logo.svg" alt="Roga" className="h-8 w-8" />
+            <h1 className="font-bold text-xl">Roga QI Library</h1>
+          </div>
+          <p className="mt-3 max-w-2xl text-white/90">
+            Explore Roga Originals — our growing collection of insights on Question Intelligence.
+          </p>
+        </div>
+      </section>
+
+      {/* Filters */}
+      <section className="max-w-6xl mx-auto px-6 -mt-6">
+        <LibraryFilters
+          papers={PAPERS}
+          topic={topic}
+          setTopic={setTopic}
+          sort={sort}
+          setSort={setSort}
+          q={q}
+          setQ={setQ}
+        />
+      </section>
+
+      {/* Grid */}
+      <section className="max-w-6xl mx-auto px-6 py-10">
+        {filtered.length === 0 ? (
+          <p className="text-coal/70">No papers match your filters yet.</p>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((p, i) => (
+              <PaperCard
+                key={p.id}
+                title={p.title}
+                subtitle={p.subtitle}
+                abstract={p.abstract}
+                tags={[p.topic, ...p.tags]}
+                href={p.href}
+                accent={(["violet", "teal", "coral"] as const)[i % 3]}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-fog border-t border-black/5">
+        <div className="max-w-6xl mx-auto px-6 py-8 text-sm text-coal/70 flex items-center justify-between">
+          <p>Roga trains Question Intelligence — the art of asking better questions.</p>
+          <nav className="flex gap-4">
+            <a href="/privacy" className="hover:underline">Privacy</a>
+            <a href="/terms" className="hover:underline">Terms</a>
+            <a href="/contact" className="hover:underline">Contact</a>
+          </nav>
+        </div>
+      </footer>
+    </main>
+  );
+}
+
+5) Styling checklist (matches mock)
+
+Page background: bg-fog.
+
+Header band: bg-teal, white text, logo + title left.
+
+Filters card: white + rounded + shadow; form controls use bg-fog with subtle borders.
+
+Grid: 3-up on desktop (lg:grid-cols-3), 2-up on tablet, 1-up on mobile.
+
+Cards: card utility (white, rounded-2xl, shadow-card, p-6), hover: hover:shadow-lg.
+
+Typography: Titles font-display (Poppins), body font-sans (Inter).
+
+Badges: Fog background, coal text; compact and wrap.
+
+6) Accessibility & UX
+
+Each card’s “Read Now” is a clear CTA (<a>), keyboard focus visible.
+
+Search input labeled by placeholder; add aria-label="Search papers" if needed.
+
+Ensure PDFs have correct Content-Disposition (download/view) and are compressed.
+
+7) SEO / Metadata
+
+Set metadata title/description on the page (included).
+
+For each paper, consider creating an HTML page with an abstract + canonical link to the PDF for better SEO. You can still offer a Download PDF button.
+
+8) Hook from Home
+
+On the homepage add a simple CTA:
+
+<a
+  href="/library"
+  className="inline-flex items-center gap-2 rounded-2xl bg-white text-coal px-5 py-3 font-semibold hover:bg-fog border border-black/10"
+>
+  Roga QI Library
+</a>
+
+9) Optional polish
+
+Add URL query params for filters (?topic=Leadership&q=...).
+
+Add pagination if you expect >24 items.
+
+Replace the 📖 placeholder with small SVG illustrations in brand accents for variety.
