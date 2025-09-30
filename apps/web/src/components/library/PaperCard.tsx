@@ -25,7 +25,7 @@ export default function PaperCard({
   accent = "violet",
 }: Props) {
   return (
-    <div className="card transition-shadow hover:shadow-lg">
+    <article className="card transition-shadow hover:shadow-lg">
       <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${accentMap[accent]} mb-4`}>
         {/* Placeholder icon; replace with SVG under /public/icons if desired */}
         <span className="text-xl">📖</span>
@@ -51,6 +51,6 @@ export default function PaperCard({
           <span>→</span>
         </a>
       </div>
-    </div>
+    </article>
   );
 }

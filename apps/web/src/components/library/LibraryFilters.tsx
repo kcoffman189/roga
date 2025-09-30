@@ -21,12 +21,13 @@ export default function LibraryFilters({ papers, topic, setTopic, sort, setSort,
   );
 
   return (
-    <div className="bg-white rounded-2xl shadow-card p-4 md:p-5 flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+    <div className="card flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 p-4 md:p-5">
       <div className="flex gap-3">
         <select
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
           className="rounded-xl border border-black/10 bg-fog px-3 py-2"
+          aria-label="Filter by topic"
         >
           <option value="">All Topics</option>
           {topics.map((t) => (
@@ -40,6 +41,7 @@ export default function LibraryFilters({ papers, topic, setTopic, sort, setSort,
           value={sort}
           onChange={(e) => setSort(e.target.value as "date" | "popularity")}
           className="rounded-xl border border-black/10 bg-fog px-3 py-2"
+          aria-label="Sort by"
         >
           <option value="date">Newest</option>
           <option value="popularity">Popular</option>
@@ -51,6 +53,7 @@ export default function LibraryFilters({ papers, topic, setTopic, sort, setSort,
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search Roga Originals…"
+          aria-label="Search papers"
           className="w-full rounded-xl border border-black/10 bg-fog px-3 py-2"
         />
       </div>

@@ -1,0 +1,251 @@
+0) What’s off now (from the screenshot)
+
+No teal header band; typography is default.
+
+Filters look like native controls; not in a card.
+
+Papers render as plain blocks; no card layout, icons, tags, or CTA styling.
+
+Grid is single-column; spacing is tight.
+
+Footer links jammed together.
+
+We’ll fix all of this with Tailwind utilities you already use across the site.
+
+1) File/route layout (keep or align to this)
+app/library/page.tsx
+components/library/LibraryFilters.tsx
+components/library/PaperCard.tsx
+components/library/TagBadge.tsx
+data/papers.ts
+public/icons/{book.svg, spark.svg, idea.svg}  // simple line icons
+
+
+If you created different file names, keep them—just apply the code below to your equivalents.
+
+2) Ensure tokens & utilities exist
+
+In tailwind.config.js you should already have:
+
+extend:{
+  colors:{ teal:"#00BFA6", coral:"#FF6F61", violet:"#7B61FF", coal:"#2E2E2E", fog:"#F5F5F5", white:"#FFFFFF" },
+  borderRadius:{ xl:"12px","2xl":"16px" },
+  boxShadow:{ card:"0 8px 20px rgba(0,0,0,0.06)" }
+}
+
+
+In app/globals.css confirm:
+
+.card { @apply bg-white rounded-2xl shadow-card p-6; }
+
+3) Header band (teal hero)
+
+At the top of app/library/page.tsx, wrap with a teal band:
+
+<section className="bg-teal">
+  <div className="max-w-6xl mx-auto px-6 py-10 text-white">
+    <div className="flex items-center gap-3">
+      <img src="/brand/roga-logo.svg" alt="Roga" className="h-8 w-8" />
+      <h1 className="font-bold text-xl">Roga QI Library</h1>
+    </div>
+    <p className="mt-3 max-w-2xl text-white/90">
+      Explore Roga Originals — our growing collection of insights on Question Intelligence.
+    </p>
+  </div>
+</section>
+
+
+Set page background to Fog:
+
+<main className="min-h-screen bg-fog text-coal"> … </main>
+
+4) Filters bar as a card (not raw controls)
+
+Replace the unstyled selects/input with a card. Put this immediately after the teal header:
+
+<section className="max-w-6xl mx-auto px-6 -mt-6">
+  <div className="card flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 p-4 md:p-5">
+    <div className="flex gap-3">
+      <select
+        value={topic}
+        onChange={(e)=>setTopic(e.target.value)}
+        className="rounded-xl border border-black/10 bg-fog px-3 py-2"
+        aria-label="Filter by topic"
+      >
+        <option value="">All Topics</option>
+        {topics.map(t=> <option key={t} value={t}>{t}</option>)}
+      </select>
+
+      <select
+        value={sort}
+        onChange={(e)=>setSort(e.target.value as "date"|"popularity")}
+        className="rounded-xl border border-black/10 bg-fog px-3 py-2"
+        aria-label="Sort by"
+      >
+        <option value="date">Newest</option>
+        <option value="popularity">Popular</option>
+      </select>
+    </div>
+
+    <div className="flex-1 md:max-w-sm">
+      <input
+        value={q}
+        onChange={(e)=>setQ(e.target.value)}
+        placeholder="Search Roga Originals…"
+        aria-label="Search papers"
+        className="w-full rounded-xl border border-black/10 bg-fog px-3 py-2"
+      />
+    </div>
+  </div>
+</section>
+
+
+topics should be Array.from(new Set(PAPERS.map(p=>p.topic))).sort().
+
+5) Paper cards (grid + card UI + CTA)
+
+Create the card component and use a grid container.
+
+5a) Card component
+// components/library/PaperCard.tsx
+import TagBadge from "./TagBadge";
+
+export default function PaperCard({
+  title, subtitle, abstract, tags, href, accent="violet"
+}: {
+  title:string; subtitle?:string; abstract:string; tags:string[]; href:string;
+  accent?: "teal"|"violet"|"coral";
+}) {
+  const accentMap = {
+    teal: "bg-teal/10 text-teal",
+    violet: "bg-violet/10 text-violet",
+    coral: "bg-coral/10 text-coral",
+  } as const;
+
+  return (
+    <article className="card transition-shadow hover:shadow-lg">
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${accentMap[accent]} mb-4`}>
+        {/* replace with /icons/book.svg if you have it */}
+        <span className="text-xl">📖</span>
+      </div>
+
+      <h3 className="font-display font-bold text-lg text-coal">{title}</h3>
+      {subtitle && <p className="text-coal/70 text-sm mt-1">{subtitle}</p>}
+
+      <p className="text-coal/80 text-sm mt-3 line-clamp-3">{abstract}</p>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {tags.map(tag => <TagBadge key={tag}>{tag}</TagBadge>)}
+      </div>
+
+      <div className="mt-5">
+        <a
+          href={href}
+          className="inline-flex items-center gap-2 rounded-2xl bg-teal text-white px-4 py-2 font-semibold hover:bg-violet transition-colors"
+        >
+          Read Now <span>→</span>
+        </a>
+      </div>
+    </article>
+  );
+}
+
+5b) Tag pill
+// components/library/TagBadge.tsx
+export default function TagBadge({children}:{children:React.ReactNode}) {
+  return (
+    <span className="inline-flex items-center rounded-full bg-fog text-coal/80 text-xs font-semibold px-3 py-1">
+      {children}
+    </span>
+  );
+}
+
+5c) Grid
+
+In page.tsx render a 3-up grid on desktop, 2-up on tablet:
+
+<section className="max-w-6xl mx-auto px-6 py-10">
+  {filtered.length === 0 ? (
+    <p className="text-coal/70">No papers match your filters yet.</p>
+  ) : (
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {filtered.map((p, i)=> (
+        <PaperCard
+          key={p.id}
+          title={p.title}
+          subtitle={p.subtitle}
+          abstract={p.abstract}
+          tags={[p.topic, ...p.tags]}
+          href={p.href}
+          accent={(["violet","teal","coral"] as const)[i % 3]}
+        />
+      ))}
+    </div>
+  )}
+</section>
+
+
+Important: Right now your screenshot shows tiny broken icons at the right of each item. Remove those legacy <img> tags or swap to the new card icon inside PaperCard.
+
+6) Typography upgrades
+
+Make sure headings and body fonts match brand (already configured in earlier steps):
+
+Titles on cards: font-display font-bold (Poppins).
+
+Abstract/body: font-sans (Inter).
+
+Page background: Fog; body text: Coal.
+
+If your font-display/font-sans utilities aren’t set, add in tailwind.config.js or keep explicit class names.
+
+7) Footer spacing & links
+
+Replace the jammed links with a spaced footer:
+
+<footer className="bg-fog border-t border-black/5">
+  <div className="max-w-6xl mx-auto px-6 py-8 text-sm text-coal/70 flex items-center justify-between">
+    <p>Roga trains Question Intelligence — the art of asking better questions.</p>
+    <nav className="flex gap-4">
+      <a href="/privacy" className="hover:underline">Privacy</a>
+      <a href="/terms" className="hover:underline">Terms</a>
+      <a href="/contact" className="hover:underline">Contact</a>
+    </nav>
+  </div>
+</footer>
+
+8) Common gotchas (fix these to match the mock)
+
+Broken icons: remove old <img> placeholders; use the accent block (📖) or /public/icons/*.svg.
+
+No card styles: ensure .card class is defined (bg-white rounded-2xl shadow-card p-6).
+
+Single column: add grid gap-6 md:grid-cols-2 lg:grid-cols-3.
+
+Native selects: wrap in the card and apply rounded-xl bg-fog border.
+
+Spacing: use max-w-6xl mx-auto px-6 for page sections and generous py-*.
+
+9) Optional polish
+
+Add query params for filters (?topic=Leadership&q=…) so links are shareable.
+
+Add a Featured section: show the most popular or newest item as a large card at top (easy variation).
+
+Replace 📖 with small vector art in brand accents for variety (/public/icons/book.svg, spark.svg, lightbulb.svg).
+
+10) Quick diff checklist for your team
+
+ Wrap header in teal band + copy.
+
+ Replace raw filters with carded filters and styles above.
+
+ Swap list blocks for PaperCard and TagBadge components.
+
+ Render papers in a responsive grid.
+
+ Fix footer layout & spacing.
+
+ Remove legacy icon <img> tags that are breaking.
+
+Follow the sections above and the page will match the mock—clean, gridded, and on-brand.
