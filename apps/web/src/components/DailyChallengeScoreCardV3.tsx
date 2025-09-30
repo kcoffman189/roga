@@ -132,7 +132,7 @@ export default function DailyChallengeScoreCardV3({
       <div className="flex items-start gap-4">
         <div className="text-3xl">🌎</div>
         <div>
-          <h2 className="text-xl heading mb-2">Today's Challenge</h2>
+          <h2 className="text-xl heading mb-2">Today&apos;s Challenge</h2>
           <p className="copy leading-relaxed">{scenario.text}</p>
         </div>
       </div>
