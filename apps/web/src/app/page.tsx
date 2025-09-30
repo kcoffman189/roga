@@ -34,6 +34,9 @@ export default function Home() {
                 </span>
               </Button>
             </Link>
+            <Link href="/library">
+              <Button className="text-lg px-8 py-4 border-0">Roga Library</Button>
+            </Link>
           </div>
         </div>
 
