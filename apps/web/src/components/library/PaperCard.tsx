@@ -10,12 +10,6 @@ type Props = {
   accent?: "teal" | "violet" | "coral";
 };
 
-const accentMap = {
-  teal: "bg-teal/10 text-teal",
-  violet: "bg-violet/10 text-violet",
-  coral: "bg-coral/10 text-coral",
-};
-
 export default function PaperCard({
   title,
   subtitle,
@@ -25,32 +19,25 @@ export default function PaperCard({
   accent = "violet",
 }: Props) {
   return (
-    <article className="card transition-shadow hover:shadow-lg">
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${accentMap[accent]} mb-4`}>
-        {/* Placeholder icon; replace with SVG under /public/icons if desired */}
-        <span className="text-xl">📖</span>
-      </div>
+    <a href={href} className="block">
+      <article className="card text-center py-8 px-4 transition-shadow hover:shadow-lg" style={{minHeight: '215px'}}>
+        <div className="h-16 mb-4 flex items-center justify-center">
+          {/* Placeholder icon; replace with SVG under /public/icons if desired */}
+          <span className="text-5xl">📖</span>
+        </div>
 
-      <h3 className="font-display font-bold text-lg text-coal">{title}</h3>
-      {subtitle && <p className="text-coal/70 text-sm mt-1">{subtitle}</p>}
+        <h3 className="heading text-sm mb-3 break-words">{title}</h3>
 
-      <p className="text-coal/80 text-sm mt-3 line-clamp-3">{abstract}</p>
+        <p className="copy text-xs break-words line-clamp-3">{abstract}</p>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {tags.map((t) => (
-          <TagBadge key={t}>{t}</TagBadge>
-        ))}
-      </div>
-
-      <div className="mt-5">
-        <a
-          href={href}
-          className="inline-flex items-center gap-2 rounded-2xl bg-teal text-white px-4 py-2 font-semibold hover:bg-violet transition-colors"
-        >
-          Read Now
-          <span>→</span>
-        </a>
-      </div>
-    </article>
+        {tags.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1 justify-center">
+            {tags.slice(0, 2).map((t) => (
+              <TagBadge key={t}>{t}</TagBadge>
+            ))}
+          </div>
+        )}
+      </article>
+    </a>
   );
 }
