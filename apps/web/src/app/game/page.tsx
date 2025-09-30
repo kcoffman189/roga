@@ -8,7 +8,8 @@ import Card from "@/components/ui/Card";
 import Link from "next/link";
 import Image from "next/image";
 import DailyChallengeScoreCard from "@/components/DailyChallengeScoreCard";
-import { getFeedback, type CoachFeedback } from "./actions";
+import DailyChallengeScoreCardV3 from "@/components/DailyChallengeScoreCardV3";
+import { getFeedback, getFeedbackV3, type CoachFeedback, type CoachFeedbackV3 } from "./actions";
 import type { MVPScoreCardResponse } from "@/types/feedback";
 import scenariosData from "@/data/scenarios.json";
 
@@ -169,6 +170,7 @@ export default function DailyChallengePage() {
   const [coachingFeedback, setCoachingFeedback] = useState<CoachingFeedbackData | null>(null);
   const [enhancedFeedback, setEnhancedFeedback] = useState<EnhancedCoachingFeedbackData | null>(null);
   const [dailyChallengeFeedback, setDailyChallengeFeedback] = useState<CoachFeedback | null>(null);
+  const [dailyChallengeV3Feedback, setDailyChallengeV3Feedback] = useState<CoachFeedbackV3 | null>(null);
   const [mvpFeedback, setMvpFeedback] = useState<MVPScoreCardResponse | null>(null);
   const [useCoachingMode, setUseCoachingMode] = useState("original"); // "mvp", "v3", "enhanced", "legacy", "original"
   const [isLoading, setIsLoading] = useState(false);
@@ -188,6 +190,7 @@ export default function DailyChallengePage() {
       setEnhancedFeedback(null);
       setDailyChallengeFeedback(null);
       setMvpFeedback(null);
+      setDailyChallengeV3Feedback(null);
 
       if (useCoachingMode === 'mvp') {
         // Use the new MVP ScoreCard feedback system
@@ -215,8 +218,8 @@ export default function DailyChallengePage() {
 
       if (useCoachingMode === 'v3') {
         // Use the new Daily Challenge feedback system
-        const feedback = await getFeedback(currentScenario.text || currentScenario.prompt || "", question);
-        setDailyChallengeFeedback(feedback);
+        const feedback = await getFeedbackV3(currentScenario.text || currentScenario.prompt || "", question);
+        setDailyChallengeV3Feedback(feedback);
         setShowFeedback(true);
         return;
       }
@@ -624,9 +627,19 @@ export default function DailyChallengePage() {
                   feedback={dailyChallengeFeedback}
                 />
               )}
+              {dailyChallengeV3Feedback && (
+                <DailyChallengeScoreCardV3
+                  scenario={{
+                    title: currentScenario.title,
+                    text: currentScenario.text || currentScenario.prompt || ""
+                  }}
+                  question={question}
+                  feedback={dailyChallengeV3Feedback}
+                />
+              )}
 
               {/* Legacy feedback modes */}
-              {!dailyChallengeFeedback && !mvpFeedback && (
+              {!dailyChallengeFeedback && !dailyChallengeV3Feedback && !mvpFeedback && (
                 <Card className="p-6">
                   <h3 className="font-bold text-violet mb-4 text-center">Your Feedback</h3>
 
