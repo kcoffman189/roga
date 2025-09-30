@@ -63,6 +63,9 @@ const EnhancedScoreIndicator = ({
     ));
   };
 
+  // Split feedback into sentences for better readability
+  const feedbackLines = feedback.split('. ').filter(line => line.trim());
+
   return (
     <div className="py-4 border-b border-[var(--roga-mist)] last:border-b-0">
       <div className="flex items-center justify-between mb-3">
@@ -82,9 +85,13 @@ const EnhancedScoreIndicator = ({
           </span>
         </div>
       </div>
-      <p className="text-sm copy text-[var(--roga-coal)] leading-relaxed pl-6">
-        {feedback}
-      </p>
+      <div className="text-sm copy text-[var(--roga-coal)] leading-relaxed pl-6 space-y-2">
+        {feedbackLines.map((line, idx) => (
+          <p key={idx} className={idx === 0 ? "font-medium" : "text-[var(--roga-coal)]/80"}>
+            {line}{idx < feedbackLines.length - 1 && '.'}
+          </p>
+        ))}
+      </div>
     </div>
   );
 };
