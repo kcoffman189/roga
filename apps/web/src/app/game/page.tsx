@@ -172,7 +172,7 @@ export default function DailyChallengePage() {
   const [dailyChallengeFeedback, setDailyChallengeFeedback] = useState<CoachFeedback | null>(null);
   const [dailyChallengeV3Feedback, setDailyChallengeV3Feedback] = useState<CoachFeedbackV3 | null>(null);
   const [mvpFeedback, setMvpFeedback] = useState<MVPScoreCardResponse | null>(null);
-  const [useCoachingMode, setUseCoachingMode] = useState("original"); // "mvp", "v3", "enhanced", "legacy", "original"
+  const [useCoachingMode, setUseCoachingMode] = useState("v3"); // Always use V3 Daily Challenge coaching
   const [isLoading, setIsLoading] = useState(false);
   const [currentScenario, setCurrentScenario] = useState<Scenario>(() => {
     // Start with a random scenario
@@ -459,59 +459,6 @@ export default function DailyChallengePage() {
               className="mt-6 w-full min-h-[140px] rounded-xl border border-coal/20 bg-fog p-4 text-coal placeholder:text-coal/50 focus:outline-none focus:shadow-[0_0_0_3px_rgba(123,97,255,0.35)]"
             />
 
-            {/* Mode Toggle */}
-            <div className="mt-4 flex justify-center gap-2 flex-wrap">
-              <button
-                onClick={() => setUseCoachingMode("mvp")}
-                className={`text-sm px-4 py-2 rounded-lg transition-colors ${
-                  useCoachingMode === "mvp"
-                    ? "bg-emerald-100 text-emerald-700 border-2 border-emerald-300 font-bold"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                MVP ScoreCard 🎯
-              </button>
-              <button
-                onClick={() => setUseCoachingMode("v3")}
-                className={`text-sm px-4 py-2 rounded-lg transition-colors ${
-                  useCoachingMode === "v3"
-                    ? "bg-teal-100 text-teal-700 border-2 border-teal-300 font-bold"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                Daily Challenge v3 ⭐
-              </button>
-              <button
-                onClick={() => setUseCoachingMode("enhanced")}
-                className={`text-sm px-4 py-2 rounded-lg transition-colors ${
-                  useCoachingMode === "enhanced"
-                    ? "bg-purple-100 text-purple-700 border-2 border-purple-300"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                Enhanced v2 🚀
-              </button>
-              <button
-                onClick={() => setUseCoachingMode("legacy")}
-                className={`text-sm px-4 py-2 rounded-lg transition-colors ${
-                  useCoachingMode === "legacy" 
-                    ? "bg-blue-100 text-blue-700 border-2 border-blue-300" 
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                Legacy v1 ⚡
-              </button>
-              <button
-                onClick={() => setUseCoachingMode("original")}
-                className={`text-sm px-4 py-2 rounded-lg transition-colors ${
-                  useCoachingMode === "original" 
-                    ? "bg-green-100 text-green-700 border-2 border-green-300" 
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                Original 📊
-              </button>
-            </div>
 
             {/* Actions */}
             <div className="mt-6 flex flex-wrap justify-center" style={{gap: '20px'}}>
