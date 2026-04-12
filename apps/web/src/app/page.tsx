@@ -1,90 +1,124 @@
-import BrandMark from "@/components/ui/BrandMark";
-import Button from "@/components/ui/Button";
-import Card from "@/components/ui/Card";
-import Link from "next/link";
-import Image from "next/image";
+'use client'
+
+import { createClient } from '@/lib/supabase/client'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+
+type Conversation = {
+  id: string
+  title: string | null
+  created_at: string
+}
 
 export default function Home() {
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [userId, setUserId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+  const supabase = createClient()
+
+  useEffect(() => {
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      setUserId(user.id)
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conversations/${user.id}`)
+      const data = await res.json()
+      setConversations(data.conversations || [])
+      setLoading(false)
+    }
+    init()
+  }, [])
+
+  const startConversation = (mode: 'intentional' | 'open') => {
+    router.push(`/conversation/new?mode=${mode}`)
+  }
+
+  const resumeConversation = (id: string) => {
+    router.push(`/conversation/${id}`)
+  }
+
+  const deleteConversation = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation()
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conversation/${id}`, {
+      method: 'DELETE',
+    })
+    const data = await res.json()
+    console.log('Delete response:', res.status, data)
+    if (res.ok) {
+      setConversations(prev => prev.filter(c => c.id !== id))
+    }
+  }
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }
+
   return (
-    <main className="min-h-screen">
-      {/* TEAL SECTION - 80-85% viewport with all content */}
-      <section className="min-h-[84vh] relative px-6 py-6" style={{backgroundColor: '#20B2AA'}}>
-        {/* Logo positioned further down and right with massive font size */}
-        <div className="absolute top-20 flex items-center gap-4" style={{left: '86px'}}>
-          <BrandMark size={80} />
-          <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '6rem', color: 'white'}}>roga</span>
-        </div>
-        
-        {/* Centered hero content */}
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8 max-w-4xl mx-auto" style={{transform: 'translateY(35px)'}}>
-          <h1 className="text-white text-7xl md:text-8xl lg:text-9xl leading-tight" style={{fontFamily: 'Georgia, serif', color: 'white'}}>
-            The art of asking
-          </h1>
-          <p className="text-white text-xl md:text-2xl max-w-3xl mx-auto" style={{fontFamily: 'Georgia, serif', color: 'white'}}>
-            Sharpen your Question Intelligence with daily challenges and deep practice.
-          </p>
-          <div className="flex justify-center gap-6 mt-12" style={{gap: '20px'}}>
-            <Link href="/game">
-              <Button className="text-lg px-8 py-4 border-0">Start Daily Challenge</Button>
-            </Link>
-            <Link href="/game/sessions">
-              <Button className="text-lg px-8 py-4 border-0">
-                <span className="text-center leading-tight">
-                  Roga Session -<br />Under Construction
-                </span>
-              </Button>
-            </Link>
-            <Link href="/library">
-              <Button className="text-lg px-8 py-4 border-0">Roga Library</Button>
-            </Link>
-          </div>
-        </div>
+    <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#fafafa' }}>
+      {/* Left Panel */}
+      <div style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', display: 'flex', flexDirection: 'column', padding: '24px 16px' }}>
+        <div style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px' }}>Roga</div>
 
-        {/* FEATURE CARDS - 50% NARROWER WITH FOG BACKGROUND */}
-        <div className="max-w-4xl mx-auto mt-16" style={{transform: 'translateY(-10px)'}}>
-          <div className="flex flex-row justify-center items-stretch" style={{gap: '20px'}}>
-            <Card className="text-center py-8 px-4 w-40" style={{minHeight: '215px', width: '160px'}}>
-              <div className="h-16 mb-4 flex items-center justify-center">
-                <Image src="/brand/stopwatch.svg" alt="Daily Challenge" width={48} height={48} />
+        <button
+          onClick={() => startConversation('intentional')}
+          style={{ textAlign: 'left', padding: '10px 12px', marginBottom: '8px', borderRadius: '6px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', fontSize: '14px' }}
+        >
+          Let's dig into something
+        </button>
+        <button
+          onClick={() => startConversation('open')}
+          style={{ textAlign: 'left', padding: '10px 12px', marginBottom: '24px', borderRadius: '6px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', fontSize: '14px' }}
+        >
+          Tell me something interesting
+        </button>
+
+        <a href="/library" style={{ display: 'block', padding: '10px 12px', marginBottom: '24px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0' }}>
+          My Library
+        </a>
+
+        <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', paddingLeft: '4px' }}>Past conversations</div>
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          {loading ? (
+            <div style={{ fontSize: '13px', color: '#999', padding: '4px' }}>Loading...</div>
+          ) : conversations.length === 0 ? (
+            <div style={{ fontSize: '13px', color: '#999', padding: '4px' }}>No conversations yet</div>
+          ) : (
+            conversations.map((conv) => (
+              <div
+                key={conv.id}
+                onClick={() => resumeConversation(conv.id)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', marginBottom: '2px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', color: '#333' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f5')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                <div style={{ flex: 1, minWidth: 0, marginRight: '8px' }}>
+                  <div style={{ fontWeight: '500', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {conv.title || 'Untitled conversation'}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#999' }}>{formatDate(conv.created_at)}</div>
+                </div>
+                <button
+                  onClick={(e) => deleteConversation(e, conv.id)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '14px', padding: '2px 4px', borderRadius: '4px', flexShrink: 0, lineHeight: 1 }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#999')}
+                  onMouseLeave={e => (e.currentTarget.style.color = '#ccc')}
+                >
+                  ✕
+                </button>
               </div>
-              <h3 className="heading text-sm mb-3 break-words">Daily Challenge</h3>
-              <p className="copy text-xs break-words">2-3 minute scenarios with fast feedback</p>
-            </Card>
-
-            <Card className="text-center py-8 px-4 w-40" style={{minHeight: '215px', width: '160px'}}>
-              <div className="h-16 mb-4 flex items-center justify-center">
-                <Image src="/brand/deep_practice_icon.svg" alt="Deep Practice" width={48} height={48} />
-              </div>
-              <h3 className="heading text-sm mb-3 break-words">Deep Practice</h3>
-              <p className="copy text-xs break-words">10-15 minute multi-round roleplay</p>
-            </Card>
-
-            <Card className="text-center py-8 px-4 w-40" style={{minHeight: '215px', width: '160px'}}>
-              <div className="h-16 mb-4 flex items-center justify-center">
-                <Image src="/brand/trophy_icon.svg" alt="Streaks & Badges" width={48} height={48} />
-              </div>
-              <h3 className="heading text-sm mb-3 break-words">Streaks & Badges</h3>
-              <p className="copy text-xs break-words">Keep your curiosity going</p>
-            </Card>
-          </div>
+            ))
+          )}
         </div>
-      </section>
+      </div>
 
-      {/* MINIMAL WHITE FOOTER SECTION */}
-      <footer className="bg-white py-8 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">
-          <div className="text-center md:text-left mb-4 md:mb-0">
-            <p className="text-lg text-gray-700" style={{fontFamily: 'Georgia, serif'}}>
-              Roga trains Question Intelligence — the art of asking better questions.
-            </p>
-          </div>
-          <div className="flex text-sm" style={{gap: '10px'}}>
-            <Link href="/privacy" style={{color: 'black'}} className="hover:text-gray-700">Privacy</Link>
-            <Link href="/terms" style={{color: 'black'}} className="hover:text-gray-700">Terms</Link>
-            <a href="#" style={{color: 'black'}} className="hover:text-gray-700">Contact</a>
-          </div>
+      {/* Main Area */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', color: '#999' }}>
+          <div style={{ fontSize: '24px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>Good to see you.</div>
+          <div style={{ fontSize: '15px' }}>Start a conversation or pick up where you left off.</div>
         </div>
-      </footer>
-    </main>
-  );
+      </div>
+    </div>
+  )
 }
