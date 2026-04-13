@@ -6,6 +6,8 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+
 function NewConversationInner() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -27,7 +29,7 @@ function NewConversationInner() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    const res = await fetch('${process.env.NEXT_PUBLIC_API_URL}/conversation/start', {
+    const res = await fetch(`${API_URL}/conversation/start`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

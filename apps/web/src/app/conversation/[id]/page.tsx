@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+
 type Message = {
   role: 'user' | 'assistant'
   content: string
@@ -28,7 +30,7 @@ export default function ConversationPage() {
       setUserId(user.id)
       const id = params.id as string
       setConversationId(id)
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conversation/${id}/messages`)
+      const res = await fetch(`${API_URL}/conversation/${id}/messages`)
       const data = await res.json()
       setMessages(data.messages || [])
     }
@@ -46,7 +48,7 @@ export default function ConversationPage() {
     setMessages(prev => [...prev, { role: 'user', content: userMessage }])
     setLoading(true)
 
-    const res = await fetch('${process.env.NEXT_PUBLIC_API_URL}/conversation/continue', {
+    const res = await fetch(`${API_URL}/conversation/continue`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

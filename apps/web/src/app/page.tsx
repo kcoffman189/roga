@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+
 type Conversation = {
   id: string
   title: string | null
@@ -23,7 +25,7 @@ export default function Home() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       setUserId(user.id)
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conversations/${user.id}`)
+      const res = await fetch(`${API_URL}/conversations/${user.id}`)
       const data = await res.json()
       setConversations(data.conversations || [])
       setLoading(false)
@@ -41,7 +43,7 @@ export default function Home() {
 
   const deleteConversation = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conversation/${id}`, {
+    const res = await fetch(`${API_URL}/conversation/${id}`, {
       method: 'DELETE',
     })
     const data = await res.json()
