@@ -8,6 +8,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+const STREAM_URL = API_URL.replace(/^https:\/\//, 'http://')
 
 type Message = {
   role: 'user' | 'assistant'
@@ -89,9 +90,13 @@ function ConversationInner() {
       ])
     }
 
-    const res = await fetch(`${API_URL}/conversation/continue/stream`, {
+    const res = await fetch(`${STREAM_URL}/conversation/continue/stream`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream',
+      },
+      cache: 'no-store',
       body: JSON.stringify({
         conversation_id: convId,
         message: userMessage || '__stream_existing__',
