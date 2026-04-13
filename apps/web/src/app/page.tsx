@@ -22,8 +22,13 @@ export default function Home() {
 
   useEffect(() => {
     const init = async () => {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) {
+        window.location.href = '/login'
+        return
+      }
       setUserId(user.id)
       const res = await fetch(`${API_URL}/conversations/${user.id}`)
       const data = await res.json()
