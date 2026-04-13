@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const router = useRouter()
 
   const handleLogin = async () => {
     setLoading(true)
@@ -14,9 +16,15 @@ export default function LoginPage() {
     const { createClient } = await import('@/lib/supabase/client')
     const supabase = createClient()
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setError(error.message)
-    else window.location.href = '/'
-    setLoading(false)
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+    } else {
+      setTimeout(() => {
+        router.push('/')
+        router.refresh()
+      }, 500)
+    }
   }
 
   const handleSignUp = async () => {
@@ -25,9 +33,15 @@ export default function LoginPage() {
     const { createClient } = await import('@/lib/supabase/client')
     const supabase = createClient()
     const { error } = await supabase.auth.signUp({ email, password })
-    if (error) setError(error.message)
-    else window.location.href = '/'
-    setLoading(false)
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+    } else {
+      setTimeout(() => {
+        router.push('/')
+        router.refresh()
+      }, 500)
+    }
   }
 
   return (
@@ -47,8 +61,10 @@ export default function LoginPage() {
         onChange={(e) => setPassword(e.target.value)}
         placeholder="password"
         style={{ padding: '8px', marginBottom: '12px', width: '280px', fontSize: '16px' }}
+        onKeyDown={(e) => { if (e.key === 'Enter') handleLogin() }}
       />
       {error && <p style={{ color: 'red', marginBottom: '8px' }}>{error}</p>}
+      {loading && <p style={{ color: '#999', marginBottom: '8px' }}>Signing in...</p>}
       <div style={{ display: 'flex', gap: '8px' }}>
         <button
           onClick={handleLogin}
