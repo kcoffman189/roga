@@ -10,7 +10,11 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://roga.me"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://roga.me",
+        "https://www.roga.me",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
