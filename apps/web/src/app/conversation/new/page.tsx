@@ -6,9 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import { fetchEventSource } from '@microsoft/fetch-event-source'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
-const STREAM_URL = API_URL.replace(/^https:\/\//, 'http://')
 
 function NewConversationInner() {
   const [input, setInput] = useState('')
@@ -40,44 +40,32 @@ function NewConversationInner() {
     if (!user) return
     const uid = userId || user.id
 
-    const res = await fetch(`${STREAM_URL}/conversation/start/stream`, {
+    const ctrl = new AbortController()
+
+    await fetchEventSource(`${API_URL}/conversation/start/stream`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'text/event-stream',
-      },
-      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         mode,
         initial_message: message || input || undefined,
         user_id: uid,
       }),
+      signal: ctrl.signal,
+      onmessage(ev) {
+        try {
+          const data = JSON.parse(ev.data)
+          if (data.type === 'conversation_id') {
+            ctrl.abort()
+            router.push(`/conversation/${data.conversation_id}?streaming=true`)
+          }
+        } catch {}
+      },
+      onerror(err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return
+        throw err
+      },
+      openWhenHidden: true,
     })
-
-    const reader = res.body?.getReader()
-    const decoder = new TextDecoder()
-    let conversationId = null
-
-    if (!reader) return
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      const chunk = decoder.decode(value)
-      const lines = chunk.split('\n')
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          try {
-            const data = JSON.parse(line.slice(6))
-            if (data.type === 'conversation_id') {
-              conversationId = data.conversation_id
-              router.push(`/conversation/${conversationId}?streaming=true`)
-              return
-            }
-          } catch {}
-        }
-      }
-    }
   }
 
   if (mode === 'open') {

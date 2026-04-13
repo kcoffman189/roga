@@ -6,9 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import { fetchEventSource } from '@microsoft/fetch-event-source'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
-const STREAM_URL = API_URL.replace(/^https:\/\//, 'http://')
 
 type Message = {
   role: 'user' | 'assistant'
@@ -90,57 +90,43 @@ function ConversationInner() {
       ])
     }
 
-    const res = await fetch(`${STREAM_URL}/conversation/continue/stream`, {
+    await fetchEventSource(`${API_URL}/conversation/continue/stream`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'text/event-stream',
-      },
-      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         conversation_id: convId,
         message: userMessage || '__stream_existing__',
         user_id: uid,
       }),
+      onmessage(ev) {
+        try {
+          const data = JSON.parse(ev.data)
+          if (data.type === 'text') {
+            setMessages(prev => {
+              const updated = [...prev]
+              const lastMsg = updated[updated.length - 1]
+              if (lastMsg?.streaming) {
+                updated[updated.length - 1] = { ...lastMsg, content: lastMsg.content + data.text }
+              }
+              return updated
+            })
+          } else if (data.type === 'done') {
+            setMessages(prev => {
+              const updated = [...prev]
+              const lastMsg = updated[updated.length - 1]
+              if (lastMsg?.streaming) {
+                updated[updated.length - 1] = { ...lastMsg, streaming: false }
+              }
+              return updated
+            })
+          }
+        } catch {}
+      },
+      onerror(err) {
+        throw err
+      },
+      openWhenHidden: true,
     })
-
-    const reader = res.body?.getReader()
-    const decoder = new TextDecoder()
-
-    if (!reader) return
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      const chunk = decoder.decode(value)
-      const lines = chunk.split('\n')
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          try {
-            const data = JSON.parse(line.slice(6))
-            if (data.type === 'text') {
-              setMessages(prev => {
-                const updated = [...prev]
-                const lastMsg = updated[updated.length - 1]
-                if (lastMsg?.streaming) {
-                  updated[updated.length - 1] = { ...lastMsg, content: lastMsg.content + data.text }
-                }
-                return updated
-              })
-            } else if (data.type === 'done') {
-              setMessages(prev => {
-                const updated = [...prev]
-                const lastMsg = updated[updated.length - 1]
-                if (lastMsg?.streaming) {
-                  updated[updated.length - 1] = { ...lastMsg, streaming: false }
-                }
-                return updated
-              })
-            }
-          } catch {}
-        }
-      }
-    }
     setLoading(false)
   }
 
