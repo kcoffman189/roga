@@ -1,4 +1,5 @@
 'use client'
+
 export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/client'
@@ -18,28 +19,60 @@ function NewConversationInner() {
   const hasStarted = useRef(false)
 
   useEffect(() => {
-    if (mode === 'open' && !hasStarted.current) {
-      hasStarted.current = true
-      handleStart()
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        window.location.href = '/login'
+        return
+      }
+      if (mode === 'open' && !hasStarted.current) {
+        hasStarted.current = true
+        handleStart(user.id)
+      }
     }
+    init()
   }, [mode])
 
-  const handleStart = async (message?: string) => {
+  const handleStart = async (userId?: string, message?: string) => {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
+    const uid = userId || user.id
 
-    const res = await fetch(`${API_URL}/conversation/start`, {
+    const res = await fetch(`${API_URL}/conversation/start/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         mode,
         initial_message: message || input || undefined,
-        user_id: user.id,
+        user_id: uid,
       }),
     })
-    const data = await res.json()
-    router.push(`/conversation/${data.conversation_id}`)
+
+    const reader = res.body?.getReader()
+    const decoder = new TextDecoder()
+    let conversationId = null
+
+    if (!reader) return
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      const chunk = decoder.decode(value)
+      const lines = chunk.split('\n')
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6))
+            if (data.type === 'conversation_id') {
+              conversationId = data.conversation_id
+              router.push(`/conversation/${conversationId}?streaming=true`)
+              return
+            }
+          } catch {}
+        }
+      }
+    }
   }
 
   if (mode === 'open') {

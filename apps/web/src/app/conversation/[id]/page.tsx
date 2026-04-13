@@ -1,18 +1,21 @@
 'use client'
+
 export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
 type Message = {
   role: 'user' | 'assistant'
   content: string
+  streaming?: boolean
 }
 
-export default function ConversationPage() {
+function ConversationInner() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -20,19 +23,35 @@ export default function ConversationPage() {
   const [conversationId, setConversationId] = useState<string | null>(null)
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const bottomRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
+  const isStreaming = searchParams.get('streaming') === 'true'
+  const hasInitialized = useRef(false)
 
   useEffect(() => {
+    if (hasInitialized.current) return
+    hasInitialized.current = true
+
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) {
+        window.location.href = '/login'
+        return
+      }
       setUserId(user.id)
       const id = params.id as string
       setConversationId(id)
-      const res = await fetch(`${API_URL}/conversation/${id}/messages`)
-      const data = await res.json()
-      setMessages(data.messages || [])
+
+      if (isStreaming) {
+        // Start streaming the response for new conversations
+        streamNewConversation(id, user.id)
+      } else {
+        // Load existing conversation history
+        const res = await fetch(`${API_URL}/conversation/${id}/messages`)
+        const data = await res.json()
+        setMessages(data.messages || [])
+      }
     }
     init()
   }, [])
@@ -41,25 +60,90 @@ export default function ConversationPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  const streamNewConversation = async (convId: string, uid: string) => {
+    // Fetch the user message that was already stored
+    const res = await fetch(`${API_URL}/conversation/${convId}/messages`)
+    const data = await res.json()
+    const existingMessages = data.messages || []
+
+    if (existingMessages.length > 0) {
+      // Show user message immediately, start streaming assistant response
+      const userMsg = existingMessages[existingMessages.length - 1]
+      const filteredMessages = existingMessages.filter(
+        (m: Message) => !(m.role === 'user' && m.content.includes('Surface something interesting'))
+      )
+      setMessages([...filteredMessages, { role: 'assistant', content: '', streaming: true }])
+
+      // Stream the response
+      await streamContinue(convId, uid, null, filteredMessages)
+    }
+  }
+
+  const streamContinue = async (convId: string, uid: string, userMessage: string | null, existingMessages?: Message[]) => {
+    setLoading(true)
+
+    if (userMessage) {
+      setMessages(prev => [...prev,
+        { role: 'user', content: userMessage },
+        { role: 'assistant', content: '', streaming: true }
+      ])
+    }
+
+    const res = await fetch(`${API_URL}/conversation/continue/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        conversation_id: convId,
+        message: userMessage || '__stream_existing__',
+        user_id: uid,
+      }),
+    })
+
+    const reader = res.body?.getReader()
+    const decoder = new TextDecoder()
+
+    if (!reader) return
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      const chunk = decoder.decode(value)
+      const lines = chunk.split('\n')
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6))
+            if (data.type === 'text') {
+              setMessages(prev => {
+                const updated = [...prev]
+                const lastMsg = updated[updated.length - 1]
+                if (lastMsg?.streaming) {
+                  updated[updated.length - 1] = { ...lastMsg, content: lastMsg.content + data.text }
+                }
+                return updated
+              })
+            } else if (data.type === 'done') {
+              setMessages(prev => {
+                const updated = [...prev]
+                const lastMsg = updated[updated.length - 1]
+                if (lastMsg?.streaming) {
+                  updated[updated.length - 1] = { ...lastMsg, streaming: false }
+                }
+                return updated
+              })
+            }
+          } catch {}
+        }
+      }
+    }
+    setLoading(false)
+  }
+
   const sendMessage = async () => {
     if (!input.trim() || !userId || !conversationId || loading) return
     const userMessage = input.trim()
     setInput('')
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }])
-    setLoading(true)
-
-    const res = await fetch(`${API_URL}/conversation/continue`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        conversation_id: conversationId,
-        message: userMessage,
-        user_id: userId,
-      }),
-    })
-    const data = await res.json()
-    setMessages(prev => [...prev, { role: 'assistant', content: data.message }])
-    setLoading(false)
+    await streamContinue(conversationId, userId, userMessage)
   }
 
   return (
@@ -80,23 +164,20 @@ export default function ConversationPage() {
 
       {/* Conversation Area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* Messages */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '40px 0' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto', padding: '0 24px' }}>
-            {messages
-              .filter((msg, i) => !(i === 0 && msg.role === 'user' && msg.content.includes('Surface something interesting')))
-              .map((msg, i) => (
-                <div key={i} style={{ marginBottom: '24px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
-                    {msg.role === 'user' ? 'You' : 'Roga'}
-                  </div>
-                  <div style={{ fontSize: '15px', lineHeight: '1.6', color: '#1a1a1a', whiteSpace: 'pre-wrap' }}>
-                    {msg.content}
-                  </div>
+            {messages.map((msg, i) => (
+              <div key={i} style={{ marginBottom: '24px' }}>
+                <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
+                  {msg.role === 'user' ? 'You' : 'Roga'}
                 </div>
-              ))
-            }
-            {loading && (
+                <div style={{ fontSize: '15px', lineHeight: '1.6', color: '#1a1a1a', whiteSpace: 'pre-wrap' }}>
+                  {msg.content}
+                  {msg.streaming && <span style={{ opacity: 0.5 }}>▊</span>}
+                </div>
+              </div>
+            ))}
+            {loading && messages[messages.length - 1]?.content === '' && (
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Roga</div>
                 <div style={{ fontSize: '15px', color: '#999' }}>Thinking...</div>
@@ -133,5 +214,13 @@ export default function ConversationPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ConversationPage() {
+  return (
+    <Suspense>
+      <ConversationInner />
+    </Suspense>
   )
 }
