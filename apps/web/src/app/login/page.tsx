@@ -13,17 +13,26 @@ export default function LoginPage() {
   const handleLogin = async () => {
     setLoading(true)
     setError('')
-    const { createClient } = await import('@/lib/supabase/client')
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setError(error.message)
+    try {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+      console.log('Attempting login...')
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      console.log('Login result:', { data, error })
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+      } else {
+        setTimeout(() => {
+          router.push('/')
+          router.refresh()
+        }, 500)
+      }
+    } catch (e) {
+      console.error('Login exception:', e)
+      setError('Something went wrong. Check console.')
       setLoading(false)
-    } else {
-      setTimeout(() => {
-        router.push('/')
-        router.refresh()
-      }, 500)
     }
   }
 
