@@ -110,7 +110,7 @@ export default function ConversationPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Reply..."
-              rows={2}
+              rows={6}
               style={{ flex: 1, padding: '10px 12px', fontSize: '15px', borderRadius: '8px', border: '1px solid #e0e0e0', resize: 'none', fontFamily: 'sans-serif' }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
