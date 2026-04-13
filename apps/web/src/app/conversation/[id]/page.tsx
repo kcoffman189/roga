@@ -83,16 +83,19 @@ export default function ConversationPage() {
         {/* Messages */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '40px 0' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto', padding: '0 24px' }}>
-            {messages.map((msg, i) => (
-              <div key={i} style={{ marginBottom: '24px' }}>
-                <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
-                  {msg.role === 'user' ? 'You' : 'Roga'}
+            {messages
+              .filter((msg, i) => !(i === 0 && msg.role === 'user' && msg.content.includes('Surface something interesting')))
+              .map((msg, i) => (
+                <div key={i} style={{ marginBottom: '24px' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
+                    {msg.role === 'user' ? 'You' : 'Roga'}
+                  </div>
+                  <div style={{ fontSize: '15px', lineHeight: '1.6', color: '#1a1a1a', whiteSpace: 'pre-wrap' }}>
+                    {msg.content}
+                  </div>
                 </div>
-                <div style={{ fontSize: '15px', lineHeight: '1.6', color: '#1a1a1a', whiteSpace: 'pre-wrap' }}>
-                  {msg.content}
-                </div>
-              </div>
-            ))}
+              ))
+            }
             {loading && (
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Roga</div>
