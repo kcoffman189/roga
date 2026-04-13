@@ -2,6 +2,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { inter, poppins, merriweather } from "@/lib/fonts";
+import KeepAlive from '@/components/KeepAlive'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${inter.variable} ${poppins.variable} ${merriweather.variable}`}>
+        <KeepAlive />
         {children}
       </body>
     </html>
