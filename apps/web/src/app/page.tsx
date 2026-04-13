@@ -1,4 +1,5 @@
 'use client'
+
 export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/client'
@@ -13,26 +14,40 @@ type Conversation = {
   created_at: string
 }
 
+type WelcomeQuote = {
+  quote: string | null
+  book: string | null
+  empty_library: boolean
+}
+
 export default function Home() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [userId, setUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [welcome, setWelcome] = useState<WelcomeQuote | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
     const init = async () => {
-      const { createClient } = await import('@/lib/supabase/client')
-      const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         window.location.href = '/login'
         return
       }
       setUserId(user.id)
-      const res = await fetch(`${API_URL}/conversations/${user.id}`)
-      const data = await res.json()
-      setConversations(data.conversations || [])
+
+      // Fetch conversations and welcome quote in parallel
+      const [convsRes, quoteRes] = await Promise.all([
+        fetch(`${API_URL}/conversations/${user.id}`),
+        fetch(`${API_URL}/welcome-quote/${user.id}`)
+      ])
+
+      const convsData = await convsRes.json()
+      const quoteData = await quoteRes.json()
+
+      setConversations(convsData.conversations || [])
+      setWelcome(quoteData)
       setLoading(false)
     }
     init()
@@ -48,18 +63,49 @@ export default function Home() {
 
   const deleteConversation = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
-    const res = await fetch(`${API_URL}/conversation/${id}`, {
-      method: 'DELETE',
-    })
-    const data = await res.json()
-    console.log('Delete response:', res.status, data)
-    if (res.ok) {
-      setConversations(prev => prev.filter(c => c.id !== id))
-    }
+    await fetch(`${API_URL}/conversation/${id}`, { method: 'DELETE' })
+    setConversations(prev => prev.filter(c => c.id !== id))
   }
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }
+
+  const renderWelcome = () => {
+    if (loading) return null
+
+    if (welcome?.empty_library) {
+      return (
+        <div style={{ textAlign: 'center', maxWidth: '480px' }}>
+          <p style={{ fontSize: '15px', color: '#999', lineHeight: '1.6' }}>
+            Add some books to your library and Roga will have something to think about.
+          </p>
+          <a href="/library" style={{ display: 'inline-block', marginTop: '16px', fontSize: '14px', color: '#333', textDecoration: 'underline' }}>
+            Go to My Library
+          </a>
+        </div>
+      )
+    }
+
+    if (welcome?.quote && welcome?.book) {
+      return (
+        <div style={{ textAlign: 'center', maxWidth: '520px' }}>
+          <p style={{ fontSize: '18px', lineHeight: '1.7', color: '#1a1a1a', fontStyle: 'italic', marginBottom: '12px' }}>
+            &ldquo;{welcome.quote}&rdquo;
+          </p>
+          <p style={{ fontSize: '13px', color: '#999', letterSpacing: '0.02em' }}>
+            {welcome.book}
+          </p>
+        </div>
+      )
+    }
+
+    return (
+      <div style={{ textAlign: 'center', color: '#999' }}>
+        <div style={{ fontSize: '24px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>Good to see you.</div>
+        <div style={{ fontSize: '15px' }}>Start a conversation or pick up where you left off.</div>
+      </div>
+    )
   }
 
   return (
@@ -121,11 +167,8 @@ export default function Home() {
       </div>
 
       {/* Main Area */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', color: '#999' }}>
-          <div style={{ fontSize: '24px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>Good to see you.</div>
-          <div style={{ fontSize: '15px' }}>Start a conversation or pick up where you left off.</div>
-        </div>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
+        {renderWelcome()}
       </div>
     </div>
   )
