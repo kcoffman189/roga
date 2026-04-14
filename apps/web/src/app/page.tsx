@@ -34,38 +34,25 @@ export default function Home() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser()
-      console.log('Auth user:', user)
-      console.log('Auth error:', error)
+      const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         window.location.href = '/login'
         return
       }
       setUserId(user.id)
-      console.log('User ID set:', user.id)
 
-      try {
-        // Fetch conversations and welcome quote in parallel
-        const [convsRes, quoteRes] = await Promise.all([
-          fetch(`${API_URL}/conversations/${user.id}`),
-          fetch(`${API_URL}/welcome-quote/${user.id}`)
-        ])
+      // Fetch conversations and welcome quote in parallel
+      const [convsRes, quoteRes] = await Promise.all([
+        fetch(`${API_URL}/conversations/${user.id}`),
+        fetch(`${API_URL}/welcome-quote/${user.id}`)
+      ])
 
-        console.log('Conversations response status:', convsRes.status)
-        console.log('Quote response status:', quoteRes.status)
+      const convsData = await convsRes.json()
+      const quoteData = await quoteRes.json()
 
-        const convsData = await convsRes.json()
-        const quoteData = await quoteRes.json()
-
-        console.log('Conversations data:', convsData)
-        console.log('Quote data:', quoteData)
-
-        setConversations(convsData.conversations || [])
-        setWelcome(quoteData)
-        setLoading(false)
-      } catch (err) {
-        console.error('Error after auth:', err)
-      }
+      setConversations(convsData.conversations || [])
+      setWelcome(quoteData)
+      setLoading(false)
     }
     init()
   }, [])
