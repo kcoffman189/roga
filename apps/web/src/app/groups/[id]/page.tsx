@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { supabase } from '@/lib/supabase/client'
+import { createSupabaseClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 
@@ -32,6 +32,7 @@ export default function GroupViewPage() {
   const params = useParams()
   const router = useRouter()
   const groupId = params.id as string
+  const supabase = createSupabaseClient()
 
   useEffect(() => {
     const init = async () => {

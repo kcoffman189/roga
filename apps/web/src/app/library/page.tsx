@@ -1,7 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { supabase } from '@/lib/supabase/client'
+import { createSupabaseClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -30,6 +30,7 @@ export default function LibraryPage() {
   const [adding, setAdding] = useState(false)
   const [step, setStep] = useState<1 | 2>(1)
   const router = useRouter()
+  const supabase = createSupabaseClient()
 
   useEffect(() => {
     fetchLibrary()
