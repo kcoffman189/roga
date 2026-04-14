@@ -42,25 +42,30 @@ export default function Home() {
         return
       }
       setUserId(user.id)
+      console.log('User ID set:', user.id)
 
-      // Fetch conversations and welcome quote in parallel
-      const [convsRes, quoteRes] = await Promise.all([
-        fetch(`${API_URL}/conversations/${user.id}`),
-        fetch(`${API_URL}/welcome-quote/${user.id}`)
-      ])
+      try {
+        // Fetch conversations and welcome quote in parallel
+        const [convsRes, quoteRes] = await Promise.all([
+          fetch(`${API_URL}/conversations/${user.id}`),
+          fetch(`${API_URL}/welcome-quote/${user.id}`)
+        ])
 
-      console.log('Conversations response status:', convsRes.status)
-      console.log('Quote response status:', quoteRes.status)
+        console.log('Conversations response status:', convsRes.status)
+        console.log('Quote response status:', quoteRes.status)
 
-      const convsData = await convsRes.json()
-      const quoteData = await quoteRes.json()
+        const convsData = await convsRes.json()
+        const quoteData = await quoteRes.json()
 
-      console.log('Conversations data:', convsData)
-      console.log('Quote data:', quoteData)
+        console.log('Conversations data:', convsData)
+        console.log('Quote data:', quoteData)
 
-      setConversations(convsData.conversations || [])
-      setWelcome(quoteData)
-      setLoading(false)
+        setConversations(convsData.conversations || [])
+        setWelcome(quoteData)
+        setLoading(false)
+      } catch (err) {
+        console.error('Error after auth:', err)
+      }
     }
     init()
   }, [])
