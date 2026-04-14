@@ -49,8 +49,14 @@ export default function Home() {
         fetch(`${API_URL}/welcome-quote/${user.id}`)
       ])
 
+      console.log('Conversations response status:', convsRes.status)
+      console.log('Quote response status:', quoteRes.status)
+
       const convsData = await convsRes.json()
       const quoteData = await quoteRes.json()
+
+      console.log('Conversations data:', convsData)
+      console.log('Quote data:', quoteData)
 
       setConversations(convsData.conversations || [])
       setWelcome(quoteData)
