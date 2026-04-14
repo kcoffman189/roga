@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic'
 
 import { createSupabaseClient } from '@/lib/supabase/client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
 const FAMILIARITY_STATES = [
@@ -30,7 +30,7 @@ export default function LibraryPage() {
   const [adding, setAdding] = useState(false)
   const [step, setStep] = useState<1 | 2>(1)
   const router = useRouter()
-  const supabase = createSupabaseClient()
+  const supabase = useRef(createSupabaseClient()).current
 
   useEffect(() => {
     fetchLibrary()

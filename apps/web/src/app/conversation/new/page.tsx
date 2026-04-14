@@ -16,7 +16,7 @@ function NewConversationInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const mode = searchParams.get('mode') || 'intentional'
-  const supabase = createSupabaseClient()
+  const supabase = useRef(createSupabaseClient()).current
   const hasStarted = useRef(false)
 
   useEffect(() => {

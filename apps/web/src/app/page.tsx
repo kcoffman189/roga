@@ -27,7 +27,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [welcome, setWelcome] = useState<WelcomeQuote | null>(null)
   const router = useRouter()
-  const supabase = createSupabaseClient()
+  const supabase = useRef(createSupabaseClient()).current
   const libraryRef = useRef<HTMLAnchorElement>(null)
   const digInRef = useRef<HTMLButtonElement>(null)
   const interestingRef = useRef<HTMLButtonElement>(null)

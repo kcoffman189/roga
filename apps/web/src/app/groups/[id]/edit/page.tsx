@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { createSupabaseClient } from '@/lib/supabase/client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
@@ -34,7 +34,7 @@ export default function GroupEditPage() {
   const params = useParams()
   const router = useRouter()
   const groupId = params.id as string
-  const supabase = createSupabaseClient()
+  const supabase = useRef(createSupabaseClient()).current
 
   useEffect(() => {
     const init = async () => {

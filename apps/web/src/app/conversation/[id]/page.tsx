@@ -26,7 +26,7 @@ function ConversationInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const bottomRef = useRef<HTMLDivElement>(null)
-  const supabase = createSupabaseClient()
+  const supabase = useRef(createSupabaseClient()).current
   const isStreaming = searchParams.get('streaming') === 'true'
   const hasInitialized = useRef(false)
 

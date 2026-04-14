@@ -18,7 +18,7 @@ function GroupNewConversationInner() {
   const searchParams = useSearchParams()
   const groupId = params.id as string
   const mode = searchParams.get('mode') || 'intentional'
-  const supabase = createSupabaseClient()
+  const supabase = useRef(createSupabaseClient()).current
   const hasStarted = useRef(false)
 
   useEffect(() => {

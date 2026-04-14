@@ -27,7 +27,7 @@ function GroupConversationInner() {
   const groupId = params.id as string
   const conversationId = params.conversation_id as string
   const bottomRef = useRef<HTMLDivElement>(null)
-  const supabase = createSupabaseClient()
+  const supabase = useRef(createSupabaseClient()).current
   const isStreaming = searchParams.get('streaming') === 'true'
   const hasInitialized = useRef(false)
 
