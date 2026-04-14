@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import OnboardingBubbles from '@/components/OnboardingBubbles'
@@ -27,7 +27,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [welcome, setWelcome] = useState<WelcomeQuote | null>(null)
   const router = useRouter()
-  const supabase = createClient()
   const libraryRef = useRef<HTMLAnchorElement>(null)
   const digInRef = useRef<HTMLButtonElement>(null)
   const interestingRef = useRef<HTMLButtonElement>(null)

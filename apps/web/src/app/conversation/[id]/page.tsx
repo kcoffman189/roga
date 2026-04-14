@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
@@ -26,7 +26,6 @@ function ConversationInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const bottomRef = useRef<HTMLDivElement>(null)
-  const supabase = createClient()
   const isStreaming = searchParams.get('streaming') === 'true'
   const hasInitialized = useRef(false)
 

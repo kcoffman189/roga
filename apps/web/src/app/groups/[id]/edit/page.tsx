@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 
@@ -34,7 +34,6 @@ export default function GroupEditPage() {
   const params = useParams()
   const router = useRouter()
   const groupId = params.id as string
-  const supabase = createClient()
 
   useEffect(() => {
     const init = async () => {

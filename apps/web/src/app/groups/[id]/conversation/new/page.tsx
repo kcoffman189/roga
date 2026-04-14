@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
@@ -18,7 +18,6 @@ function GroupNewConversationInner() {
   const searchParams = useSearchParams()
   const groupId = params.id as string
   const mode = searchParams.get('mode') || 'intentional'
-  const supabase = createClient()
   const hasStarted = useRef(false)
 
   useEffect(() => {

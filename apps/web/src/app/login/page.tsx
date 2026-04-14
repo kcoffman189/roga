@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -14,8 +15,6 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     try {
-      const { createClient } = await import('@/lib/supabase/client')
-      const supabase = createClient()
       console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
       console.log('Attempting login...')
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
@@ -39,8 +38,6 @@ export default function LoginPage() {
   const handleSignUp = async () => {
     setLoading(true)
     setError('')
-    const { createClient } = await import('@/lib/supabase/client')
-    const supabase = createClient()
     const { error } = await supabase.auth.signUp({ email, password })
     if (error) {
       setError(error.message)
