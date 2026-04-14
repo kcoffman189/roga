@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime, timezone
 import anthropic
 import os
 import json
@@ -61,7 +62,18 @@ def get_library_context(user_id: str) -> str:
         lines.append(line)
     return "User's library:\n" + "\n".join(lines)
 
-def build_system_prompt(library_context: str) -> str:
+def build_system_prompt(library_context: str, books_override: Optional[list] = None) -> str:
+    if books_override is not None:
+        if books_override:
+            lines = []
+            for entry in books_override:
+                line = f"- {entry['title']} ({entry['familiarity_state'].replace('_', ' ')})"
+                if entry.get('notes'):
+                    line += f": {entry['notes']}"
+                lines.append(line)
+            library_context = "User's library:\n" + "\n".join(lines)
+        else:
+            library_context = "The user has not added any books to this group yet."
     return f"""You are Roga. You're a thinking partner — a well-read, curious friend who happens to know a lot. You know the user's personal library and you're genuinely interested in their ideas.
 
 {library_context}
@@ -409,3 +421,254 @@ Respond with ONLY a JSON object in this exact format, no other text:
 def get_messages(conversation_id: str):
     result = supabase.from_("messages").select("role, content, created_at").eq("conversation_id", conversation_id).order("created_at").execute()
     return {"messages": result.data}
+
+
+# --- Groups Models ---
+
+class CreateGroupRequest(BaseModel):
+    user_id: str
+    name: str
+    book_ids: list
+
+class UpdateGroupRequest(BaseModel):
+    name: Optional[str] = None
+    book_ids_to_add: Optional[list] = None
+    book_ids_to_remove: Optional[list] = None
+
+class StartGroupConversationRequest(BaseModel):
+    user_id: str
+    group_id: str
+    message: str
+    mode: str  # "intentional" or "open"
+
+class ContinueGroupConversationRequest(BaseModel):
+    user_id: str
+    conversation_id: str
+    message: str
+
+# --- Groups Routes ---
+
+@app.get("/groups/{user_id}")
+def get_groups(user_id: str):
+    groups_result = supabase.from_("groups").select("id, name, is_paused, created_at, updated_at").eq("user_id", user_id).order("updated_at", desc=True).execute()
+    groups = groups_result.data
+
+    if not groups:
+        return {"groups": []}
+
+    group_ids = [g["id"] for g in groups]
+
+    # Fetch book counts for all groups in one query
+    books_result = supabase.from_("group_books").select("group_id").in_("group_id", group_ids).execute()
+    book_counts: dict = {}
+    for row in books_result.data:
+        gid = row["group_id"]
+        book_counts[gid] = book_counts.get(gid, 0) + 1
+
+    # Fetch last conversation timestamps for all groups in one query
+    convs_result = supabase.from_("group_conversations").select("group_id, updated_at").in_("group_id", group_ids).order("updated_at", desc=True).execute()
+    last_conv: dict = {}
+    for row in convs_result.data:
+        gid = row["group_id"]
+        if gid not in last_conv:
+            last_conv[gid] = row["updated_at"]
+
+    for g in groups:
+        g["book_count"] = book_counts.get(g["id"], 0)
+        g["last_conversation_at"] = last_conv.get(g["id"], None)
+
+    return {"groups": groups}
+
+
+@app.post("/groups")
+def create_group(req: CreateGroupRequest):
+    if not req.name.strip():
+        raise HTTPException(status_code=400, detail="Group name cannot be empty.")
+    if len(req.book_ids) < 2:
+        raise HTTPException(status_code=400, detail="A group needs at least 2 books.")
+
+    group_result = supabase.from_("groups").insert({
+        "user_id": req.user_id,
+        "name": req.name.strip()
+    }).execute()
+    group_id = group_result.data[0]["id"]
+
+    book_rows = [{"group_id": group_id, "book_id": bid} for bid in req.book_ids]
+    supabase.from_("group_books").insert(book_rows).execute()
+
+    return {"group": group_result.data[0]}
+
+
+@app.put("/groups/{group_id}")
+def update_group(group_id: str, req: UpdateGroupRequest):
+    # Validate projected book count before making changes
+    if req.book_ids_to_remove:
+        current_result = supabase.from_("group_books").select("book_id").eq("group_id", group_id).execute()
+        current_ids = {row["book_id"] for row in current_result.data}
+        removing = {bid for bid in req.book_ids_to_remove if bid in current_ids}
+        adding = set(req.book_ids_to_add or []) - current_ids
+        projected = len(current_ids) + len(adding) - len(removing)
+        if projected < 2:
+            raise HTTPException(
+                status_code=400,
+                detail="A group needs at least 2 books. Add another book before removing this one."
+            )
+
+    if req.book_ids_to_add:
+        add_rows = [{"group_id": group_id, "book_id": bid} for bid in req.book_ids_to_add]
+        supabase.from_("group_books").upsert(add_rows, on_conflict="group_id,book_id").execute()
+
+    if req.book_ids_to_remove:
+        supabase.from_("group_books").delete().eq("group_id", group_id).in_("book_id", req.book_ids_to_remove).execute()
+
+    update_data: dict = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    if req.name is not None:
+        update_data["name"] = req.name.strip()
+
+    result = supabase.from_("groups").update(update_data).eq("id", group_id).execute()
+    return {"group": result.data[0]}
+
+
+@app.delete("/groups/{group_id}")
+def delete_group(group_id: str):
+    supabase.from_("groups").delete().eq("id", group_id).execute()
+    return {"success": True}
+
+
+# --- Group Conversation Helpers ---
+
+def get_group_books(group_id: str) -> list:
+    """Fetch library entries for all books belonging to a group."""
+    gb_result = supabase.from_("group_books").select("book_id").eq("group_id", group_id).execute()
+    book_ids = [row["book_id"] for row in gb_result.data]
+    if not book_ids:
+        return []
+    entries_result = supabase.from_("library_entries").select("title, familiarity_state, notes").in_("id", book_ids).execute()
+    return entries_result.data
+
+
+# --- Group Conversation Routes ---
+
+@app.post("/group-conversation/start/stream")
+def start_group_conversation_stream(req: StartGroupConversationRequest):
+    group_books = get_group_books(req.group_id)
+    system_prompt = build_system_prompt("", books_override=group_books)
+
+    if req.mode == "open":
+        user_message = "Surface something interesting from my library — an unexpected connection or a thread worth pulling on."
+    else:
+        user_message = req.message or "I'd like to explore something."
+
+    def generate():
+        full_response = ""
+
+        conv_result = supabase.from_("group_conversations").insert({
+            "group_id": req.group_id,
+            "user_id": req.user_id,
+            "title": "Untitled Conversation"
+        }).execute()
+        conversation_id = conv_result.data[0]["id"]
+
+        supabase.from_("groups").update({
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }).eq("id", req.group_id).execute()
+
+        supabase.from_("group_messages").insert({
+            "conversation_id": conversation_id,
+            "role": "user",
+            "content": user_message
+        }).execute()
+
+        yield f"data: {json.dumps({'type': 'conversation_id', 'conversation_id': conversation_id})}\n\n"
+
+        with anthropic_client.messages.stream(
+            model="claude-sonnet-4-20250514",
+            max_tokens=1000,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_message}]
+        ) as stream:
+            for text in stream.text_stream:
+                full_response += text
+                yield f"data: {json.dumps({'type': 'text', 'text': text})}\n\n"
+
+        supabase.from_("group_messages").insert({
+            "conversation_id": conversation_id,
+            "role": "assistant",
+            "content": full_response
+        }).execute()
+
+        title = generate_conversation_title(user_message, full_response)
+        supabase.from_("group_conversations").update({"title": title}).eq("id", conversation_id).execute()
+
+        yield f"data: {json.dumps({'type': 'done', 'conversation_id': conversation_id, 'title': title})}\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+@app.post("/group-conversation/continue/stream")
+def continue_group_conversation_stream(req: ContinueGroupConversationRequest):
+    history_result = supabase.from_("group_messages").select("role, content").eq("conversation_id", req.conversation_id).order("created_at").execute()
+    history = [{"role": m["role"], "content": m["content"]} for m in history_result.data]
+
+    conv_result = supabase.from_("group_conversations").select("group_id").eq("id", req.conversation_id).single().execute()
+    group_id = conv_result.data["group_id"]
+    group_books = get_group_books(group_id)
+    system_prompt = build_system_prompt("", books_override=group_books)
+
+    is_first_response = len(history_result.data) == 1 and req.message == "__stream_existing__"
+    first_user_message = history_result.data[0]["content"] if is_first_response else None
+
+    history.append({"role": "user", "content": req.message})
+
+    supabase.from_("group_messages").insert({
+        "conversation_id": req.conversation_id,
+        "role": "user",
+        "content": req.message
+    }).execute()
+
+    def generate():
+        full_response = ""
+        with anthropic_client.messages.stream(
+            model="claude-sonnet-4-20250514",
+            max_tokens=1000,
+            system=system_prompt,
+            messages=history
+        ) as stream:
+            for text in stream.text_stream:
+                full_response += text
+                yield f"data: {json.dumps({'type': 'text', 'text': text})}\n\n"
+
+        supabase.from_("group_messages").insert({
+            "conversation_id": req.conversation_id,
+            "role": "assistant",
+            "content": full_response
+        }).execute()
+
+        if is_first_response:
+            title_conv = supabase.from_("group_conversations").select("title").eq("id", req.conversation_id).single().execute()
+            current_title = title_conv.data.get("title") if title_conv.data else None
+            if current_title == "Untitled Conversation":
+                title = generate_conversation_title(first_user_message, full_response)
+                supabase.from_("group_conversations").update({"title": title}).eq("id", req.conversation_id).execute()
+
+        yield f"data: {json.dumps({'type': 'done'})}\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+@app.get("/group-conversations/{group_id}")
+def get_group_conversations(group_id: str):
+    result = supabase.from_("group_conversations").select("id, title, created_at, updated_at").eq("group_id", group_id).order("updated_at", desc=True).execute()
+    return {"conversations": result.data}
+
+
+@app.get("/group-conversation/{conversation_id}/messages")
+def get_group_messages(conversation_id: str):
+    result = supabase.from_("group_messages").select("role, content, created_at").eq("conversation_id", conversation_id).order("created_at").execute()
+    return {"messages": result.data}
+
+
+@app.delete("/group-conversation/{conversation_id}")
+def delete_group_conversation(conversation_id: str):
+    supabase.from_("group_conversations").delete().eq("id", conversation_id).execute()
+    return {"success": True}

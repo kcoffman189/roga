@@ -68,6 +68,45 @@ export default function LibraryPage() {
   }
 
   const handleDeleteBook = async (id: string) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    // Query 1: which groups does this book belong to (scoped to current user's groups)
+    const { data: membership } = await supabase
+      .from('group_books')
+      .select('group_id, groups!inner(id, name, user_id)')
+      .eq('library_entry_id', id)
+      .eq('groups.user_id', user.id)
+
+    const groups: { id: string; name: string }[] = (membership ?? []).map((row: any) => ({
+      id: row.group_id,
+      name: Array.isArray(row.groups) ? row.groups[0].name : row.groups.name,
+    }))
+
+    let message: string
+    if (groups.length === 0) {
+      message = 'Are you sure you want to remove this book from your library?'
+    } else {
+      // Query 2: fetch book counts for each affected group
+      const counts = await Promise.all(
+        groups.map(g =>
+          supabase
+            .from('group_books')
+            .select('*', { count: 'exact', head: true })
+            .eq('group_id', g.id)
+        )
+      )
+
+      const groupBelowMin = groups.find((g, i) => (counts[i].count ?? 0) <= 2)
+      if (groupBelowMin) {
+        message = `This book is currently in one or more groups. Removing it from your library will also remove it from those groups. Removing this book will drop your "${groupBelowMin.name}" group below the minimum of 2 books. That group will be paused until you add another book. Are you sure?`
+      } else {
+        message = 'This book is currently in one or more groups. Removing it from your library will also remove it from those groups. Are you sure?'
+      }
+    }
+
+    if (!window.confirm(message)) return
+
     await supabase.from('library_entries').delete().eq('id', id)
     setEntries(prev => prev.filter(e => e.id !== id))
   }

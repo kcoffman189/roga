@@ -133,6 +133,10 @@ export default function Home() {
           Tell me something interesting
         </button>
 
+        <a href="/groups" style={{ display: 'block', padding: '10px 12px', marginBottom: '8px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0' }}>
+          Groups
+        </a>
+
         <a ref={libraryRef} href="/library" style={{ display: 'block', padding: '10px 12px', marginBottom: '24px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0' }}>
           My Library
         </a>
