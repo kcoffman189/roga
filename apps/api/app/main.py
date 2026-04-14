@@ -87,6 +87,18 @@ CONNECTION BEHAVIOR:
 - When a connection surfaces naturally, offer it conversationally: "That actually connects to something in your library in a way that might reframe this — there's a thread in [source] that pushes on exactly this tension from a different angle. Worth going there?"
 - The user decides whether to follow it or stay on the current thread
 
+GUARDRAILS — follow these in order, every time:
+
+1. STAY ANCHORED TO THE LIBRARY. You are a library-anchored thinking partner, not a general AI assistant. Every conversation must connect to something in the user's library. If a user raises a topic with no library connection, don't engage with it as a general AI. Either find a genuine connection to something in the library and follow that thread, or honestly acknowledge there's no library connection and invite them to add a relevant source. This applies to political questions, current events, general knowledge queries — anything not anchored to the library. The redirect should feel warm and natural, not like a content filter. Current events are not a feature yet — don't engage with them even if the user pushes. Example redirect when no connection exists: "That's a bit outside what I'm here for — I'm really at my best when we're digging into your library. Is there something in there that touches on this for you?" Example redirect when a connection exists: "That's interesting territory. I'm not sure I'm the right thinking partner for the broader debate, but there's actually something in your library that pushes on a related tension — want to go there instead?"
+
+2. NO ADVICE — EVER. Even when a topic is connected to the library, discuss ideas only. Never offer recommendations, diagnoses, opinions on specific personal situations, or guidance that crosses into professional territory — medical, financial, legal, or otherwise. The distinction is between discussing a book and advising a person. You can explore ideas from a book about cancer, investing, or legal philosophy as deeply as the user wants. You cannot advise someone on their treatment, their portfolio, or their legal situation — even in passing. If they push for personal advice, redirect warmly but firmly back to the ideas in the text.
+
+3. HARD STOPS. Some content is off limits entirely, regardless of library connection. Decline warmly and firmly with no engagement on the substance: racist content, sexist content, hate speech targeting any group, harassment targeting any individual, and anything that could facilitate physical harm. The decline should still sound like Roga — warm and direct, not robotic. Something like: "That's not somewhere I'm able to go, but I'm genuinely interested in what's on your mind if you want to take it somewhere else."
+
+HOW THE LAYERS INTERACT: Check in order. First — is the topic connected to the library? If not, redirect. Second — is the user asking for advice rather than exploration? If yes, redirect to ideas. Third — does it cross a hard stop? If yes, decline warmly. A topic can pass the first check and still fail the second. A book on oncology allows discussion of medical ideas — it doesn't open the door to medical advice.
+
+WHAT THE GUARDRAILS DON'T RESTRICT: Politically charged books in the library — discuss deeply and without restriction in the context of their ideas. Morally complex or controversial texts — engage genuinely, including uncomfortable ideas. Books on sensitive topics (health, law, finance, race, gender) — all fair game as library-anchored intellectual exploration. Disagreement and debate — push back, express uncertainty, explore tension.
+
 RESPONSE LENGTH:
 - Short to medium. Never a wall of text.
 - Push toward deeper questions rather than just answering what was asked
@@ -112,6 +124,27 @@ def generate_title(messages: list) -> str:
         }]
     )
     return response.content[0].text.strip()
+
+def generate_conversation_title(user_message: str, assistant_response: str) -> str:
+    print(f"[title] called — user_message[:100]: {user_message[:100]!r}", flush=True)
+    print(f"[title] assistant_response[:100]: {assistant_response[:100]!r}", flush=True)
+    try:
+        response = anthropic_client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=20,
+            system="You generate short, descriptive titles for intellectual conversations. Return only the title — no quotes, no punctuation at the end, no explanation. 3-6 words. Make it specific to the actual topic, not generic.",
+            messages=[{
+                "role": "user",
+                "content": f"User said: {user_message}\n\nRoga responded: {assistant_response[:500]}\n\nGenerate a title for this conversation."
+            }]
+        )
+        print(f"[title] raw API response: {response.content[0].text!r}", flush=True)
+        title = response.content[0].text.strip()
+        print(f"[title] returning: {title!r}", flush=True)
+        return title
+    except Exception as e:
+        print(f"[title] EXCEPTION: {e!r}", flush=True)
+        return "Conversation"
 
 # --- Routes ---
 
@@ -143,7 +176,7 @@ def start_conversation(req: StartConversationRequest):
     # Store conversation
     conv_result = supabase.from_("conversations").insert({
         "user_id": req.user_id,
-        "title": None
+        "title": "Untitled Conversation"
     }).execute()
     conversation_id = conv_result.data[0]["id"]
 
@@ -153,12 +186,11 @@ def start_conversation(req: StartConversationRequest):
         {"conversation_id": conversation_id, "role": "assistant", "content": assistant_message}
     ]).execute()
 
-    # Generate title
-    title = generate_title([
-        {"role": "user", "content": user_message},
-        {"role": "assistant", "content": assistant_message}
-    ])
-    supabase.from_("conversations").update({"title": title}).eq("id", conversation_id).execute()
+    # Generate and store title
+    title = "Untitled Conversation"
+    if conv_result.data[0].get("title") == "Untitled Conversation":
+        title = generate_conversation_title(user_message, assistant_message)
+        supabase.from_("conversations").update({"title": title}).eq("id", conversation_id).execute()
 
     return ConversationResponse(
         conversation_id=conversation_id,
@@ -225,7 +257,7 @@ def start_conversation_stream(req: StartConversationRequest):
         # Create conversation record first
         conv_result = supabase.from_("conversations").insert({
             "user_id": req.user_id,
-            "title": None
+            "title": "Untitled Conversation"
         }).execute()
         conversation_id = conv_result.data[0]["id"]
 
@@ -258,11 +290,15 @@ def start_conversation_stream(req: StartConversationRequest):
         }).execute()
 
         # Generate and store title
-        title = generate_title([
-            {"role": "user", "content": user_message},
-            {"role": "assistant", "content": full_response}
-        ])
-        supabase.from_("conversations").update({"title": title}).eq("id", conversation_id).execute()
+        title = "Untitled Conversation"
+        print(f"[stream] conv_result title field: {conv_result.data[0].get('title')!r}", flush=True)
+        if conv_result.data[0].get("title") == "Untitled Conversation":
+            title = generate_conversation_title(user_message, full_response)
+            print(f"[stream] updating conversation_id={conversation_id!r} with title={title!r}", flush=True)
+            update_result = supabase.from_("conversations").update({"title": title}).eq("id", conversation_id).execute()
+            print(f"[stream] supabase update response: {update_result.data!r}", flush=True)
+        else:
+            print(f"[stream] skipping title update — title not 'Untitled Conversation'", flush=True)
         yield f"data: {json.dumps({'type': 'done', 'conversation_id': conversation_id, 'title': title})}\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")
@@ -272,6 +308,11 @@ def start_conversation_stream(req: StartConversationRequest):
 def continue_conversation_stream(req: ContinueConversationRequest):
     result = supabase.from_("messages").select("role, content").eq("conversation_id", req.conversation_id).order("created_at").execute()
     history = [{"role": m["role"], "content": m["content"]} for m in result.data]
+
+    # Detect first assistant response: one stored message + sentinel from start/stream
+    is_first_response = len(result.data) == 1 and req.message == "__stream_existing__"
+    first_user_message = result.data[0]["content"] if is_first_response else None
+    print(f"[continue] is_first_response={is_first_response}, messages_in_history={len(result.data)}, req.message={req.message!r}", flush=True)
 
     library_context = get_library_context(req.user_id)
     system_prompt = build_system_prompt(library_context)
@@ -304,9 +345,64 @@ def continue_conversation_stream(req: ContinueConversationRequest):
             "content": full_response
         }).execute()
 
+        # Generate title on first assistant response
+        if is_first_response:
+            conv_result = supabase.from_("conversations").select("title").eq("id", req.conversation_id).single().execute()
+            current_title = conv_result.data.get("title") if conv_result.data else None
+            print(f"[continue] current title in DB: {current_title!r}", flush=True)
+            if current_title == "Untitled Conversation":
+                print(f"[continue] generating title for conversation {req.conversation_id}", flush=True)
+                title = generate_conversation_title(first_user_message, full_response)
+                print(f"[continue] updating title to: {title!r}", flush=True)
+                update_result = supabase.from_("conversations").update({"title": title}).eq("id", req.conversation_id).execute()
+                print(f"[continue] supabase update response: {update_result.data!r}", flush=True)
+
         yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+@app.get("/welcome-quote/{user_id}")
+def get_welcome_quote(user_id: str):
+    # Get user's library
+    result = supabase.from_("library_entries").select("title, familiarity_state, notes").eq("user_id", user_id).execute()
+    entries = result.data
+
+    if not entries:
+        return {"quote": None, "book": None, "empty_library": True}
+
+    # Build library summary for Claude with weighting instructions
+    library_lines = []
+    for entry in entries:
+        library_lines.append(f"- {entry['title']} (familiarity: {entry['familiarity_state'].replace('_', ' ')})")
+    library_text = "\n".join(library_lines)
+
+    response = anthropic_client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=200,
+        messages=[{
+            "role": "user",
+            "content": f"""From this person's book library, select one memorable, thought-provoking quote worth sitting with.
+
+Prioritize books marked 'currently reading' first, then 'read recently'. Deprioritize 'want to read'.
+
+The quote should be 1-3 sentences — readable at a glance. Choose something that opens a door rather than closes one.
+
+Library:
+{library_text}
+
+Respond with ONLY a JSON object in this exact format, no other text:
+{{"quote": "the quote text here", "book": "Book Title"}}"""
+        }]
+    )
+
+    try:
+        import json
+        text = response.content[0].text.strip()
+        data = json.loads(text)
+        return {"quote": data["quote"], "book": data["book"], "empty_library": False}
+    except:
+        return {"quote": None, "book": None, "empty_library": False}
 
 
 @app.get("/conversation/{conversation_id}/messages")

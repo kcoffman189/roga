@@ -164,6 +164,15 @@ export default function Home() {
             ))
           )}
         </div>
+
+        <button
+          onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '8px 12px', marginTop: '8px', fontSize: '13px', color: '#999', borderRadius: '6px', width: '100%' }}
+          onMouseEnter={e => (e.currentTarget.style.color = '#555')}
+          onMouseLeave={e => (e.currentTarget.style.color = '#999')}
+        >
+          Log out
+        </button>
       </div>
 
       {/* Main Area */}
