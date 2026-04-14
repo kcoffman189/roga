@@ -3,8 +3,9 @@
 export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import OnboardingBubbles from '@/components/OnboardingBubbles'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
@@ -27,6 +28,9 @@ export default function Home() {
   const [welcome, setWelcome] = useState<WelcomeQuote | null>(null)
   const router = useRouter()
   const supabase = createClient()
+  const libraryRef = useRef<HTMLAnchorElement>(null)
+  const digInRef = useRef<HTMLButtonElement>(null)
+  const interestingRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     const init = async () => {
@@ -115,19 +119,21 @@ export default function Home() {
         <div style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px' }}>Roga</div>
 
         <button
+          ref={digInRef}
           onClick={() => startConversation('intentional')}
           style={{ textAlign: 'left', padding: '10px 12px', marginBottom: '8px', borderRadius: '6px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', fontSize: '14px' }}
         >
           Let's dig into something
         </button>
         <button
+          ref={interestingRef}
           onClick={() => startConversation('open')}
           style={{ textAlign: 'left', padding: '10px 12px', marginBottom: '24px', borderRadius: '6px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', fontSize: '14px' }}
         >
           Tell me something interesting
         </button>
 
-        <a href="/library" style={{ display: 'block', padding: '10px 12px', marginBottom: '24px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0' }}>
+        <a ref={libraryRef} href="/library" style={{ display: 'block', padding: '10px 12px', marginBottom: '24px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0' }}>
           My Library
         </a>
 
@@ -136,7 +142,7 @@ export default function Home() {
           {loading ? (
             <div style={{ fontSize: '13px', color: '#999', padding: '4px' }}>Loading...</div>
           ) : conversations.length === 0 ? (
-            <div style={{ fontSize: '13px', color: '#999', padding: '4px' }}>No conversations yet</div>
+            <div style={{ fontSize: '13px', color: '#999', padding: '4px' }}>Your conversations will appear here.</div>
           ) : (
             conversations.map((conv) => (
               <div
@@ -179,6 +185,16 @@ export default function Home() {
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
         {renderWelcome()}
       </div>
+
+      {userId && (
+        <OnboardingBubbles
+          userId={userId}
+          supabase={supabase}
+          libraryRef={libraryRef}
+          digInRef={digInRef}
+          interestingRef={interestingRef}
+        />
+      )}
     </div>
   )
 }

@@ -163,7 +163,15 @@ export default function LibraryPage() {
           {loading ? (
             <p style={{ color: '#666' }}>Loading your library...</p>
           ) : entries.length === 0 ? (
-            <p style={{ color: '#666' }}>Your library is empty. Add your first book.</p>
+            <div style={{ textAlign: 'center', padding: '48px 0' }}>
+              <p style={{ color: '#999', marginBottom: '20px', fontSize: '15px' }}>Your library is empty. Add your first book to get started.</p>
+              <button
+                onClick={() => { setShowAdd(true); setStep(1) }}
+                style={{ padding: '10px 24px', fontSize: '14px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #ccc', background: '#fff' }}
+              >
+                + Add book
+              </button>
+            </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {entries.map((entry) => (
