@@ -34,7 +34,9 @@ export default function Home() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user }, error } = await supabase.auth.getUser()
+      console.log('Auth user:', user)
+      console.log('Auth error:', error)
       if (!user) {
         window.location.href = '/login'
         return
