@@ -493,7 +493,7 @@ def create_group(req: CreateGroupRequest):
     }).execute()
     group_id = group_result.data[0]["id"]
 
-    book_rows = [{"group_id": group_id, "book_id": bid} for bid in req.book_ids]
+    book_rows = [{"group_id": group_id, "library_entry_id": bid} for bid in req.book_ids]
     supabase.from_("group_books").insert(book_rows).execute()
 
     return {"group": group_result.data[0]}
@@ -503,8 +503,8 @@ def create_group(req: CreateGroupRequest):
 def update_group(group_id: str, req: UpdateGroupRequest):
     # Validate projected book count before making changes
     if req.book_ids_to_remove:
-        current_result = supabase.from_("group_books").select("book_id").eq("group_id", group_id).execute()
-        current_ids = {row["book_id"] for row in current_result.data}
+        current_result = supabase.from_("group_books").select("library_entry_id").eq("group_id", group_id).execute()
+        current_ids = {row["library_entry_id"] for row in current_result.data}
         removing = {bid for bid in req.book_ids_to_remove if bid in current_ids}
         adding = set(req.book_ids_to_add or []) - current_ids
         projected = len(current_ids) + len(adding) - len(removing)
@@ -515,11 +515,11 @@ def update_group(group_id: str, req: UpdateGroupRequest):
             )
 
     if req.book_ids_to_add:
-        add_rows = [{"group_id": group_id, "book_id": bid} for bid in req.book_ids_to_add]
-        supabase.from_("group_books").upsert(add_rows, on_conflict="group_id,book_id").execute()
+        add_rows = [{"group_id": group_id, "library_entry_id": bid} for bid in req.book_ids_to_add]
+        supabase.from_("group_books").upsert(add_rows, on_conflict="group_id,library_entry_id").execute()
 
     if req.book_ids_to_remove:
-        supabase.from_("group_books").delete().eq("group_id", group_id).in_("book_id", req.book_ids_to_remove).execute()
+        supabase.from_("group_books").delete().eq("group_id", group_id).in_("library_entry_id", req.book_ids_to_remove).execute()
 
     update_data: dict = {"updated_at": datetime.now(timezone.utc).isoformat()}
     if req.name is not None:
@@ -539,8 +539,8 @@ def delete_group(group_id: str):
 
 def get_group_books(group_id: str) -> list:
     """Fetch library entries for all books belonging to a group."""
-    gb_result = supabase.from_("group_books").select("book_id").eq("group_id", group_id).execute()
-    book_ids = [row["book_id"] for row in gb_result.data]
+    gb_result = supabase.from_("group_books").select("library_entry_id").eq("group_id", group_id).execute()
+    book_ids = [row["library_entry_id"] for row in gb_result.data]
     if not book_ids:
         return []
     entries_result = supabase.from_("library_entries").select("title, familiarity_state, notes").in_("id", book_ids).execute()
