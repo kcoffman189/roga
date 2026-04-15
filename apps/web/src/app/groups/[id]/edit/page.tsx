@@ -93,6 +93,7 @@ export default function GroupEditPage() {
     if (book_ids_to_add.length > 0) body.book_ids_to_add = book_ids_to_add
     if (book_ids_to_remove.length > 0) body.book_ids_to_remove = book_ids_to_remove
 
+    console.log('PUT URL:', `${process.env.NEXT_PUBLIC_API_URL}/groups/${groupId}`)
     const res = await fetch(`${API_URL}/groups/${groupId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
