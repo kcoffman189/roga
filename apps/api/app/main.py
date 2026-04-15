@@ -47,16 +47,36 @@ class ConversationResponse(BaseModel):
     message: str
     title: Optional[str] = None
 
+class UpdateFamiliarityRequest(BaseModel):
+    familiarity_score: Optional[int] = None
+    is_unread: Optional[bool] = None
+
 # --- Helpers ---
 
+def _familiarity_label(entry: dict) -> str:
+    if entry.get('is_unread'):
+        return "haven't read this yet"
+    score = entry.get('familiarity_score')
+    if score == 5:
+        return "know it deeply — reference with confidence and specific detail"
+    if score == 4:
+        return "quite familiar — reference comfortably, mostly thematic"
+    if score == 3:
+        return "moderately familiar — lean on themes and major arguments"
+    if score == 2:
+        return "vaguely familiar — reference lightly, invite user to fill gaps"
+    if score == 1:
+        return "barely familiar — reference sparingly, ask what user remembers"
+    return "familiarity unknown"
+
 def get_library_context(user_id: str) -> str:
-    result = supabase.from_("library_entries").select("title, familiarity_state, notes").eq("user_id", user_id).execute()
+    result = supabase.from_("library_entries").select("title, familiarity_score, is_unread, notes").eq("user_id", user_id).execute()
     entries = result.data
     if not entries:
         return "The user has not added any books to their library yet."
     lines = []
     for entry in entries:
-        line = f"- {entry['title']} ({entry['familiarity_state'].replace('_', ' ')})"
+        line = f"- {entry['title']} ({_familiarity_label(entry)})"
         if entry.get('notes'):
             line += f": {entry['notes']}"
         lines.append(line)
@@ -67,7 +87,7 @@ def build_system_prompt(library_context: str, books_override: Optional[list] = N
         if books_override:
             lines = []
             for entry in books_override:
-                line = f"- {entry['title']} ({entry['familiarity_state'].replace('_', ' ')})"
+                line = f"- {entry['title']} ({_familiarity_label(entry)})"
                 if entry.get('notes'):
                     line += f": {entry['notes']}"
                 lines.append(line)
@@ -112,8 +132,9 @@ HOW THE LAYERS INTERACT: Check in order. First — is the topic connected to the
 WHAT THE GUARDRAILS DON'T RESTRICT: Politically charged books in the library — discuss deeply and without restriction in the context of their ideas. Morally complex or controversial texts — engage genuinely, including uncomfortable ideas. Books on sensitive topics (health, law, finance, race, gender) — all fair game as library-anchored intellectual exploration. Disagreement and debate — push back, express uncertainty, explore tension.
 
 RESPONSE LENGTH:
-- Short to medium. Never a wall of text.
-- Push toward deeper questions rather than just answering what was asked
+- Extremely brief. 1-3 sentences maximum, every time, no exceptions.
+- One idea. One question. Stop.
+- If you're about to write a fourth sentence, delete it.
 
 ONE CALIBRATION EXAMPLE:
 
@@ -163,6 +184,29 @@ def generate_conversation_title(user_message: str, assistant_response: str) -> s
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.patch("/library/{entry_id}/familiarity")
+def update_familiarity(entry_id: str, req: UpdateFamiliarityRequest):
+    if req.familiarity_score is not None and not (1 <= req.familiarity_score <= 5):
+        raise HTTPException(status_code=400, detail="familiarity_score must be between 1 and 5.")
+
+    update_data: dict = {}
+
+    if req.is_unread is True:
+        update_data["is_unread"] = True
+        update_data["familiarity_score"] = None
+    elif req.is_unread is False:
+        update_data["is_unread"] = False
+        update_data["familiarity_score"] = req.familiarity_score if req.familiarity_score is not None else 3
+    elif req.familiarity_score is not None:
+        update_data["familiarity_score"] = req.familiarity_score
+    else:
+        raise HTTPException(status_code=400, detail="At least one of familiarity_score or is_unread must be provided.")
+
+    result = supabase.from_("library_entries").update(update_data).eq("id", entry_id).execute()
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Library entry not found.")
+    return {"entry": result.data[0]}
 
 @app.post("/conversation/start", response_model=ConversationResponse)
 def start_conversation(req: StartConversationRequest):
@@ -377,7 +421,7 @@ def continue_conversation_stream(req: ContinueConversationRequest):
 @app.get("/welcome-quote/{user_id}")
 def get_welcome_quote(user_id: str):
     # Get user's library
-    result = supabase.from_("library_entries").select("title, familiarity_state, notes").eq("user_id", user_id).execute()
+    result = supabase.from_("library_entries").select("title, familiarity_score, is_unread, notes").eq("user_id", user_id).execute()
     entries = result.data
 
     if not entries:
@@ -386,7 +430,7 @@ def get_welcome_quote(user_id: str):
     # Build library summary for Claude with weighting instructions
     library_lines = []
     for entry in entries:
-        library_lines.append(f"- {entry['title']} (familiarity: {entry['familiarity_state'].replace('_', ' ')})")
+        library_lines.append(f"- {entry['title']} ({_familiarity_label(entry)})")
     library_text = "\n".join(library_lines)
 
     response = anthropic_client.messages.create(
@@ -396,7 +440,7 @@ def get_welcome_quote(user_id: str):
             "role": "user",
             "content": f"""From this person's book library, select one memorable, thought-provoking quote worth sitting with.
 
-Prioritize books marked 'currently reading' first, then 'read recently'. Deprioritize 'want to read'.
+Prioritize books the user knows well (score 4-5) first. Deprioritize books they haven't read yet.
 
 The quote should be 1-3 sentences — readable at a glance. Choose something that opens a door rather than closes one.
 
@@ -543,7 +587,7 @@ def get_group_books(group_id: str) -> list:
     book_ids = [row["library_entry_id"] for row in gb_result.data]
     if not book_ids:
         return []
-    entries_result = supabase.from_("library_entries").select("title, familiarity_state, notes").in_("id", book_ids).execute()
+    entries_result = supabase.from_("library_entries").select("title, familiarity_score, is_unread, notes").in_("id", book_ids).execute()
     return entries_result.data
 
 

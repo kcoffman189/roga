@@ -5,18 +5,13 @@ import { createSupabaseClient } from '@/lib/supabase/client'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
-const FAMILIARITY_STATES = [
-  { value: 'currently_reading', label: 'Currently reading' },
-  { value: 'read_recently', label: 'Read it — recently' },
-  { value: 'read_long_ago', label: 'Read it — a while ago' },
-  { value: 'partially_read', label: 'Partially read / dipped in' },
-  { value: 'want_to_read', label: 'Want to read' },
-]
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://roga-api.fly.dev'
 
 type LibraryEntry = {
   id: string
   title: string
-  familiarity_state: string
+  familiarity_score: number | null
+  is_unread: boolean
   notes: string | null
   created_at: string
 }
@@ -26,7 +21,7 @@ export default function LibraryPage() {
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [searchTitle, setSearchTitle] = useState('')
-  const [selectedFamiliarity, setSelectedFamiliarity] = useState('')
+  const [addIsUnread, setAddIsUnread] = useState(false)
   const [adding, setAdding] = useState(false)
   const [step, setStep] = useState<1 | 2>(1)
   const router = useRouter()
@@ -55,12 +50,13 @@ export default function LibraryPage() {
     const { error } = await supabase.from('library_entries').insert({
       user_id: user.id,
       title: searchTitle.trim(),
-      familiarity_state: selectedFamiliarity,
+      familiarity_score: addIsUnread ? null : 3,
+      is_unread: addIsUnread,
     })
     if (!error) {
       setShowAdd(false)
       setSearchTitle('')
-      setSelectedFamiliarity('')
+      setAddIsUnread(false)
       setStep(1)
       fetchLibrary()
     }
@@ -71,7 +67,6 @@ export default function LibraryPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    // Query 1: which groups does this book belong to (scoped to current user's groups)
     const { data: membership } = await supabase
       .from('group_books')
       .select('group_id, groups!inner(id, name, user_id)')
@@ -87,7 +82,6 @@ export default function LibraryPage() {
     if (groups.length === 0) {
       message = 'Are you sure you want to remove this book from your library?'
     } else {
-      // Query 2: fetch book counts for each affected group
       const counts = await Promise.all(
         groups.map(g =>
           supabase
@@ -111,8 +105,13 @@ export default function LibraryPage() {
     setEntries(prev => prev.filter(e => e.id !== id))
   }
 
-  const getFamiliarityLabel = (value: string) => {
-    return FAMILIARITY_STATES.find(s => s.value === value)?.label || value
+  const handleFamiliarityChange = async (id: string, patch: { familiarity_score?: number | null; is_unread?: boolean }) => {
+    setEntries(prev => prev.map(e => e.id === id ? { ...e, ...patch } : e))
+    await fetch(`${API_BASE}/library/${id}/familiarity`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    })
   }
 
   return (
@@ -173,21 +172,13 @@ export default function LibraryPage() {
               )}
               {step === 2 && (
                 <>
-                  <p style={{ margin: '0 0 4px', fontWeight: '500' }}>{searchTitle}</p>
-                  <p style={{ margin: '0 0 16px', fontSize: '14px', color: '#666' }}>Where are you with this one?</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {FAMILIARITY_STATES.map((state) => (
-                      <button
-                        key={state.value}
-                        onClick={() => setSelectedFamiliarity(state.value)}
-                        style={{ padding: '12px 16px', fontSize: '15px', cursor: 'pointer', borderRadius: '6px', border: `2px solid ${selectedFamiliarity === state.value ? '#000' : '#e0e0e0'}`, background: selectedFamiliarity === state.value ? '#f5f5f5' : '#fff', textAlign: 'left' }}
-                      >
-                        {state.label}
-                      </button>
-                    ))}
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-                    <button onClick={handleAddBook} disabled={!selectedFamiliarity || adding} style={{ padding: '8px 20px', fontSize: '14px', cursor: 'pointer', borderRadius: '6px', background: '#000', color: '#fff', border: 'none' }}>
+                  <p style={{ margin: '0 0 16px', fontWeight: '500' }}>{searchTitle}</p>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none' }}>
+                    <ToggleSwitch checked={addIsUnread} onChange={setAddIsUnread} />
+                    <span style={{ fontSize: '14px', color: '#444' }}>Haven't read this yet</span>
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
+                    <button onClick={handleAddBook} disabled={adding} style={{ padding: '8px 20px', fontSize: '14px', cursor: 'pointer', borderRadius: '6px', background: '#000', color: '#fff', border: 'none' }}>
                       {adding ? 'Adding...' : 'Add to library'}
                     </button>
                     <button onClick={() => setStep(1)} style={{ padding: '8px 20px', fontSize: '14px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #ccc', background: '#fff' }}>
@@ -214,24 +205,92 @@ export default function LibraryPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {entries.map((entry) => (
-                <div key={entry.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid #e0e0e0', borderRadius: '8px', padding: '16px 20px', background: '#fff' }}>
-                  <div>
-                    <div style={{ fontWeight: '500', marginBottom: '4px' }}>{entry.title}</div>
-                    <div style={{ fontSize: '13px', color: '#666' }}>{getFamiliarityLabel(entry.familiarity_state)}</div>
+                <div key={entry.id} style={{ border: '1px solid #e0e0e0', borderRadius: '8px', padding: '16px 20px', background: '#fff' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <div style={{ fontWeight: '500' }}>{entry.title}</div>
+                    <button
+                      onClick={() => handleDeleteBook(entry.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '18px', lineHeight: 1, padding: '4px 8px', borderRadius: '4px' }}
+                      onMouseEnter={e => (e.currentTarget.style.color = '#999')}
+                      onMouseLeave={e => (e.currentTarget.style.color = '#ccc')}
+                    >
+                      ✕
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleDeleteBook(entry.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '18px', lineHeight: 1, padding: '4px 8px', borderRadius: '4px' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = '#999')}
-                    onMouseLeave={e => (e.currentTarget.style.color = '#ccc')}
-                  >
-                    ✕
-                  </button>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none', marginBottom: entry.is_unread ? 0 : '10px' }}>
+                    <ToggleSwitch
+                      checked={entry.is_unread}
+                      onChange={(val) => {
+                        handleFamiliarityChange(entry.id, { is_unread: val })
+                      }}
+                    />
+                    <span style={{ fontSize: '13px', color: '#666' }}>Haven't read this yet</span>
+                  </label>
+                  {!entry.is_unread && (
+                    <FamiliaritySlider
+                      value={entry.familiarity_score ?? 3}
+                      onChange={(val) => handleFamiliarityChange(entry.id, { familiarity_score: val })}
+                    />
+                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
+      </div>
+    </div>
+  )
+}
+
+function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (val: boolean) => void }) {
+  return (
+    <div
+      onClick={() => onChange(!checked)}
+      style={{
+        width: '36px',
+        height: '20px',
+        borderRadius: '10px',
+        background: checked ? '#333' : '#ddd',
+        position: 'relative',
+        cursor: 'pointer',
+        flexShrink: 0,
+        transition: 'background 0.15s',
+      }}
+    >
+      <div style={{
+        position: 'absolute',
+        top: '3px',
+        left: checked ? '19px' : '3px',
+        width: '14px',
+        height: '14px',
+        borderRadius: '50%',
+        background: '#fff',
+        transition: 'left 0.15s',
+      }} />
+    </div>
+  )
+}
+
+function FamiliaritySlider({ value, onChange }: { value: number; onChange: (val: number) => void }) {
+  return (
+    <div style={{ paddingTop: '2px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '12px', color: '#aaa', whiteSpace: 'nowrap' }}>Vaguely familiar</span>
+        <input
+          type="range"
+          min={1}
+          max={5}
+          step={1}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          style={{
+            flex: 1,
+            accentColor: '#333',
+            cursor: 'pointer',
+            height: '4px',
+          }}
+        />
+        <span style={{ fontSize: '12px', color: '#aaa', whiteSpace: 'nowrap' }}>Know it deeply</span>
       </div>
     </div>
   )
