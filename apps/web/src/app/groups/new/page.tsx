@@ -74,18 +74,22 @@ export default function NewGroupPage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', fontFamily: 'sans-serif', background: '#fafafa' }}>
+    <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#fafafa' }}>
 
-      {/* Header */}
+      {/* Mobile Header — hidden on desktop */}
       <div
+        className="flex md:hidden"
         style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
           background: '#fff',
           borderBottom: '1px solid #e0e0e0',
-          display: 'flex',
           alignItems: 'center',
           height: '52px',
           padding: '0 16px',
-          flexShrink: 0,
         }}
       >
         <button
@@ -100,9 +104,30 @@ export default function NewGroupPage() {
         <div style={{ width: '44px' }} />
       </div>
 
-      {/* Content */}
-      <div style={{ flex: 1, padding: '24px 16px', overflowY: 'auto' }}>
-        <div style={{ width: '100%', maxWidth: '480px', margin: '0 auto' }}>
+      {/* Left Panel — desktop only */}
+      <div
+        className="hidden md:flex"
+        style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px', flexShrink: 0 }}
+      >
+        <div
+          style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px', cursor: 'pointer' }}
+          onClick={() => router.push('/groups')}
+        >
+          Roga
+        </div>
+        <div style={{ fontSize: '13px', color: '#999', paddingLeft: '4px' }}>
+          <span
+            style={{ cursor: 'pointer', color: '#999', textDecoration: 'none' }}
+            onClick={() => router.push('/groups')}
+          >
+            ← Back to Groups
+          </span>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div style={{ flex: 1, overflowY: 'auto' }} className="pt-[60px] px-4 pb-6 md:p-0 md:flex md:items-center md:justify-center">
+        <div style={{ width: '100%', maxWidth: '480px' }} className="md:px-10">
 
           {step === 1 && (
             <>
@@ -115,12 +140,12 @@ export default function NewGroupPage() {
                 onKeyDown={e => { if (e.key === 'Enter' && name.trim()) setStep(2) }}
                 placeholder="Neuroscience, History, Book Club..."
                 autoFocus
-                style={{ width: '100%', padding: '12px 14px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ccc', boxSizing: 'border-box', outline: 'none', marginBottom: '16px', minHeight: '44px' }}
+                style={{ width: '100%', padding: '12px 14px', fontSize: '16px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box', outline: 'none', marginBottom: '16px', minHeight: '44px' }}
               />
               <button
                 onClick={() => setStep(2)}
                 disabled={!name.trim()}
-                style={{ display: 'block', width: '100%', padding: '12px 28px', fontSize: '15px', cursor: name.trim() ? 'pointer' : 'not-allowed', borderRadius: '8px', background: name.trim() ? '#000' : '#e0e0e0', color: name.trim() ? '#fff' : '#999', border: 'none', minHeight: '44px' }}
+                style={{ display: 'block', width: '100%', padding: '12px 28px', fontSize: '14px', cursor: name.trim() ? 'pointer' : 'not-allowed', borderRadius: '6px', background: name.trim() ? '#000' : '#e0e0e0', color: name.trim() ? '#fff' : '#999', border: 'none', minHeight: '44px' }}
               >
                 Next
               </button>
@@ -129,6 +154,7 @@ export default function NewGroupPage() {
 
           {step === 2 && (
             <>
+              <h1 style={{ fontSize: '22px', fontWeight: '600', marginBottom: '4px' }}>{name}</h1>
               <p style={{ fontSize: '14px', color: '#999', marginBottom: '24px' }}>
                 Select at least 2 books for this group.
                 <span
@@ -142,7 +168,7 @@ export default function NewGroupPage() {
               {books.length === 0 ? (
                 <p style={{ color: '#999', fontSize: '14px' }}>Your library is empty. <a href="/library" style={{ color: '#333' }}>Add some books first.</a></p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '24px', maxHeight: '400px', overflowY: 'auto' }}>
                   {books.map(book => {
                     const selected = selectedIds.has(book.id)
                     return (
@@ -155,15 +181,15 @@ export default function NewGroupPage() {
                           gap: '12px',
                           padding: '12px 14px',
                           border: `1px solid ${selected ? '#c8a96e' : '#e0e0e0'}`,
-                          borderRadius: '8px',
+                          borderRadius: '6px',
                           background: selected ? '#fdfaf5' : '#fff',
                           cursor: 'pointer',
-                          minHeight: '56px',
+                          minHeight: '44px',
                         }}
                       >
                         <div style={{
-                          width: '22px',
-                          height: '22px',
+                          width: '18px',
+                          height: '18px',
                           borderRadius: '4px',
                           border: `2px solid ${selected ? '#c8a96e' : '#ccc'}`,
                           background: selected ? '#c8a96e' : '#fff',
@@ -172,7 +198,7 @@ export default function NewGroupPage() {
                           alignItems: 'center',
                           justifyContent: 'center',
                         }}>
-                          {selected && <span style={{ color: '#fff', fontSize: '13px', fontWeight: '700', lineHeight: 1 }}>✓</span>}
+                          {selected && <span style={{ color: '#fff', fontSize: '11px', fontWeight: '700', lineHeight: 1 }}>✓</span>}
                         </div>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontWeight: '500', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{book.title}</div>
@@ -189,11 +215,10 @@ export default function NewGroupPage() {
                   onClick={handleCreate}
                   disabled={selectedIds.size < 2 || submitting}
                   style={{
-                    flex: 1,
-                    padding: '12px 28px',
-                    fontSize: '15px',
+                    padding: '10px 28px',
+                    fontSize: '14px',
                     cursor: selectedIds.size >= 2 && !submitting ? 'pointer' : 'not-allowed',
-                    borderRadius: '8px',
+                    borderRadius: '6px',
                     background: selectedIds.size >= 2 ? '#000' : '#e0e0e0',
                     color: selectedIds.size >= 2 ? '#fff' : '#999',
                     border: 'none',
@@ -202,7 +227,7 @@ export default function NewGroupPage() {
                 >
                   {submitting ? 'Creating...' : 'Create Group'}
                 </button>
-                <span style={{ fontSize: '13px', color: '#bbb', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: '13px', color: '#bbb' }}>
                   {selectedIds.size} selected
                 </span>
               </div>

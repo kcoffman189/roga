@@ -125,7 +125,7 @@ export default function GroupEditPage() {
 
       {/* Mobile Header — hidden on desktop */}
       <div
-        className="md:hidden"
+        className="flex md:hidden"
         style={{
           position: 'fixed',
           top: 0,
@@ -134,7 +134,6 @@ export default function GroupEditPage() {
           zIndex: 10,
           background: '#fff',
           borderBottom: '1px solid #e0e0e0',
-          display: 'flex',
           alignItems: 'center',
           height: '52px',
           padding: '0 16px',
@@ -171,7 +170,7 @@ export default function GroupEditPage() {
 
       {/* Main Content */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
-        <div style={{ maxWidth: '560px', margin: '0 auto', padding: '16px', paddingTop: '68px', paddingBottom: '32px' }}>
+        <div className="px-4 pt-[68px] pb-8 md:px-10 md:py-12" style={{ maxWidth: '560px', margin: '0 auto' }}>
           <h1 className="hidden md:block" style={{ fontSize: '22px', fontWeight: '600', marginBottom: '32px' }}>Edit group</h1>
 
           {/* Name */}

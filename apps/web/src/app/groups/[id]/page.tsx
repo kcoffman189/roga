@@ -147,7 +147,7 @@ export default function GroupViewPage() {
 
       {/* Mobile Header — hidden on desktop */}
       <div
-        className="md:hidden"
+        className="flex md:hidden"
         style={{
           position: 'fixed',
           top: 0,
@@ -156,7 +156,6 @@ export default function GroupViewPage() {
           zIndex: 10,
           background: '#fff',
           borderBottom: '1px solid #e0e0e0',
-          display: 'flex',
           alignItems: 'center',
           height: '52px',
           padding: '0 16px',

@@ -79,12 +79,12 @@ function GroupNewConversationInner() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'sans-serif', background: '#fafafa' }}>
 
-      {/* Header */}
+      {/* Mobile Header — hidden on desktop */}
       <div
+        className="flex md:hidden"
         style={{
           background: '#fff',
           borderBottom: '1px solid #e0e0e0',
-          display: 'flex',
           alignItems: 'center',
           height: '52px',
           padding: '0 16px',

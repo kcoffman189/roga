@@ -137,7 +137,7 @@ function GroupConversationInner() {
 
       {/* Mobile Header — hidden on desktop */}
       <div
-        className="md:hidden"
+        className="flex md:hidden"
         style={{
           position: 'fixed',
           top: 0,
@@ -146,7 +146,6 @@ function GroupConversationInner() {
           zIndex: 10,
           background: '#fff',
           borderBottom: '1px solid #e0e0e0',
-          display: 'flex',
           alignItems: 'center',
           padding: '0 16px',
           height: '52px',
@@ -197,7 +196,7 @@ function GroupConversationInner() {
       {/* Conversation Area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Messages */}
-        <div className="pt-14 md:pt-0" style={{ flex: 1, overflowY: 'auto', paddingBottom: '40px' }}>
+        <div className="pt-14 md:pt-10" style={{ flex: 1, overflowY: 'auto', paddingBottom: '40px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto', padding: '24px 16px 0' }}>
             {messages.map((msg, i) => (
               <div key={i} style={{ marginBottom: '24px' }}>

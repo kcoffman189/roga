@@ -52,7 +52,7 @@ export default function GroupsPage() {
 
       {/* Mobile Header — hidden on desktop */}
       <div
-        className="md:hidden"
+        className="flex md:hidden"
         style={{
           position: 'fixed',
           top: 0,
@@ -62,7 +62,6 @@ export default function GroupsPage() {
           background: '#fff',
           borderBottom: '1px solid #e0e0e0',
           padding: '10px 20px',
-          display: 'flex',
           alignItems: 'center',
           gap: '12px',
           minHeight: '56px',
@@ -105,7 +104,8 @@ export default function GroupsPage() {
       {/* Main Content */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         <div
-          style={{ maxWidth: '680px', margin: '0 auto', padding: '16px', paddingTop: '72px', paddingBottom: '80px' }}
+          className="px-4 pt-[72px] pb-20 md:px-10 md:py-12"
+          style={{ maxWidth: '680px', margin: '0 auto' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <h1 className="hidden md:block" style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>Groups</h1>
