@@ -148,7 +148,6 @@ function GroupConversationInner() {
           borderBottom: '1px solid #e0e0e0',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
           padding: '0 16px',
           height: '52px',
         }}
@@ -158,12 +157,6 @@ function GroupConversationInner() {
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '18px', color: '#1a1a1a', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
         >
           Roga
-        </button>
-        <button
-          onClick={handleDelete}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#ccc', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          🗑
         </button>
       </div>
 
