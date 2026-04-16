@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import { createSupabaseClient } from '@/lib/supabase/client'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import BottomTabBar from '@/components/BottomTabBar'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
@@ -48,8 +49,39 @@ export default function GroupsPage() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#fafafa' }}>
-      {/* Left Panel */}
-      <div style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', display: 'flex', flexDirection: 'column', padding: '24px 16px', flexShrink: 0 }}>
+
+      {/* Mobile Header — hidden on desktop */}
+      <div
+        className="md:hidden"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          background: '#fff',
+          borderBottom: '1px solid #e0e0e0',
+          padding: '10px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          minHeight: '56px',
+        }}
+      >
+        <button
+          onClick={() => router.push('/')}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#333', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          ←
+        </button>
+        <div style={{ fontWeight: '600', fontSize: '17px' }}>Groups</div>
+      </div>
+
+      {/* Left Panel — desktop only */}
+      <div
+        className="hidden md:flex"
+        style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px', flexShrink: 0 }}
+      >
         <div
           style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px', cursor: 'pointer' }}
           onClick={() => router.push('/')}
@@ -71,13 +103,15 @@ export default function GroupsPage() {
       </div>
 
       {/* Main Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '48px 40px' }}>
-        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>Groups</h1>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div
+          style={{ maxWidth: '680px', margin: '0 auto', padding: '16px', paddingTop: '72px', paddingBottom: '80px' }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h1 className="hidden md:block" style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>Groups</h1>
             <button
               onClick={() => router.push('/groups/new')}
-              style={{ padding: '8px 20px', fontSize: '14px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #ccc', background: '#fff' }}
+              style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #ccc', background: '#fff', minHeight: '44px', marginLeft: 'auto' }}
             >
               + New Group
             </button>
@@ -92,7 +126,7 @@ export default function GroupsPage() {
               </p>
               <button
                 onClick={() => router.push('/groups/new')}
-                style={{ padding: '10px 24px', fontSize: '14px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #ccc', background: '#fff' }}
+                style={{ padding: '12px 24px', fontSize: '15px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #ccc', background: '#fff', minHeight: '44px' }}
               >
                 + New Group
               </button>
@@ -103,7 +137,7 @@ export default function GroupsPage() {
                 <div
                   key={group.id}
                   onClick={() => router.push(`/groups/${group.id}`)}
-                  style={{ border: '1px solid #e0e0e0', borderRadius: '8px', padding: '18px 20px', background: '#fff', cursor: 'pointer' }}
+                  style={{ border: '1px solid #e0e0e0', borderRadius: '8px', padding: '18px 20px', background: '#fff', cursor: 'pointer', minHeight: '64px' }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#fafafa')}
                   onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
                 >
@@ -130,6 +164,8 @@ export default function GroupsPage() {
           )}
         </div>
       </div>
+
+      <BottomTabBar />
     </div>
   )
 }

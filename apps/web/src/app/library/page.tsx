@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { createSupabaseClient } from '@/lib/supabase/client'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import BottomTabBar from '@/components/BottomTabBar'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://roga-api.fly.dev'
 
@@ -116,8 +117,39 @@ export default function LibraryPage() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#fafafa' }}>
-      {/* Left Panel */}
-      <div style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', display: 'flex', flexDirection: 'column', padding: '24px 16px', flexShrink: 0 }}>
+
+      {/* Mobile Header — hidden on desktop */}
+      <div
+        className="md:hidden"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          background: '#fff',
+          borderBottom: '1px solid #e0e0e0',
+          padding: '10px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          minHeight: '56px',
+        }}
+      >
+        <button
+          onClick={() => router.push('/')}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#333', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          ←
+        </button>
+        <div style={{ fontWeight: '600', fontSize: '17px' }}>My Library</div>
+      </div>
+
+      {/* Left Panel — desktop only */}
+      <div
+        className="hidden md:flex"
+        style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px', flexShrink: 0 }}
+      >
         <div style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px', cursor: 'pointer' }} onClick={() => router.push('/')}>Roga</div>
         <button onClick={() => router.push('/conversation/new?mode=intentional')} style={{ textAlign: 'left', padding: '10px 12px', marginBottom: '8px', borderRadius: '6px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', fontSize: '14px' }}>
           Let's dig into something
@@ -135,20 +167,23 @@ export default function LibraryPage() {
       </div>
 
       {/* Main Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '48px 40px' }}>
-        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>My Library</h1>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div
+          className="md:px-10 md:py-12"
+          style={{ maxWidth: '680px', margin: '0 auto', padding: '16px', paddingTop: '72px', paddingBottom: '80px' }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h1 className="md:block hidden" style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>My Library</h1>
             <button
               onClick={() => { setShowAdd(true); setStep(1) }}
-              style={{ padding: '8px 20px', fontSize: '14px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #ccc', background: '#fff' }}
+              style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #ccc', background: '#fff', minHeight: '44px', marginLeft: 'auto' }}
             >
               + Add book
             </button>
           </div>
 
           {showAdd && (
-            <div style={{ border: '1px solid #e0e0e0', borderRadius: '8px', padding: '24px', marginBottom: '32px', background: '#fff' }}>
+            <div style={{ border: '1px solid #e0e0e0', borderRadius: '8px', padding: '24px', marginBottom: '24px', background: '#fff' }}>
               {step === 1 && (
                 <>
                   <p style={{ margin: '0 0 12px', fontWeight: '500' }}>What book do you want to add?</p>
@@ -157,14 +192,14 @@ export default function LibraryPage() {
                     value={searchTitle}
                     onChange={(e) => setSearchTitle(e.target.value)}
                     placeholder="Type a title..."
-                    style={{ width: '100%', padding: '10px', fontSize: '16px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '12px', fontSize: '16px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box', minHeight: '44px' }}
                     onKeyDown={(e) => { if (e.key === 'Enter' && searchTitle.trim()) setStep(2) }}
                   />
                   <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                    <button onClick={() => setStep(2)} disabled={!searchTitle.trim()} style={{ padding: '8px 20px', fontSize: '14px', cursor: 'pointer', borderRadius: '6px', background: '#000', color: '#fff', border: 'none' }}>
+                    <button onClick={() => setStep(2)} disabled={!searchTitle.trim()} style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '6px', background: '#000', color: '#fff', border: 'none', minHeight: '44px' }}>
                       Next
                     </button>
-                    <button onClick={() => { setShowAdd(false); setSearchTitle(''); setStep(1) }} style={{ padding: '8px 20px', fontSize: '14px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #ccc', background: '#fff' }}>
+                    <button onClick={() => { setShowAdd(false); setSearchTitle(''); setStep(1) }} style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #ccc', background: '#fff', minHeight: '44px' }}>
                       Cancel
                     </button>
                   </div>
@@ -173,15 +208,15 @@ export default function LibraryPage() {
               {step === 2 && (
                 <>
                   <p style={{ margin: '0 0 16px', fontWeight: '500' }}>{searchTitle}</p>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none', minHeight: '44px' }}>
                     <ToggleSwitch checked={addIsUnread} onChange={setAddIsUnread} />
-                    <span style={{ fontSize: '14px', color: '#444' }}>Haven't read this yet</span>
+                    <span style={{ fontSize: '15px', color: '#444' }}>Haven't read this yet</span>
                   </label>
                   <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
-                    <button onClick={handleAddBook} disabled={adding} style={{ padding: '8px 20px', fontSize: '14px', cursor: 'pointer', borderRadius: '6px', background: '#000', color: '#fff', border: 'none' }}>
+                    <button onClick={handleAddBook} disabled={adding} style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '6px', background: '#000', color: '#fff', border: 'none', minHeight: '44px' }}>
                       {adding ? 'Adding...' : 'Add to library'}
                     </button>
-                    <button onClick={() => setStep(1)} style={{ padding: '8px 20px', fontSize: '14px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #ccc', background: '#fff' }}>
+                    <button onClick={() => setStep(1)} style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #ccc', background: '#fff', minHeight: '44px' }}>
                       Back
                     </button>
                   </div>
@@ -197,7 +232,7 @@ export default function LibraryPage() {
               <p style={{ color: '#999', marginBottom: '20px', fontSize: '15px' }}>Your library is empty. Add your first book to get started.</p>
               <button
                 onClick={() => { setShowAdd(true); setStep(1) }}
-                style={{ padding: '10px 24px', fontSize: '14px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #ccc', background: '#fff' }}
+                style={{ padding: '12px 24px', fontSize: '15px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #ccc', background: '#fff', minHeight: '44px' }}
               >
                 + Add book
               </button>
@@ -207,24 +242,24 @@ export default function LibraryPage() {
               {entries.map((entry) => (
                 <div key={entry.id} style={{ border: '1px solid #e0e0e0', borderRadius: '8px', padding: '16px 20px', background: '#fff' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <div style={{ fontWeight: '500' }}>{entry.title}</div>
+                    <div style={{ fontWeight: '500', fontSize: '15px' }}>{entry.title}</div>
                     <button
                       onClick={() => handleDeleteBook(entry.id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '18px', lineHeight: 1, padding: '4px 8px', borderRadius: '4px' }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '18px', lineHeight: 1, minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }}
                       onMouseEnter={e => (e.currentTarget.style.color = '#999')}
                       onMouseLeave={e => (e.currentTarget.style.color = '#ccc')}
                     >
                       ✕
                     </button>
                   </div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none', marginBottom: entry.is_unread ? 0 : '10px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none', marginBottom: entry.is_unread ? 0 : '10px', minHeight: '44px' }}>
                     <ToggleSwitch
                       checked={entry.is_unread}
                       onChange={(val) => {
                         handleFamiliarityChange(entry.id, { is_unread: val })
                       }}
                     />
-                    <span style={{ fontSize: '13px', color: '#666' }}>Haven't read this yet</span>
+                    <span style={{ fontSize: '14px', color: '#666' }}>Haven't read this yet</span>
                   </label>
                   {!entry.is_unread && (
                     <FamiliaritySlider
@@ -238,6 +273,8 @@ export default function LibraryPage() {
           )}
         </div>
       </div>
+
+      <BottomTabBar />
     </div>
   )
 }
@@ -247,9 +284,9 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (val:
     <div
       onClick={() => onChange(!checked)}
       style={{
-        width: '36px',
-        height: '20px',
-        borderRadius: '10px',
+        width: '44px',
+        height: '26px',
+        borderRadius: '13px',
         background: checked ? '#333' : '#ddd',
         position: 'relative',
         cursor: 'pointer',
@@ -259,10 +296,10 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (val:
     >
       <div style={{
         position: 'absolute',
-        top: '3px',
-        left: checked ? '19px' : '3px',
-        width: '14px',
-        height: '14px',
+        top: '4px',
+        left: checked ? '22px' : '4px',
+        width: '18px',
+        height: '18px',
         borderRadius: '50%',
         background: '#fff',
         transition: 'left 0.15s',
@@ -287,7 +324,7 @@ function FamiliaritySlider({ value, onChange }: { value: number; onChange: (val:
             flex: 1,
             accentColor: '#333',
             cursor: 'pointer',
-            height: '4px',
+            height: '20px',
           }}
         />
         <span style={{ fontSize: '12px', color: '#aaa', whiteSpace: 'nowrap' }}>Know it deeply</span>
