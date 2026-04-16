@@ -122,8 +122,39 @@ export default function GroupEditPage() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#fafafa' }}>
-      {/* Left Panel */}
-      <div style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', display: 'flex', flexDirection: 'column', padding: '24px 16px', flexShrink: 0 }}>
+
+      {/* Mobile Header — hidden on desktop */}
+      <div
+        className="md:hidden"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          background: '#fff',
+          borderBottom: '1px solid #e0e0e0',
+          display: 'flex',
+          alignItems: 'center',
+          height: '52px',
+          padding: '0 16px',
+        }}
+      >
+        <button
+          onClick={() => router.push(`/groups/${groupId}`)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#333', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          ←
+        </button>
+        <div style={{ flex: 1, textAlign: 'center', fontWeight: '600', fontSize: '16px' }}>Edit Group</div>
+        <div style={{ width: '44px' }} />
+      </div>
+
+      {/* Left Panel — desktop only */}
+      <div
+        className="hidden md:flex"
+        style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px', flexShrink: 0 }}
+      >
         <div
           style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px', cursor: 'pointer' }}
           onClick={() => router.push(`/groups/${groupId}`)}
@@ -139,9 +170,9 @@ export default function GroupEditPage() {
       </div>
 
       {/* Main Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '48px 40px' }}>
-        <div style={{ maxWidth: '560px', margin: '0 auto' }}>
-          <h1 style={{ fontSize: '22px', fontWeight: '600', marginBottom: '32px' }}>Edit group</h1>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ maxWidth: '560px', margin: '0 auto', padding: '16px', paddingTop: '68px', paddingBottom: '32px' }}>
+          <h1 className="hidden md:block" style={{ fontSize: '22px', fontWeight: '600', marginBottom: '32px' }}>Edit group</h1>
 
           {/* Name */}
           <div style={{ marginBottom: '36px' }}>
@@ -152,7 +183,7 @@ export default function GroupEditPage() {
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              style={{ width: '100%', padding: '10px 12px', fontSize: '15px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box', outline: 'none' }}
+              style={{ width: '100%', padding: '12px 14px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ccc', boxSizing: 'border-box', outline: 'none', minHeight: '44px' }}
             />
           </div>
 
@@ -170,7 +201,7 @@ export default function GroupEditPage() {
               {booksInGroup.map(book => (
                 <div
                   key={book.id}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', border: '1px solid #e0e0e0', borderRadius: '6px', background: '#fff' }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', border: '1px solid #e0e0e0', borderRadius: '8px', background: '#fff', minHeight: '56px' }}
                 >
                   <div style={{ minWidth: 0, marginRight: '8px' }}>
                     <div style={{ fontWeight: '500', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{book.title}</div>
@@ -178,7 +209,7 @@ export default function GroupEditPage() {
                   </div>
                   <button
                     onClick={() => removeBook(book.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '14px', padding: '2px 6px', borderRadius: '4px', lineHeight: 1, flexShrink: 0 }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '18px', padding: '4px 8px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                     onMouseEnter={e => (e.currentTarget.style.color = '#999')}
                     onMouseLeave={e => (e.currentTarget.style.color = '#ccc')}
                   >
@@ -200,7 +231,7 @@ export default function GroupEditPage() {
                   <div
                     key={book.id}
                     onClick={() => addBook(book.id)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', border: '1px solid #e0e0e0', borderRadius: '6px', background: '#fff', cursor: 'pointer' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', border: '1px solid #e0e0e0', borderRadius: '8px', background: '#fff', cursor: 'pointer', minHeight: '56px' }}
                     onMouseEnter={e => (e.currentTarget.style.background = '#fafafa')}
                     onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
                   >
@@ -208,7 +239,7 @@ export default function GroupEditPage() {
                       <div style={{ fontWeight: '500', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{book.title}</div>
                       <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{FAMILIARITY_LABELS[book.familiarity_state] || book.familiarity_state}</div>
                     </div>
-                    <span style={{ fontSize: '18px', color: '#ccc', flexShrink: 0 }}>+</span>
+                    <span style={{ fontSize: '20px', color: '#ccc', flexShrink: 0 }}>+</span>
                   </div>
                 ))}
               </div>
@@ -216,21 +247,21 @@ export default function GroupEditPage() {
           )}
 
           {/* Save + Delete */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
             <button
               onClick={handleSave}
               disabled={saving || !name.trim()}
-              style={{ padding: '10px 28px', fontSize: '14px', borderRadius: '6px', border: 'none', background: name.trim() ? '#000' : '#e0e0e0', color: name.trim() ? '#fff' : '#999', cursor: saving || !name.trim() ? 'not-allowed' : 'pointer' }}
+              style={{ flex: 1, padding: '12px 28px', fontSize: '15px', borderRadius: '8px', border: 'none', background: name.trim() ? '#000' : '#e0e0e0', color: name.trim() ? '#fff' : '#999', cursor: saving || !name.trim() ? 'not-allowed' : 'pointer', minHeight: '44px' }}
             >
               {saving ? 'Saving...' : 'Save changes'}
             </button>
             <button
               onClick={handleDelete}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#ccc', padding: '8px 4px' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#ccc', padding: '8px', minHeight: '44px' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#e57373')}
               onMouseLeave={e => (e.currentTarget.style.color = '#ccc')}
             >
-              Delete group
+              Delete
             </button>
           </div>
 

@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import { createSupabaseClient } from '@/lib/supabase/client'
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import BottomTabBar from '@/components/BottomTabBar'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
@@ -118,7 +119,6 @@ export default function GroupViewPage() {
       body: JSON.stringify({ book_ids_to_add: [bookId] }),
     })
     await fetchGroupBooks()
-    // Refresh group so is_paused / book_count stays current
     if (userId) {
       const res = await fetch(`${API_URL}/groups/${userId}`)
       const data = await res.json()
@@ -144,8 +144,46 @@ export default function GroupViewPage() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#fafafa' }}>
-      {/* Left Panel */}
-      <div style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', display: 'flex', flexDirection: 'column', padding: '24px 16px' }}>
+
+      {/* Mobile Header — hidden on desktop */}
+      <div
+        className="md:hidden"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          background: '#fff',
+          borderBottom: '1px solid #e0e0e0',
+          display: 'flex',
+          alignItems: 'center',
+          height: '52px',
+          padding: '0 16px',
+        }}
+      >
+        <button
+          onClick={() => router.push('/groups')}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '18px', color: '#1a1a1a', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
+        >
+          Roga
+        </button>
+        <div style={{ flex: 1, textAlign: 'center', fontWeight: '600', fontSize: '15px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: '0 8px' }}>
+          {group?.name ?? 'Group'}
+        </div>
+        <button
+          onClick={() => router.push(`/groups/${groupId}/edit`)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#999', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          ✎
+        </button>
+      </div>
+
+      {/* Left Panel — desktop only */}
+      <div
+        className="hidden md:flex"
+        style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px' }}
+      >
         <div
           style={{ fontWeight: '700', fontSize: '18px', marginBottom: '24px', paddingLeft: '8px', cursor: 'pointer' }}
           onClick={() => router.push('/groups')}
@@ -153,7 +191,6 @@ export default function GroupViewPage() {
           Roga
         </div>
 
-        {/* Group name + edit icon */}
         <div
           style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingLeft: '8px', marginBottom: '16px', cursor: 'pointer' }}
           onClick={() => router.push(`/groups/${groupId}/edit`)}
@@ -164,7 +201,6 @@ export default function GroupViewPage() {
           <span style={{ fontSize: '12px', color: '#ccc' }}>✎</span>
         </div>
 
-        {/* Paused banner */}
         {paused && (
           <div style={{ marginBottom: '16px', padding: '10px 12px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px', fontSize: '12px', color: '#92400e', lineHeight: '1.5' }}>
             This group is paused. Add at least 2 books to start new conversations.
@@ -186,9 +222,7 @@ export default function GroupViewPage() {
           Tell me something interesting
         </button>
 
-        {/* Scrollable area: conversations + group library */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-          {/* Past conversations */}
           <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', paddingLeft: '4px' }}>
             Past conversations
           </div>
@@ -223,7 +257,6 @@ export default function GroupViewPage() {
             )}
           </div>
 
-          {/* Group Library */}
           <div style={{ borderTop: '1px solid #e0e0e0', paddingTop: '16px', marginTop: '16px', display: 'flex', flexDirection: 'column', maxHeight: '280px', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
               <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', paddingLeft: '4px' }}>
@@ -243,10 +276,7 @@ export default function GroupViewPage() {
                 <div style={{ fontSize: '13px', color: '#999', padding: '4px' }}>No books in this group yet.</div>
               ) : (
                 groupBooks.map(book => (
-                  <div
-                    key={book.id}
-                    style={{ padding: '8px 12px', marginBottom: '2px', borderRadius: '6px' }}
-                  >
+                  <div key={book.id} style={{ padding: '8px 12px', marginBottom: '2px', borderRadius: '6px' }}>
                     <div style={{ fontSize: '13px', fontWeight: '500', color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{book.title}</div>
                     <div style={{ fontSize: '11px', color: '#999', marginTop: '1px' }}>{FAMILIARITY_LABELS[book.familiarity_state] || book.familiarity_state}</div>
                   </div>
@@ -257,8 +287,11 @@ export default function GroupViewPage() {
         </div>
       </div>
 
-      {/* Main Area */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
+      {/* Desktop Main Area */}
+      <div
+        className="hidden md:flex"
+        style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: '40px' }}
+      >
         <div style={{ textAlign: 'center', color: '#999' }}>
           <div style={{ fontSize: '15px' }}>
             {paused
@@ -268,14 +301,100 @@ export default function GroupViewPage() {
         </div>
       </div>
 
+      {/* Mobile Main Content */}
+      <div
+        className="md:hidden"
+        style={{ flex: 1, overflowY: 'auto', paddingTop: '52px', paddingBottom: '72px' }}
+      >
+        <div style={{ padding: '16px' }}>
+
+          {paused && (
+            <div style={{ marginBottom: '16px', padding: '12px 16px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', fontSize: '13px', color: '#92400e', lineHeight: '1.5' }}>
+              This group is paused. Add at least 2 books to start new conversations.
+            </div>
+          )}
+
+          <button
+            onClick={() => { if (!paused) router.push(`/groups/${groupId}/conversation/new?mode=intentional`) }}
+            disabled={paused}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '10px', borderRadius: '8px', border: '1px solid #e0e0e0', background: '#fff', fontSize: '15px', cursor: paused ? 'not-allowed' : 'pointer', color: paused ? '#bbb' : '#333', minHeight: '44px' }}
+          >
+            Let's dig into something
+          </button>
+          <button
+            onClick={() => { if (!paused) router.push(`/groups/${groupId}/conversation/new?mode=open`) }}
+            disabled={paused}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '28px', borderRadius: '8px', border: '1px solid #e0e0e0', background: '#fff', fontSize: '15px', cursor: paused ? 'not-allowed' : 'pointer', color: paused ? '#bbb' : '#333', minHeight: '44px' }}
+          >
+            Tell me something interesting
+          </button>
+
+          <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
+            Past conversations
+          </div>
+          <div style={{ marginBottom: '28px' }}>
+            {conversations.length === 0 ? (
+              <div style={{ fontSize: '13px', color: '#999' }}>Your conversations will appear here.</div>
+            ) : (
+              conversations.map(conv => (
+                <div
+                  key={conv.id}
+                  onClick={() => router.push(`/groups/${groupId}/conversation/${conv.id}`)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', marginBottom: '6px', borderRadius: '8px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', minHeight: '56px' }}
+                >
+                  <div style={{ flex: 1, minWidth: 0, marginRight: '8px' }}>
+                    <div style={{ fontWeight: '500', fontSize: '14px', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {conv.title || 'Untitled conversation'}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#999' }}>{formatDate(conv.updated_at)}</div>
+                  </div>
+                  <button
+                    onClick={e => deleteConversation(e, conv.id)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '16px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Group Library
+            </div>
+            <button
+              onClick={openBookPicker}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#666', padding: '4px 8px', minHeight: '44px' }}
+            >
+              + Add Book
+            </button>
+          </div>
+          <div>
+            {groupBooks.length === 0 ? (
+              <div style={{ fontSize: '13px', color: '#999' }}>No books in this group yet.</div>
+            ) : (
+              groupBooks.map(book => (
+                <div key={book.id} style={{ padding: '12px 16px', marginBottom: '6px', borderRadius: '8px', border: '1px solid #e0e0e0', background: '#fff' }}>
+                  <div style={{ fontSize: '14px', fontWeight: '500', color: '#333' }}>{book.title}</div>
+                  <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{FAMILIARITY_LABELS[book.familiarity_state] || book.familiarity_state}</div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      <BottomTabBar />
+
       {/* Book Picker Modal */}
       {showBookPicker && (
         <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '16px' }}
           onClick={() => setShowBookPicker(false)}
         >
           <div
-            style={{ background: '#fff', borderRadius: '10px', padding: '24px', width: '360px', maxHeight: '480px', display: 'flex', flexDirection: 'column', boxShadow: '0 4px 24px rgba(0,0,0,0.12)' }}
+            style={{ background: '#fff', borderRadius: '10px', padding: '24px', width: '100%', maxWidth: '360px', maxHeight: '480px', display: 'flex', flexDirection: 'column', boxShadow: '0 4px 24px rgba(0,0,0,0.12)' }}
             onClick={e => e.stopPropagation()}
           >
             <div style={{ fontWeight: '600', fontSize: '15px', marginBottom: '16px' }}>Add a book to this group</div>
@@ -288,7 +407,7 @@ export default function GroupViewPage() {
                     key={book.id}
                     disabled={addingBook}
                     onClick={() => handleAddBook(book.id)}
-                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', marginBottom: '4px', borderRadius: '6px', border: '1px solid #e0e0e0', background: '#fff', cursor: addingBook ? 'not-allowed' : 'pointer', fontSize: '13px' }}
+                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '12px 14px', marginBottom: '4px', borderRadius: '6px', border: '1px solid #e0e0e0', background: '#fff', cursor: addingBook ? 'not-allowed' : 'pointer', fontSize: '13px', minHeight: '44px' }}
                     onMouseEnter={e => { if (!addingBook) e.currentTarget.style.background = '#f5f5f5' }}
                     onMouseLeave={e => { e.currentTarget.style.background = '#fff' }}
                   >
@@ -300,7 +419,7 @@ export default function GroupViewPage() {
             </div>
             <button
               onClick={() => setShowBookPicker(false)}
-              style={{ marginTop: '16px', padding: '8px', fontSize: '13px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #e0e0e0', background: '#fff', color: '#666' }}
+              style={{ marginTop: '16px', padding: '10px', fontSize: '14px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #e0e0e0', background: '#fff', color: '#666', minHeight: '44px' }}
             >
               Cancel
             </button>
