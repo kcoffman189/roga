@@ -116,7 +116,10 @@ export default function Home() {
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#fafafa' }}>
       {/* Left Panel */}
       <div style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', display: 'flex', flexDirection: 'column', padding: '24px 16px' }}>
-        <div style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px' }}>Roga</div>
+        <div style={{ marginBottom: '32px', paddingLeft: '8px' }}>
+          <div style={{ fontWeight: '700', fontSize: '22px' }}>Roga</div>
+          <div style={{ fontSize: '11px', color: '#aaa', marginTop: '2px', letterSpacing: '0.04em' }}>Beta</div>
+        </div>
 
         <button
           ref={digInRef}
