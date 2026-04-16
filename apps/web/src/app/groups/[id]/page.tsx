@@ -6,6 +6,7 @@ import { createSupabaseClient } from '@/lib/supabase/client'
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import BottomTabBar from '@/components/BottomTabBar'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
@@ -53,6 +54,7 @@ export default function GroupViewPage() {
   const router = useRouter()
   const groupId = params.id as string
   const supabase = useRef(createSupabaseClient()).current
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     const init = async () => {
@@ -147,8 +149,8 @@ export default function GroupViewPage() {
 
       {/* Mobile Header — hidden on desktop */}
       <div
-        className="flex md:hidden"
         style={{
+          display: isMobile ? 'flex' : 'none',
           position: 'fixed',
           top: 0,
           left: 0,
@@ -180,8 +182,7 @@ export default function GroupViewPage() {
 
       {/* Left Panel — desktop only */}
       <div
-        className="hidden md:flex"
-        style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px' }}
+        style={{ display: isMobile ? 'none' : 'flex', width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px' }}
       >
         <div
           style={{ fontWeight: '700', fontSize: '18px', marginBottom: '24px', paddingLeft: '8px', cursor: 'pointer' }}
@@ -288,8 +289,7 @@ export default function GroupViewPage() {
 
       {/* Desktop Main Area */}
       <div
-        className="hidden md:flex"
-        style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: '40px' }}
+        style={{ display: isMobile ? 'none' : 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', padding: '40px' }}
       >
         <div style={{ textAlign: 'center', color: '#999' }}>
           <div style={{ fontSize: '15px' }}>
@@ -302,8 +302,7 @@ export default function GroupViewPage() {
 
       {/* Mobile Main Content */}
       <div
-        className="md:hidden"
-        style={{ flex: 1, overflowY: 'auto', paddingTop: '52px', paddingBottom: '72px' }}
+        style={{ display: isMobile ? 'block' : 'none', flex: 1, overflowY: 'auto', paddingTop: '52px', paddingBottom: '72px' }}
       >
         <div style={{ padding: '16px' }}>
 

@@ -7,6 +7,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
@@ -18,6 +19,7 @@ function NewConversationInner() {
   const mode = searchParams.get('mode') || 'intentional'
   const supabase = useRef(createSupabaseClient()).current
   const hasStarted = useRef(false)
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     const init = async () => {
@@ -81,8 +83,8 @@ function NewConversationInner() {
 
       {/* Mobile Header — hidden on desktop */}
       <div
-        className="flex md:hidden"
         style={{
+          display: isMobile ? 'flex' : 'none',
           borderBottom: '1px solid #e0e0e0',
           background: '#fff',
           alignItems: 'center',

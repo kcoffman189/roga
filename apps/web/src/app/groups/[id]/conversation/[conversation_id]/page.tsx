@@ -7,6 +7,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
@@ -30,6 +31,7 @@ function GroupConversationInner() {
   const supabase = useRef(createSupabaseClient()).current
   const isStreaming = searchParams.get('streaming') === 'true'
   const hasInitialized = useRef(false)
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     if (hasInitialized.current) return
@@ -137,8 +139,8 @@ function GroupConversationInner() {
 
       {/* Mobile Header — hidden on desktop */}
       <div
-        className="flex md:hidden"
         style={{
+          display: isMobile ? 'flex' : 'none',
           position: 'fixed',
           top: 0,
           left: 0,
@@ -161,8 +163,7 @@ function GroupConversationInner() {
 
       {/* Left Panel — desktop only */}
       <div
-        className="hidden md:flex"
-        style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px' }}
+        style={{ display: isMobile ? 'none' : 'flex', width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px' }}
       >
         <div
           style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px', cursor: 'pointer' }}
@@ -196,7 +197,7 @@ function GroupConversationInner() {
       {/* Conversation Area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Messages */}
-        <div className="pt-14 md:pt-10" style={{ flex: 1, overflowY: 'auto', paddingBottom: '40px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: isMobile ? '56px' : '40px', paddingBottom: '40px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto', padding: '24px 16px 0' }}>
             {messages.map((msg, i) => (
               <div key={i} style={{ marginBottom: '24px' }}>

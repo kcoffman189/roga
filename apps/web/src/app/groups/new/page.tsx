@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import { createSupabaseClient } from '@/lib/supabase/client'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
@@ -31,6 +32,7 @@ export default function NewGroupPage() {
   const [submitting, setSubmitting] = useState(false)
   const router = useRouter()
   const supabase = useRef(createSupabaseClient()).current
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     const init = async () => {
@@ -78,8 +80,8 @@ export default function NewGroupPage() {
 
       {/* Mobile Header — hidden on desktop */}
       <div
-        className="flex md:hidden"
         style={{
+          display: isMobile ? 'flex' : 'none',
           position: 'fixed',
           top: 0,
           left: 0,
@@ -106,8 +108,7 @@ export default function NewGroupPage() {
 
       {/* Left Panel — desktop only */}
       <div
-        className="hidden md:flex"
-        style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px', flexShrink: 0 }}
+        style={{ display: isMobile ? 'none' : 'flex', width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px', flexShrink: 0 }}
       >
         <div
           style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px', cursor: 'pointer' }}
@@ -126,8 +127,8 @@ export default function NewGroupPage() {
       </div>
 
       {/* Main Content */}
-      <div style={{ flex: 1, overflowY: 'auto' }} className="pt-[60px] px-4 pb-6 md:p-0 md:flex md:items-center md:justify-center">
-        <div style={{ width: '100%', maxWidth: '480px' }} className="md:px-10">
+      <div style={{ flex: 1, overflowY: 'auto', ...(isMobile ? { paddingTop: '60px', padding: '60px 16px 24px' } : { display: 'flex', alignItems: 'center', justifyContent: 'center' }) }}>
+        <div style={{ width: '100%', maxWidth: '480px', ...(isMobile ? {} : { padding: '0 40px' }) }}>
 
           {step === 1 && (
             <>

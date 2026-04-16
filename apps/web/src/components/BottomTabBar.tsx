@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import { Home, BookOpen, Users, MessageCircle } from 'lucide-react'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 type Tab = {
   label: string
@@ -20,6 +21,9 @@ const tabs: Tab[] = [
 export default function BottomTabBar() {
   const pathname = usePathname()
   const router = useRouter()
+  const isMobile = useIsMobile()
+
+  if (!isMobile) return null
 
   const isActive = (tab: Tab) => {
     if (tab.matchPrefix) return pathname.startsWith(tab.matchPrefix)
@@ -28,7 +32,6 @@ export default function BottomTabBar() {
 
   return (
     <div
-      className="md:hidden"
       style={{
         position: 'fixed',
         bottom: 0,

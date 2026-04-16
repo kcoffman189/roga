@@ -5,6 +5,7 @@ import { createSupabaseClient } from '@/lib/supabase/client'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import BottomTabBar from '@/components/BottomTabBar'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://roga-api.fly.dev'
 
@@ -27,6 +28,7 @@ export default function LibraryPage() {
   const [step, setStep] = useState<1 | 2>(1)
   const router = useRouter()
   const supabase = useRef(createSupabaseClient()).current
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     fetchLibrary()
@@ -120,8 +122,8 @@ export default function LibraryPage() {
 
       {/* Mobile Header — hidden on desktop */}
       <div
-        className="flex md:hidden"
         style={{
+          display: isMobile ? 'flex' : 'none',
           position: 'fixed',
           top: 0,
           left: 0,
@@ -146,8 +148,7 @@ export default function LibraryPage() {
 
       {/* Left Panel — desktop only */}
       <div
-        className="hidden md:flex"
-        style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px', flexShrink: 0 }}
+        style={{ display: isMobile ? 'none' : 'flex', width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px', flexShrink: 0 }}
       >
         <div style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px', cursor: 'pointer' }} onClick={() => router.push('/')}>Roga</div>
         <button onClick={() => router.push('/conversation/new?mode=intentional')} style={{ textAlign: 'left', padding: '10px 12px', marginBottom: '8px', borderRadius: '6px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', fontSize: '14px' }}>
@@ -168,11 +169,10 @@ export default function LibraryPage() {
       {/* Main Content */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         <div
-          className="px-4 pt-[72px] pb-20 md:px-10 md:py-12"
-          style={{ maxWidth: '680px', margin: '0 auto' }}
+          style={{ maxWidth: '680px', margin: '0 auto', padding: isMobile ? '72px 16px 80px' : '48px 40px' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h1 className="md:block hidden" style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>My Library</h1>
+            <h1 style={{ display: isMobile ? 'none' : 'block', fontSize: '24px', fontWeight: '600', margin: 0 }}>My Library</h1>
             <button
               onClick={() => { setShowAdd(true); setStep(1) }}
               style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #ccc', background: '#fff', minHeight: '44px', marginLeft: 'auto' }}

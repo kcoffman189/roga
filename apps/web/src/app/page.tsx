@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import OnboardingBubbles from '@/components/OnboardingBubbles'
 import BottomTabBar from '@/components/BottomTabBar'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
@@ -32,24 +33,20 @@ export default function Home() {
   const libraryRef = useRef<HTMLAnchorElement>(null)
   const digInRef = useRef<HTMLButtonElement>(null)
   const interestingRef = useRef<HTMLButtonElement>(null)
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        window.location.href = '/login'
-        return
-      }
+      if (!user) { window.location.href = '/login'; return }
       setUserId(user.id)
 
       const [convsRes, quoteRes] = await Promise.all([
         fetch(`${API_URL}/conversations/${user.id}`),
         fetch(`${API_URL}/welcome-quote/${user.id}`)
       ])
-
       const convsData = await convsRes.json()
       const quoteData = await quoteRes.json()
-
       setConversations(convsData.conversations || [])
       setWelcome(quoteData)
       setLoading(false)
@@ -57,13 +54,8 @@ export default function Home() {
     init()
   }, [])
 
-  const startConversation = (mode: 'intentional' | 'open') => {
-    router.push(`/conversation/new?mode=${mode}`)
-  }
-
-  const resumeConversation = (id: string) => {
-    router.push(`/conversation/${id}`)
-  }
+  const startConversation = (mode: 'intentional' | 'open') => router.push(`/conversation/new?mode=${mode}`)
+  const resumeConversation = (id: string) => router.push(`/conversation/${id}`)
 
   const deleteConversation = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
@@ -71,13 +63,11 @@ export default function Home() {
     setConversations(prev => prev.filter(c => c.id !== id))
   }
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  }
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
   const renderWelcome = () => {
     if (loading) return null
-
     if (welcome?.empty_library) {
       return (
         <div style={{ textAlign: 'center', maxWidth: '480px' }}>
@@ -90,20 +80,16 @@ export default function Home() {
         </div>
       )
     }
-
     if (welcome?.quote && welcome?.book) {
       return (
         <div style={{ textAlign: 'center', maxWidth: '520px' }}>
           <p style={{ fontSize: '18px', lineHeight: '1.7', color: '#1a1a1a', fontStyle: 'italic', marginBottom: '12px' }}>
             &ldquo;{welcome.quote}&rdquo;
           </p>
-          <p style={{ fontSize: '13px', color: '#999', letterSpacing: '0.02em' }}>
-            {welcome.book}
-          </p>
+          <p style={{ fontSize: '13px', color: '#999', letterSpacing: '0.02em' }}>{welcome.book}</p>
         </div>
       )
     }
-
     return (
       <div style={{ textAlign: 'center', color: '#999' }}>
         <div style={{ fontSize: '24px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>Good to see you.</div>
@@ -112,42 +98,86 @@ export default function Home() {
     )
   }
 
+  if (isMobile) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'sans-serif', background: '#fafafa' }}>
+        {/* Mobile Header */}
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10,
+          background: '#fff', borderBottom: '1px solid #e0e0e0',
+          padding: '10px 20px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
+        }}>
+          <div>
+            <div style={{ fontWeight: '700', fontSize: '24px', lineHeight: 1 }}>Roga</div>
+            <div style={{ fontSize: '11px', color: '#aaa', marginTop: '2px', letterSpacing: '0.04em' }}>Beta</div>
+          </div>
+          <button
+            onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#999', padding: '4px', minHeight: '44px' }}
+          >
+            Log out
+          </button>
+        </div>
+
+        {/* Mobile Content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingTop: '84px', paddingBottom: '80px' }}>
+          <div style={{ marginBottom: '24px' }}>{renderWelcome()}</div>
+          <button
+            onClick={() => startConversation('intentional')}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '10px', borderRadius: '8px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', fontSize: '15px', minHeight: '44px' }}
+          >
+            Let's dig into something
+          </button>
+          <button
+            onClick={() => startConversation('open')}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '32px', borderRadius: '8px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', fontSize: '15px', minHeight: '44px' }}
+          >
+            Tell me something interesting
+          </button>
+
+          <div id="mobile-conversations">
+            <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
+              Past conversations
+            </div>
+            {loading ? (
+              <div style={{ fontSize: '13px', color: '#999' }}>Loading...</div>
+            ) : conversations.length === 0 ? (
+              <div style={{ fontSize: '13px', color: '#999' }}>Your conversations will appear here.</div>
+            ) : (
+              conversations.map((conv) => (
+                <div
+                  key={conv.id}
+                  onClick={() => resumeConversation(conv.id)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', marginBottom: '6px', borderRadius: '8px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', minHeight: '56px' }}
+                >
+                  <div style={{ flex: 1, minWidth: 0, marginRight: '8px' }}>
+                    <div style={{ fontWeight: '500', fontSize: '14px', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {conv.title || 'Untitled conversation'}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#999' }}>{formatDate(conv.created_at)}</div>
+                  </div>
+                  <button
+                    onClick={(e) => deleteConversation(e, conv.id)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '16px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <BottomTabBar />
+      </div>
+    )
+  }
+
+  // Desktop layout
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#fafafa' }}>
-
-      {/* Mobile Header — hidden on desktop */}
-      <div
-        className="flex md:hidden"
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 10,
-          background: '#fff',
-          borderBottom: '1px solid #e0e0e0',
-          padding: '10px 20px',
-          alignItems: 'flex-end',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div>
-          <div style={{ fontWeight: '700', fontSize: '24px', lineHeight: 1 }}>Roga</div>
-          <div style={{ fontSize: '11px', color: '#aaa', marginTop: '2px', letterSpacing: '0.04em' }}>Beta</div>
-        </div>
-        <button
-          onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#999', padding: '4px', minHeight: '44px' }}
-        >
-          Log out
-        </button>
-      </div>
-
-      {/* Left Panel — desktop only */}
-      <div
-        className="hidden md:flex"
-        style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px' }}
-      >
+      {/* Left Panel */}
+      <div style={{ width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', display: 'flex', flexDirection: 'column', padding: '24px 16px' }}>
         <div style={{ marginBottom: '32px', paddingLeft: '8px' }}>
           <div style={{ fontWeight: '700', fontSize: '30px' }}>Roga</div>
           <div style={{ fontSize: '11px', color: '#aaa', marginTop: '2px', letterSpacing: '0.04em' }}>Beta</div>
@@ -171,7 +201,6 @@ export default function Home() {
         <a href="/groups" style={{ display: 'block', padding: '10px 12px', marginBottom: '8px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0' }}>
           Groups
         </a>
-
         <a ref={libraryRef} href="/library" style={{ display: 'block', padding: '10px 12px', marginBottom: '24px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0' }}>
           My Library
         </a>
@@ -221,73 +250,9 @@ export default function Home() {
       </div>
 
       {/* Main Area */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-
-        {/* Desktop: centered welcome */}
-        <div
-          className="hidden md:flex"
-          style={{ height: '100%', alignItems: 'center', justifyContent: 'center', padding: '40px' }}
-        >
-          {renderWelcome()}
-        </div>
-
-        {/* Mobile: stacked layout */}
-        <div
-          className="md:hidden"
-          style={{ padding: '16px', paddingTop: '84px', paddingBottom: '80px' }}
-        >
-          <div style={{ marginBottom: '24px' }}>
-            {renderWelcome()}
-          </div>
-
-          <button
-            onClick={() => startConversation('intentional')}
-            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '10px', borderRadius: '8px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', fontSize: '15px', minHeight: '44px' }}
-          >
-            Let's dig into something
-          </button>
-          <button
-            onClick={() => startConversation('open')}
-            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '32px', borderRadius: '8px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', fontSize: '15px', minHeight: '44px' }}
-          >
-            Tell me something interesting
-          </button>
-
-          <div id="mobile-conversations">
-            <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
-              Past conversations
-            </div>
-            {loading ? (
-              <div style={{ fontSize: '13px', color: '#999' }}>Loading...</div>
-            ) : conversations.length === 0 ? (
-              <div style={{ fontSize: '13px', color: '#999' }}>Your conversations will appear here.</div>
-            ) : (
-              conversations.map((conv) => (
-                <div
-                  key={conv.id}
-                  onClick={() => resumeConversation(conv.id)}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', marginBottom: '6px', borderRadius: '8px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', minHeight: '56px' }}
-                >
-                  <div style={{ flex: 1, minWidth: 0, marginRight: '8px' }}>
-                    <div style={{ fontWeight: '500', fontSize: '14px', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {conv.title || 'Untitled conversation'}
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#999' }}>{formatDate(conv.created_at)}</div>
-                  </div>
-                  <button
-                    onClick={(e) => deleteConversation(e, conv.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '16px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
+        {renderWelcome()}
       </div>
-
-      <BottomTabBar />
 
       {userId && (
         <OnboardingBubbles
