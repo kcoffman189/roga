@@ -82,7 +82,7 @@ def get_library_context(user_id: str) -> str:
         lines.append(line)
     return "User's library:\n" + "\n".join(lines)
 
-def build_system_prompt(library_context: str, books_override: Optional[list] = None) -> str:
+def build_system_prompt(library_context: str, books_override: Optional[list] = None, recent_context: str = "") -> str:
     if books_override is not None:
         if books_override:
             lines = []
@@ -94,6 +94,8 @@ def build_system_prompt(library_context: str, books_override: Optional[list] = N
             library_context = "User's library:\n" + "\n".join(lines)
         else:
             library_context = "The user has not added any books to this group yet."
+    if recent_context:
+        library_context += f"\n\n{recent_context}"
     return f"""You are Roga. You're a thinking partner — a well-read, curious friend who happens to know a lot. You know the user's personal library and you're genuinely interested in their ideas.
 
 {library_context}
@@ -131,10 +133,16 @@ HOW THE LAYERS INTERACT: Check in order. First — is the topic connected to the
 
 WHAT THE GUARDRAILS DON'T RESTRICT: Politically charged books in the library — discuss deeply and without restriction in the context of their ideas. Morally complex or controversial texts — engage genuinely, including uncomfortable ideas. Books on sensitive topics (health, law, finance, race, gender) — all fair game as library-anchored intellectual exploration. Disagreement and debate — push back, express uncertainty, explore tension.
 
+THE UNANSWERED QUESTION:
+At the close of certain conversations, you may notice a thread that was left genuinely unresolved — a question that was opened but not answered, a tension that was identified but not explored. When this happens, hold that thread lightly. If the user returns to continue the conversation or starts a new one shortly after, surface it naturally and conversationally — the way a friend would pick up where you left off: "Last time we were talking about whether Frankl's framework holds under the kind of total system Orwell describes — you left that one open. Want to pick it up?" Do this only when something meaningful was genuinely left unresolved. Do not manufacture a thread if the conversation ended cleanly. Do not summarise the previous conversation — just pick up the one open thread. Do not force it into every session. When in doubt, move on naturally.
+
+THE INSIGHT TRAIL:
+You will sometimes be given the titles of recent past conversations as light context. When genuinely and specifically relevant to the current thread, you may occasionally and naturally draw a connection to a past conversation — the way a thoughtful friend might remember something: "You know, this is actually a tension you've circled before — when you were working through Sapiens you kept coming back to something similar." Do this rarely and only when the connection is direct and specific, not merely thematic. Never cite conversation dates, titles verbatim, or timestamps — recall the shape of the thread, not the transcript. Never surface more than one past connection per response. Never manufacture a connection that isn't genuinely there — silence is better than a forced recall. Recent conversations take strong precedence over older ones. This applies in groups too — only draw from that group's past conversations, not main conversation history.
+
 RESPONSE LENGTH:
-- Extremely brief. 1-3 sentences maximum, every time, no exceptions.
-- One idea. One question. Stop.
-- If you're about to write a fourth sentence, delete it.
+- Aim for 75% of the length you'd naturally write. Cut the last quarter before sending.
+- Never a wall of text.
+- Push toward deeper questions rather than just answering what was asked.
 
 ONE CALIBRATION EXAMPLE:
 
@@ -299,7 +307,10 @@ def delete_conversation(conversation_id: str):
 @app.post("/conversation/start/stream")
 def start_conversation_stream(req: StartConversationRequest):
     library_context = get_library_context(req.user_id)
-    system_prompt = build_system_prompt(library_context)
+    recent_result = supabase.from_("conversations").select("title").eq("user_id", req.user_id).neq("title", "Untitled Conversation").order("updated_at", desc=True).limit(4).execute()
+    recent_titles = [r["title"] for r in recent_result.data if r.get("title")]
+    recent_context = "Recent past conversations: " + ", ".join(recent_titles) if recent_titles else ""
+    system_prompt = build_system_prompt(library_context, recent_context=recent_context)
 
     if req.mode == "open":
         user_message = "Surface something interesting from my library — an unexpected connection or a thread worth pulling on."
@@ -596,7 +607,10 @@ def get_group_books(group_id: str) -> list:
 @app.post("/group-conversation/start/stream")
 def start_group_conversation_stream(req: StartGroupConversationRequest):
     group_books = get_group_books(req.group_id)
-    system_prompt = build_system_prompt("", books_override=group_books)
+    recent_result = supabase.from_("group_conversations").select("title").eq("group_id", req.group_id).neq("title", "Untitled Conversation").order("updated_at", desc=True).limit(4).execute()
+    recent_titles = [r["title"] for r in recent_result.data if r.get("title")]
+    recent_context = "Recent past conversations: " + ", ".join(recent_titles) if recent_titles else ""
+    system_prompt = build_system_prompt("", books_override=group_books, recent_context=recent_context)
 
     if req.mode == "open":
         user_message = "Surface something interesting from my library — an unexpected connection or a thread worth pulling on."
