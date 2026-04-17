@@ -169,7 +169,7 @@ function ConversationInner() {
       {/* Left Panel — desktop only */}
       <div className="sidebar-panel" style={{ display: isMobile ? 'none' : 'flex', width: '260px', flexDirection: 'column', padding: '22px 20px' }}>
         <div
-          style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', color: 'var(--color-text-on-dark)', lineHeight: 1, marginBottom: '28px', cursor: 'pointer' }}
+          style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '58px', letterSpacing: '-0.02em', color: 'var(--color-text-on-dark)', lineHeight: 1, marginBottom: '28px', cursor: 'pointer' }}
           onClick={() => router.push('/')}
         >Roga</div>
         <button onClick={() => router.push('/conversation/new?mode=intentional')} className="sidebar-cta-primary">
