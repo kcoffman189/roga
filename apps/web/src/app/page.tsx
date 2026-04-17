@@ -180,7 +180,7 @@ export default function Home() {
       {/* Left Panel */}
       <div className="sidebar-panel" style={{ width: '260px', display: 'flex', flexDirection: 'column', padding: '22px 20px' }}>
         <div style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '58px', letterSpacing: '-0.02em', color: 'var(--color-text-on-dark)', lineHeight: 1 }}>Roga</div>
-        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '8px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-subtle-dark)', marginTop: '5px', marginBottom: '28px' }}>Beta</div>
+        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-subtle-dark)', marginTop: '5px', marginBottom: '28px' }}>Beta</div>
 
         <button
           ref={digInRef}
