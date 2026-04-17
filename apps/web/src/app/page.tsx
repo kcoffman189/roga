@@ -70,7 +70,7 @@ export default function Home() {
     if (loading) return null
     if (welcome?.empty_library) {
       return (
-        <div style={{ textAlign: 'center', maxWidth: '480px' }}>
+        <div style={{ textAlign: 'center', maxWidth: '400px', padding: '48px' }}>
           <p style={{ fontSize: '15px', color: 'var(--color-text-secondary)', lineHeight: '1.6' }}>
             Add some books to your library and Roga will have something to think about.
           </p>
@@ -82,20 +82,18 @@ export default function Home() {
     }
     if (welcome?.quote && welcome?.book) {
       return (
-        <div style={{ textAlign: 'center', maxWidth: '560px', margin: '0 auto' }}>
-          <p style={{ fontFamily: 'var(--font-lora), Georgia, serif', fontStyle: 'italic', fontSize: '21px', lineHeight: '1.65', color: 'rgba(28, 25, 23, 0.82)', textAlign: 'center', margin: '0 0 20px 0' }}>
+        <div style={{ textAlign: 'center', maxWidth: '400px', margin: '0 auto', padding: '48px' }}>
+          <p style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '21px', lineHeight: '1.68', color: 'var(--color-text-primary)', textAlign: 'center', margin: 0 }}>
             &ldquo;{welcome.quote}&rdquo;
           </p>
-          <div>
-            <hr style={{ width: '32px', height: '1px', backgroundColor: 'var(--color-border)', border: 'none', margin: '0 auto 16px' }} />
-            <p style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif', fontSize: '12px', fontWeight: '500', letterSpacing: '0.09em', textTransform: 'uppercase', color: 'var(--color-text-tertiary)', textAlign: 'center', margin: 0 }}>{welcome.book}</p>
-          </div>
+          <hr style={{ width: '44px', height: '2px', backgroundColor: 'var(--color-accent)', border: 'none', display: 'block', margin: '22px auto 14px' }} />
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-tertiary)', textAlign: 'center', margin: 0 }}>{welcome.book}</p>
         </div>
       )
     }
     return (
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontFamily: 'var(--font-lora), Georgia, serif', fontSize: '22px', fontWeight: '500', color: 'var(--color-text-primary)', marginBottom: '8px' }}>Good to see you.</div>
+      <div style={{ textAlign: 'center', padding: '48px' }}>
+        <div style={{ fontFamily: 'Georgia, serif', fontSize: '22px', fontWeight: '400', color: 'var(--color-text-primary)', marginBottom: '8px' }}>Good to see you.</div>
         <div style={{ fontSize: '15px', color: 'var(--color-text-secondary)' }}>Start a conversation or pick up where you left off.</div>
       </div>
     )
@@ -103,20 +101,20 @@ export default function Home() {
 
   if (isMobile) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--color-bg-primary)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--color-bg-canvas)' }}>
         {/* Mobile Header */}
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10,
-          background: 'var(--color-bg-surface)', borderBottom: '1px solid var(--color-border)',
+          background: 'var(--color-bg-canvas)', borderBottom: '1px solid var(--color-border-light)',
           padding: '10px 20px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
         }}>
           <div>
-            <div style={{ fontFamily: 'var(--font-lora), Georgia, serif', fontWeight: '500', fontSize: '44px', lineHeight: 1, color: 'var(--color-text-primary)' }}>Roga</div>
-            <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--color-text-tertiary)', marginTop: '4px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Beta</div>
+            <div style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', lineHeight: 1, color: 'var(--color-text-primary)' }}>Roga</div>
+            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '8px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginTop: '5px' }}>Beta</div>
           </div>
           <button
             onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: 'var(--color-text-tertiary)', padding: '4px', minHeight: '44px' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '11px', color: 'var(--color-text-tertiary)', padding: '4px', minHeight: '44px' }}
           >
             Log out
           </button>
@@ -127,21 +125,19 @@ export default function Home() {
           <div style={{ marginBottom: '24px' }}>{renderWelcome()}</div>
           <button
             onClick={() => startConversation('intentional')}
-            className="sidebar-btn"
-            style={{ padding: '14px 16px', marginBottom: '8px', minHeight: '44px', fontSize: '15px' }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '9px', background: 'transparent', border: 'none', borderLeft: '3px solid var(--color-accent)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '15px', color: 'var(--color-text-primary)', cursor: 'pointer', minHeight: '44px' }}
           >
             Let&apos;s dig into something
           </button>
           <button
             onClick={() => startConversation('open')}
-            className="sidebar-btn"
-            style={{ padding: '14px 16px', marginBottom: '32px', minHeight: '44px', fontSize: '15px' }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '32px', background: 'transparent', border: 'none', borderLeft: '1px solid var(--color-border-light)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '15px', color: 'var(--color-text-secondary)', cursor: 'pointer', minHeight: '44px' }}
           >
             Tell me something interesting
           </button>
 
           <div id="mobile-conversations">
-            <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: '12px' }}>
+            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '8px', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginBottom: '9px', borderTop: '1px solid var(--color-border-light)', paddingTop: '13px', marginTop: '20px' }}>
               Past conversations
             </div>
             {loading ? (
@@ -153,19 +149,17 @@ export default function Home() {
                 <div
                   key={conv.id}
                   onClick={() => resumeConversation(conv.id)}
-                  className="conv-item"
-                  style={{ padding: '12px 4px', marginBottom: '4px', minHeight: '56px' }}
+                  style={{ display: 'flex', alignItems: 'center', padding: '10px 4px', cursor: 'pointer', borderBottom: '1px solid var(--color-border-light)' }}
                 >
                   <div style={{ flex: 1, minWidth: 0, marginRight: '8px' }}>
-                    <div className="conv-item-title" style={{ fontSize: '14px' }}>
+                    <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', fontWeight: '500', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '2px' }}>
                       {conv.title || 'Untitled conversation'}
                     </div>
-                    <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', marginTop: '2px' }}>{formatDate(conv.created_at)}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--color-text-tertiary)' }}>{formatDate(conv.created_at)}</div>
                   </div>
                   <button
                     onClick={(e) => deleteConversation(e, conv.id)}
-                    className="conv-item-delete"
-                    style={{ minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)', fontSize: '14px', padding: '2px 4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                   >
                     ✕
                   </button>
@@ -182,26 +176,23 @@ export default function Home() {
 
   // Desktop layout
   return (
-    <div style={{ display: 'flex', height: '100vh', background: 'var(--color-bg-primary)' }}>
+    <div style={{ display: 'flex', height: '100vh', background: 'var(--color-bg-canvas)' }}>
       {/* Left Panel */}
-      <div style={{ width: '260px', borderRight: '1px solid var(--color-border)', background: 'var(--color-bg-sidebar)', display: 'flex', flexDirection: 'column', padding: '20px 24px' }}>
-        <div style={{ marginBottom: '32px' }}>
-          <div style={{ fontFamily: 'var(--font-lora), Georgia, serif', fontWeight: '500', fontSize: '44px', color: 'var(--color-text-primary)' }}>Roga</div>
-          <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--color-text-tertiary)', marginTop: '4px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Beta</div>
-        </div>
+      <div className="sidebar-panel" style={{ width: '260px', display: 'flex', flexDirection: 'column', padding: '22px 20px' }}>
+        <div style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', color: 'var(--color-text-on-dark)', lineHeight: 1 }}>Roga</div>
+        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '8px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-subtle-dark)', marginTop: '5px', marginBottom: '28px' }}>Beta</div>
 
         <button
           ref={digInRef}
           onClick={() => startConversation('intentional')}
-          className="sidebar-btn"
-          style={{ marginBottom: '8px' }}
+          className="sidebar-cta-primary"
         >
           Let&apos;s dig into something
         </button>
         <button
           ref={interestingRef}
           onClick={() => startConversation('open')}
-          className="sidebar-btn"
+          className="sidebar-cta-secondary"
         >
           Tell me something interesting
         </button>
@@ -213,12 +204,12 @@ export default function Home() {
           My Library
         </a>
 
-        <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.10em', marginTop: '28px', marginBottom: '12px' }}>Past conversations</div>
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div className="sidebar-section-label">Past conversations</div>
+        <div className="conv-list-scroll" style={{ flex: 1, overflowY: 'auto' }}>
           {loading ? (
-            <div style={{ fontSize: '13px', color: 'var(--color-text-tertiary)', padding: '4px' }}>Loading...</div>
+            <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted-dark)', padding: '4px 2px' }}>Loading...</div>
           ) : conversations.length === 0 ? (
-            <div style={{ fontSize: '13px', color: 'var(--color-text-tertiary)', padding: '4px' }}>Your conversations will appear here.</div>
+            <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted-dark)', padding: '4px 2px' }}>Your conversations will appear here.</div>
           ) : (
             conversations.map((conv) => (
               <div
@@ -230,7 +221,7 @@ export default function Home() {
                   <div className="conv-item-title">
                     {conv.title || 'Untitled conversation'}
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--color-text-tertiary)', marginTop: '2px' }}>{formatDate(conv.created_at)}</div>
+                  <div className="conv-item-date">{formatDate(conv.created_at)}</div>
                 </div>
                 <button
                   onClick={(e) => deleteConversation(e, conv.id)}
@@ -245,16 +236,14 @@ export default function Home() {
 
         <button
           onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '8px 12px', marginTop: '8px', fontSize: '13px', color: 'var(--color-text-tertiary)', borderRadius: '6px', width: '100%' }}
-          onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-text-secondary)')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'var(--color-text-tertiary)')}
+          className="sidebar-logout"
         >
           Log out
         </button>
       </div>
 
-      {/* Main Area */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px', background: 'var(--color-bg-primary)' }}>
+      {/* Main Canvas */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg-canvas)' }}>
         {renderWelcome()}
       </div>
 

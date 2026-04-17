@@ -140,7 +140,7 @@ function ConversationInner() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: 'var(--color-bg-primary)' }}>
+    <div style={{ display: 'flex', height: '100vh', background: 'var(--color-bg-canvas)' }}>
 
       {/* Mobile Header — hidden on desktop */}
       <div
@@ -151,8 +151,8 @@ function ConversationInner() {
           left: 0,
           right: 0,
           zIndex: 10,
-          background: 'var(--color-bg-surface)',
-          borderBottom: '1px solid var(--color-border)',
+          background: 'var(--color-bg-canvas)',
+          borderBottom: '1px solid var(--color-border-light)',
           alignItems: 'center',
           padding: '0 16px',
           height: '52px',
@@ -160,21 +160,22 @@ function ConversationInner() {
       >
         <button
           onClick={() => router.push('/')}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-lora), Georgia, serif', fontWeight: '500', fontSize: '44px', color: 'var(--color-text-primary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', color: 'var(--color-text-primary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
         >
           Roga
         </button>
       </div>
 
       {/* Left Panel — desktop only */}
-      <div
-        style={{ display: isMobile ? 'none' : 'flex', width: '260px', borderRight: '1px solid var(--color-border)', background: 'var(--color-bg-sidebar)', flexDirection: 'column', padding: '20px 24px' }}
-      >
-        <div style={{ fontFamily: 'var(--font-lora), Georgia, serif', fontWeight: '500', fontSize: '44px', marginBottom: '32px', cursor: 'pointer', color: 'var(--color-text-primary)' }} onClick={() => router.push('/')}>Roga</div>
-        <button onClick={() => router.push('/conversation/new?mode=intentional')} className="sidebar-btn" style={{ marginBottom: '8px' }}>
+      <div className="sidebar-panel" style={{ display: isMobile ? 'none' : 'flex', width: '260px', flexDirection: 'column', padding: '22px 20px' }}>
+        <div
+          style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', color: 'var(--color-text-on-dark)', lineHeight: 1, marginBottom: '28px', cursor: 'pointer' }}
+          onClick={() => router.push('/')}
+        >Roga</div>
+        <button onClick={() => router.push('/conversation/new?mode=intentional')} className="sidebar-cta-primary">
           Let&apos;s dig into something
         </button>
-        <button onClick={() => router.push('/conversation/new?mode=open')} className="sidebar-btn">
+        <button onClick={() => router.push('/conversation/new?mode=open')} className="sidebar-cta-secondary">
           Tell me something interesting
         </button>
         <a href="/library" className="sidebar-nav-link" style={{ marginTop: '24px' }}>
@@ -185,7 +186,7 @@ function ConversationInner() {
       {/* Conversation Area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Messages */}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: isMobile ? '56px' : '40px', paddingBottom: '40px', background: 'var(--color-bg-primary)' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: isMobile ? '56px' : '40px', paddingBottom: '40px', background: 'var(--color-bg-canvas)' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto', padding: '24px 16px 0' }}>
             {messages.map((msg, i) => (
               <div key={i} style={{ marginBottom: '24px' }}>
@@ -209,14 +210,14 @@ function ConversationInner() {
         </div>
 
         {/* Input */}
-        <div style={{ borderTop: '1px solid var(--color-border)', padding: '12px 16px', background: 'var(--color-bg-surface)', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}>
+        <div style={{ borderTop: '1px solid var(--color-border-light)', padding: '12px 16px', background: 'var(--color-bg-surface)', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto', display: 'flex', gap: '8px' }}>
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Reply..."
               rows={3}
-              style={{ flex: 1, padding: '10px 12px', fontSize: '16px', borderRadius: '8px', border: '1px solid var(--color-border)', resize: 'none', fontFamily: 'var(--font-inter), system-ui, sans-serif', color: 'var(--color-text-primary)', background: 'var(--color-bg-surface)' }}
+              style={{ flex: 1, padding: '10px 12px', fontSize: '16px', borderRadius: '8px', border: '1px solid var(--color-border-light)', resize: 'none', fontFamily: 'var(--font-inter), system-ui, sans-serif', color: 'var(--color-text-primary)', background: 'var(--color-bg-surface)' }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault()
