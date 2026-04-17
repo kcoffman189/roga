@@ -160,7 +160,7 @@ function ConversationInner() {
       >
         <button
           onClick={() => router.push('/')}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-lora), Georgia, serif', fontWeight: '500', fontSize: '22px', color: 'var(--color-text-primary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-lora), Georgia, serif', fontWeight: '500', fontSize: '44px', color: 'var(--color-text-primary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
         >
           Roga
         </button>
@@ -170,7 +170,7 @@ function ConversationInner() {
       <div
         style={{ display: isMobile ? 'none' : 'flex', width: '260px', borderRight: '1px solid var(--color-border)', background: 'var(--color-bg-sidebar)', flexDirection: 'column', padding: '20px 24px' }}
       >
-        <div style={{ fontFamily: 'var(--font-lora), Georgia, serif', fontWeight: '500', fontSize: '22px', marginBottom: '32px', cursor: 'pointer', color: 'var(--color-text-primary)' }} onClick={() => router.push('/')}>Roga</div>
+        <div style={{ fontFamily: 'var(--font-lora), Georgia, serif', fontWeight: '500', fontSize: '44px', marginBottom: '32px', cursor: 'pointer', color: 'var(--color-text-primary)' }} onClick={() => router.push('/')}>Roga</div>
         <button onClick={() => router.push('/conversation/new?mode=intentional')} className="sidebar-btn" style={{ marginBottom: '8px' }}>
           Let&apos;s dig into something
         </button>

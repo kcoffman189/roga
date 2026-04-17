@@ -111,7 +111,7 @@ export default function Home() {
           padding: '10px 20px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
         }}>
           <div>
-            <div style={{ fontFamily: 'var(--font-lora), Georgia, serif', fontWeight: '500', fontSize: '22px', lineHeight: 1, color: 'var(--color-text-primary)' }}>Roga</div>
+            <div style={{ fontFamily: 'var(--font-lora), Georgia, serif', fontWeight: '500', fontSize: '44px', lineHeight: 1, color: 'var(--color-text-primary)' }}>Roga</div>
             <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--color-text-tertiary)', marginTop: '4px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Beta</div>
           </div>
           <button
@@ -186,7 +186,7 @@ export default function Home() {
       {/* Left Panel */}
       <div style={{ width: '260px', borderRight: '1px solid var(--color-border)', background: 'var(--color-bg-sidebar)', display: 'flex', flexDirection: 'column', padding: '20px 24px' }}>
         <div style={{ marginBottom: '32px' }}>
-          <div style={{ fontFamily: 'var(--font-lora), Georgia, serif', fontWeight: '500', fontSize: '22px', color: 'var(--color-text-primary)' }}>Roga</div>
+          <div style={{ fontFamily: 'var(--font-lora), Georgia, serif', fontWeight: '500', fontSize: '44px', color: 'var(--color-text-primary)' }}>Roga</div>
           <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--color-text-tertiary)', marginTop: '4px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Beta</div>
         </div>
 
