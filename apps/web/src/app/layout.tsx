@@ -1,7 +1,7 @@
 // apps/web/src/app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
-import { inter, poppins, merriweather } from "@/lib/fonts";
+import { inter, poppins, merriweather, lora } from "@/lib/fonts";
 import KeepAlive from '@/components/KeepAlive'
 
 export const dynamic = 'force-dynamic'
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${poppins.variable} ${merriweather.variable}`}>
+      <body className={`${inter.variable} ${poppins.variable} ${merriweather.variable} ${lora.variable}`}>
         <KeepAlive />
         {children}
       </body>

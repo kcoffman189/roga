@@ -140,7 +140,7 @@ function ConversationInner() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#fafafa' }}>
+    <div style={{ display: 'flex', height: '100vh', background: 'var(--color-bg-primary)' }}>
 
       {/* Mobile Header — hidden on desktop */}
       <div
@@ -151,8 +151,8 @@ function ConversationInner() {
           left: 0,
           right: 0,
           zIndex: 10,
-          background: '#fff',
-          borderBottom: '1px solid #e0e0e0',
+          background: 'var(--color-bg-surface)',
+          borderBottom: '1px solid var(--color-border)',
           alignItems: 'center',
           padding: '0 16px',
           height: '52px',
@@ -160,7 +160,7 @@ function ConversationInner() {
       >
         <button
           onClick={() => router.push('/')}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '18px', color: '#1a1a1a', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-lora), Georgia, serif', fontWeight: '500', fontSize: '22px', color: 'var(--color-text-primary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
         >
           Roga
         </button>
@@ -168,16 +168,16 @@ function ConversationInner() {
 
       {/* Left Panel — desktop only */}
       <div
-        style={{ display: isMobile ? 'none' : 'flex', width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px' }}
+        style={{ display: isMobile ? 'none' : 'flex', width: '260px', borderRight: '1px solid var(--color-border)', background: 'var(--color-bg-sidebar)', flexDirection: 'column', padding: '20px 24px' }}
       >
-        <div style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px', cursor: 'pointer' }} onClick={() => router.push('/')}>Roga</div>
-        <button onClick={() => router.push('/conversation/new?mode=intentional')} style={{ textAlign: 'left', padding: '10px 12px', marginBottom: '8px', borderRadius: '6px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', fontSize: '14px' }}>
-          Let's dig into something
+        <div style={{ fontFamily: 'var(--font-lora), Georgia, serif', fontWeight: '500', fontSize: '22px', marginBottom: '32px', cursor: 'pointer', color: 'var(--color-text-primary)' }} onClick={() => router.push('/')}>Roga</div>
+        <button onClick={() => router.push('/conversation/new?mode=intentional')} className="sidebar-btn" style={{ marginBottom: '8px' }}>
+          Let&apos;s dig into something
         </button>
-        <button onClick={() => router.push('/conversation/new?mode=open')} style={{ textAlign: 'left', padding: '10px 12px', marginBottom: '24px', borderRadius: '6px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', fontSize: '14px' }}>
+        <button onClick={() => router.push('/conversation/new?mode=open')} className="sidebar-btn">
           Tell me something interesting
         </button>
-        <a href="/library" style={{ display: 'block', padding: '10px 12px', marginBottom: '24px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0' }}>
+        <a href="/library" className="sidebar-nav-link" style={{ marginTop: '24px' }}>
           My Library
         </a>
       </div>
@@ -185,14 +185,14 @@ function ConversationInner() {
       {/* Conversation Area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Messages */}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: isMobile ? '56px' : '40px', paddingBottom: '40px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: isMobile ? '56px' : '40px', paddingBottom: '40px', background: 'var(--color-bg-primary)' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto', padding: '24px 16px 0' }}>
             {messages.map((msg, i) => (
               <div key={i} style={{ marginBottom: '24px' }}>
-                <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
+                <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
                   {msg.role === 'user' ? 'You' : 'Roga'}
                 </div>
-                <div style={{ fontSize: '15px', lineHeight: '1.6', color: '#1a1a1a', whiteSpace: 'pre-wrap' }}>
+                <div style={{ fontSize: '15px', lineHeight: '1.6', color: 'var(--color-text-primary)', whiteSpace: 'pre-wrap' }}>
                   {msg.content}
                   {msg.streaming && <span style={{ opacity: 0.5 }}>▊</span>}
                 </div>
@@ -200,8 +200,8 @@ function ConversationInner() {
             ))}
             {loading && messages[messages.length - 1]?.content === '' && (
               <div style={{ marginBottom: '24px' }}>
-                <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Roga</div>
-                <div style={{ fontSize: '15px', color: '#999' }}>Thinking...</div>
+                <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Roga</div>
+                <div style={{ fontSize: '15px', color: 'var(--color-text-tertiary)' }}>Thinking...</div>
               </div>
             )}
             <div ref={bottomRef} />
@@ -209,14 +209,14 @@ function ConversationInner() {
         </div>
 
         {/* Input */}
-        <div style={{ borderTop: '1px solid #e0e0e0', padding: '12px 16px', background: '#fff', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}>
+        <div style={{ borderTop: '1px solid var(--color-border)', padding: '12px 16px', background: 'var(--color-bg-surface)', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto', display: 'flex', gap: '8px' }}>
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Reply..."
               rows={3}
-              style={{ flex: 1, padding: '10px 12px', fontSize: '16px', borderRadius: '8px', border: '1px solid #e0e0e0', resize: 'none', fontFamily: 'sans-serif' }}
+              style={{ flex: 1, padding: '10px 12px', fontSize: '16px', borderRadius: '8px', border: '1px solid var(--color-border)', resize: 'none', fontFamily: 'var(--font-inter), system-ui, sans-serif', color: 'var(--color-text-primary)', background: 'var(--color-bg-surface)' }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault()
@@ -227,7 +227,7 @@ function ConversationInner() {
             <button
               onClick={sendMessage}
               disabled={loading || !input.trim()}
-              style={{ padding: '10px 20px', fontSize: '14px', cursor: 'pointer', borderRadius: '8px', background: '#000', color: '#fff', border: 'none', alignSelf: 'flex-end', minHeight: '44px' }}
+              style={{ padding: '10px 20px', fontSize: '14px', cursor: 'pointer', borderRadius: '8px', background: 'var(--color-accent)', color: '#fff', border: 'none', alignSelf: 'flex-end', minHeight: '44px' }}
             >
               Send
             </button>
