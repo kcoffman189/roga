@@ -1,261 +1,499 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
-import { createSupabaseClient } from '@/lib/supabase/client'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import OnboardingBubbles from '@/components/OnboardingBubbles'
-import BottomTabBar from '@/components/BottomTabBar'
-import { useIsMobile } from '@/hooks/useIsMobile'
+import { createSupabaseClient } from '@/lib/supabase/client'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
-
-type Conversation = {
-  id: string
-  title: string | null
-  created_at: string
-}
-
-type WelcomeQuote = {
-  quote: string | null
-  book: string | null
-  empty_library: boolean
-}
-
-export default function Home() {
-  const [conversations, setConversations] = useState<Conversation[]>([])
-  const [userId, setUserId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [welcome, setWelcome] = useState<WelcomeQuote | null>(null)
+export default function LandingPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const router = useRouter()
   const supabase = useRef(createSupabaseClient()).current
-  const libraryRef = useRef<HTMLAnchorElement>(null)
-  const digInRef = useRef<HTMLButtonElement>(null)
-  const interestingRef = useRef<HTMLButtonElement>(null)
-  const isMobile = useIsMobile()
 
-  useEffect(() => {
-    const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { window.location.href = '/login'; return }
-      setUserId(user.id)
-
-      const [convsRes, quoteRes] = await Promise.all([
-        fetch(`${API_URL}/conversations/${user.id}`),
-        fetch(`${API_URL}/welcome-quote/${user.id}`)
-      ])
-      const convsData = await convsRes.json()
-      const quoteData = await quoteRes.json()
-      setConversations(convsData.conversations || [])
-      setWelcome(quoteData)
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    const { error } = await supabase.auth.signUp({ email, password })
+    if (error) {
+      setError(error.message)
       setLoading(false)
+    } else {
+      router.push('/home')
+      router.refresh()
     }
-    init()
-  }, [])
-
-  const startConversation = (mode: 'intentional' | 'open') => router.push(`/conversation/new?mode=${mode}`)
-  const resumeConversation = (id: string) => router.push(`/conversation/${id}`)
-
-  const deleteConversation = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
-    await fetch(`${API_URL}/conversation/${id}`, { method: 'DELETE' })
-    setConversations(prev => prev.filter(c => c.id !== id))
   }
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-
-  const renderWelcome = () => {
-    if (loading) return null
-    if (welcome?.empty_library) {
-      return (
-        <div style={{ textAlign: 'center', maxWidth: '400px', padding: '48px' }}>
-          <p style={{ fontSize: '15px', color: 'var(--color-text-secondary)', lineHeight: '1.6' }}>
-            Add some books to your library and Roga will have something to think about.
-          </p>
-          <a href="/library" style={{ display: 'inline-block', marginTop: '16px', fontSize: '14px', color: 'var(--color-accent)', textDecoration: 'underline' }}>
-            Go to My Library
-          </a>
-        </div>
-      )
-    }
-    if (welcome?.quote && welcome?.book) {
-      return (
-        <div style={{ textAlign: 'center', maxWidth: '400px', margin: '0 auto', padding: '48px' }}>
-          <p style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '21px', lineHeight: '1.68', color: 'var(--color-text-primary)', textAlign: 'center', margin: 0 }}>
-            &ldquo;{welcome.quote}&rdquo;
-          </p>
-          <hr style={{ width: '44px', height: '2px', backgroundColor: 'var(--color-accent)', border: 'none', display: 'block', margin: '22px auto 14px' }} />
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-tertiary)', textAlign: 'center', margin: 0 }}>{welcome.book}</p>
-        </div>
-      )
-    }
-    return (
-      <div style={{ textAlign: 'center', padding: '48px' }}>
-        <div style={{ fontFamily: 'Georgia, serif', fontSize: '22px', fontWeight: '400', color: 'var(--color-text-primary)', marginBottom: '8px' }}>Good to see you.</div>
-        <div style={{ fontSize: '15px', color: 'var(--color-text-secondary)' }}>Start a conversation or pick up where you left off.</div>
-      </div>
-    )
-  }
-
-  if (isMobile) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--color-bg-canvas)' }}>
-        {/* Mobile Header */}
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10,
-          background: 'var(--color-bg-canvas)', borderBottom: '1px solid var(--color-border-light)',
-          padding: '10px 20px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
-        }}>
-          <div>
-            <div style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', lineHeight: 1, color: 'var(--color-text-primary)' }}>Roga</div>
-            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '8px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginTop: '5px' }}>Beta</div>
-          </div>
-          <button
-            onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '11px', color: 'var(--color-text-tertiary)', padding: '4px', minHeight: '44px' }}
-          >
-            Log out
-          </button>
-        </div>
-
-        {/* Mobile Content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingTop: '84px', paddingBottom: '80px' }}>
-          <div style={{ marginBottom: '24px' }}>{renderWelcome()}</div>
-          <button
-            onClick={() => startConversation('intentional')}
-            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '9px', background: 'transparent', border: 'none', borderLeft: '3px solid var(--color-accent)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '15px', color: 'var(--color-text-primary)', cursor: 'pointer', minHeight: '44px' }}
-          >
-            Let&apos;s dig into something
-          </button>
-          <button
-            onClick={() => startConversation('open')}
-            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '32px', background: 'transparent', border: 'none', borderLeft: '1px solid var(--color-border-light)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '15px', color: 'var(--color-text-secondary)', cursor: 'pointer', minHeight: '44px' }}
-          >
-            Tell me something interesting
-          </button>
-
-          <div id="mobile-conversations">
-            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '8px', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginBottom: '9px', borderTop: '1px solid var(--color-border-light)', paddingTop: '13px', marginTop: '20px' }}>
-              Past conversations
-            </div>
-            {loading ? (
-              <div style={{ fontSize: '13px', color: 'var(--color-text-tertiary)' }}>Loading...</div>
-            ) : conversations.length === 0 ? (
-              <div style={{ fontSize: '13px', color: 'var(--color-text-tertiary)' }}>Your conversations will appear here.</div>
-            ) : (
-              conversations.map((conv) => (
-                <div
-                  key={conv.id}
-                  onClick={() => resumeConversation(conv.id)}
-                  style={{ display: 'flex', alignItems: 'center', padding: '10px 4px', cursor: 'pointer', borderBottom: '1px solid var(--color-border-light)' }}
-                >
-                  <div style={{ flex: 1, minWidth: 0, marginRight: '8px' }}>
-                    <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', fontWeight: '500', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '2px' }}>
-                      {conv.title || 'Untitled conversation'}
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'var(--color-text-tertiary)' }}>{formatDate(conv.created_at)}</div>
-                  </div>
-                  <button
-                    onClick={(e) => deleteConversation(e, conv.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)', fontSize: '14px', padding: '2px 4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        <BottomTabBar />
-      </div>
-    )
-  }
-
-  // Desktop layout
   return (
-    <div style={{ display: 'flex', height: '100vh', background: 'var(--color-bg-canvas)' }}>
-      {/* Left Panel */}
-      <div className="sidebar-panel" style={{ width: '260px', display: 'flex', flexDirection: 'column', padding: '22px 20px' }}>
-        <div style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '58px', letterSpacing: '-0.02em', color: 'var(--color-text-on-dark)', lineHeight: 1 }}>Roga</div>
-        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-subtle-dark)', marginTop: '5px', marginBottom: '28px' }}>Beta</div>
+    <>
+      <style>{`
+        .lp-input::placeholder { color: #B0ACA6; }
+        .lp-input:focus { border-color: #C45E0A; outline: none; }
+        .lp-btn:hover { background: #1A1A1A !important; }
+        .lp-signin-link { color: #6B6B6B; text-decoration: underline; cursor: pointer; background: none; border: none; font-size: 11px; padding: 0; }
+        .lp-signin-link:hover { color: #C45E0A; }
+        @media (max-width: 767px) {
+          .lp-hero { flex-direction: column !important; min-height: unset !important; }
+          .lp-sidebar {
+            width: 100% !important;
+            height: auto !important;
+            padding: 20px 24px !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+          }
+          .lp-sidebar::after {
+            top: auto !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: auto !important;
+            height: 3px !important;
+          }
+          .lp-sidebar-wordmark { font-size: 28px !important; }
+          .lp-sidebar-bottom { display: none !important; }
+          .lp-hero-content { padding: 32px 24px !important; }
+          .lp-hiw { padding: 40px 24px !important; }
+          .lp-steps { flex-direction: column !important; }
+          .lp-footer { padding: 20px 24px !important; }
+        }
+      `}</style>
 
-        <button
-          ref={digInRef}
-          onClick={() => startConversation('intentional')}
-          className="sidebar-cta-primary"
+      {/* ── HERO ── */}
+      <section
+        className="lp-hero"
+        style={{ display: 'flex', minHeight: '100vh' }}
+      >
+        {/* Sidebar */}
+        <div
+          className="lp-sidebar"
+          style={{
+            width: '240px',
+            flexShrink: 0,
+            background: '#272C32',
+            padding: '36px 28px',
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
         >
-          Let&apos;s dig into something
-        </button>
-        <button
-          ref={interestingRef}
-          onClick={() => startConversation('open')}
-          className="sidebar-cta-secondary"
-        >
-          Tell me something interesting
-        </button>
+          <style>{`
+            .lp-sidebar::after {
+              content: '';
+              position: absolute;
+              right: 0;
+              top: 0;
+              bottom: 0;
+              width: 3px;
+              background: #C45E0A;
+            }
+          `}</style>
 
-        <a href="/groups" className="sidebar-nav-link" style={{ marginTop: '24px', marginBottom: '4px' }}>
-          Groups
-        </a>
-        <a ref={libraryRef} href="/library" className="sidebar-nav-link">
-          My Library
-        </a>
+          {/* Top: wordmark */}
+          <div>
+            <div
+              className="lp-sidebar-wordmark"
+              style={{
+                fontFamily: 'Georgia, serif',
+                fontSize: '36px',
+                fontWeight: 400,
+                color: '#EEECEA',
+                letterSpacing: '-0.02em',
+                lineHeight: 1,
+              }}
+            >
+              Roga
+            </div>
+            <div
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '8px',
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                color: '#4E5660',
+                marginTop: '6px',
+              }}
+            >
+              Beta
+            </div>
+          </div>
 
-        <div className="sidebar-section-label">Past conversations</div>
-        <div className="conv-list-scroll" style={{ flex: 1, overflowY: 'auto' }}>
-          {loading ? (
-            <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted-dark)', padding: '4px 2px' }}>Loading...</div>
-          ) : conversations.length === 0 ? (
-            <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted-dark)', padding: '4px 2px' }}>Your conversations will appear here.</div>
-          ) : (
-            conversations.map((conv) => (
+          {/* Bottom: library preview */}
+          <div className="lp-sidebar-bottom">
+            <div
+              style={{
+                fontSize: '8px',
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: '#3E4650',
+                marginBottom: '6px',
+                fontFamily: 'Inter, sans-serif',
+              }}
+            >
+              Your library
+            </div>
+
+            <div
+              style={{
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: '12px',
+                color: '#B8C0C8',
+                padding: '5px 0 5px 10px',
+                borderLeft: '2px solid #C45E0A',
+                marginBottom: '4px',
+              }}
+            >
+              Let&apos;s dig into something
+            </div>
+
+            <div
+              style={{
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: '12px',
+                color: '#4E5660',
+                padding: '5px 0 5px 10px',
+                borderLeft: '1px solid #343C44',
+                marginBottom: '12px',
+              }}
+            >
+              Tell me something interesting
+            </div>
+
+            <div
+              style={{
+                fontSize: '8px',
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: '#3E4650',
+                marginBottom: '6px',
+                fontFamily: 'Inter, sans-serif',
+              }}
+            >
+              Recent
+            </div>
+
+            {['Frankl vs Solzhenitsyn...', 'Systems Thinking...', 'Range & Specialization...'].map((title) => (
               <div
-                key={conv.id}
-                onClick={() => resumeConversation(conv.id)}
-                className="conv-item"
+                key={title}
+                style={{
+                  fontFamily: 'Georgia, serif',
+                  fontStyle: 'italic',
+                  fontSize: '12px',
+                  color: '#4E5660',
+                  padding: '5px 0 5px 10px',
+                  borderLeft: '1px solid #343C44',
+                  marginBottom: '4px',
+                }}
               >
-                <div style={{ flex: 1, minWidth: 0, marginRight: '8px' }}>
-                  <div className="conv-item-title">
-                    {conv.title || 'Untitled conversation'}
-                  </div>
-                  <div className="conv-item-date">{formatDate(conv.created_at)}</div>
-                </div>
-                <button
-                  onClick={(e) => deleteConversation(e, conv.id)}
-                  className="conv-item-delete"
-                >
-                  ✕
-                </button>
+                {title}
               </div>
-            ))
-          )}
+            ))}
+          </div>
         </div>
 
-        <button
-          onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
-          className="sidebar-logout"
+        {/* Right column */}
+        <div
+          className="lp-hero-content"
+          style={{
+            flex: 1,
+            background: '#FAF8F4',
+            padding: '52px 48px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}
         >
-          Log out
-        </button>
-      </div>
+          {/* Headline */}
+          <div>
+            <div
+              style={{
+                fontFamily: 'Georgia, serif',
+                fontSize: '26px',
+                lineHeight: 1.5,
+                color: '#1A1A1A',
+                fontStyle: 'normal',
+              }}
+            >
+              You read across everything.
+            </div>
+            <div
+              style={{
+                fontFamily: 'Georgia, serif',
+                fontSize: '26px',
+                lineHeight: 1.5,
+                color: '#C45E0A',
+                fontStyle: 'italic',
+              }}
+            >
+              Roga finds what your books have been saying to each other.
+            </div>
+          </div>
 
-      {/* Main Canvas */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg-canvas)' }}>
-        {renderWelcome()}
-      </div>
+          {/* Subheadline */}
+          <p
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '13px',
+              color: '#6B6B6B',
+              lineHeight: 1.7,
+              maxWidth: '340px',
+              marginTop: '8px',
+              marginBottom: '32px',
+            }}
+          >
+            A thinking partner built around your personal library. Add the books you&apos;ve read. Let Roga surface the threads between them.
+          </p>
 
-      {userId && (
-        <OnboardingBubbles
-          userId={userId}
-          supabase={supabase}
-          libraryRef={libraryRef}
-          digInRef={digInRef}
-          interestingRef={interestingRef}
-        />
-      )}
-    </div>
+          {/* Divider */}
+          <hr
+            style={{
+              width: '44px',
+              height: '2px',
+              background: '#C45E0A',
+              border: 'none',
+              marginBottom: '32px',
+              display: 'block',
+              marginLeft: 0,
+            }}
+          />
+
+          {/* Signup form */}
+          <form onSubmit={handleSignUp} style={{ maxWidth: '300px' }}>
+            <input
+              className="lp-input"
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={{
+                background: '#FFFFFF',
+                border: '1px solid #E4E0DA',
+                borderRadius: '4px',
+                padding: '10px 14px',
+                fontSize: '13px',
+                fontFamily: 'Inter, sans-serif',
+                color: '#1A1A1A',
+                width: '100%',
+                marginBottom: '10px',
+                boxSizing: 'border-box',
+                display: 'block',
+              }}
+            />
+            <input
+              className="lp-input"
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{
+                background: '#FFFFFF',
+                border: '1px solid #E4E0DA',
+                borderRadius: '4px',
+                padding: '10px 14px',
+                fontSize: '13px',
+                fontFamily: 'Inter, sans-serif',
+                color: '#1A1A1A',
+                width: '100%',
+                marginBottom: '10px',
+                boxSizing: 'border-box',
+                display: 'block',
+              }}
+            />
+
+            <button
+              className="lp-btn"
+              type="submit"
+              disabled={loading}
+              style={{
+                background: '#272C32',
+                color: '#EEECEA',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '11px',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                padding: '13px 24px',
+                border: 'none',
+                borderRadius: '2px',
+                width: '100%',
+                cursor: loading ? 'default' : 'pointer',
+                position: 'relative',
+                transition: 'background 150ms ease',
+                display: 'block',
+                boxSizing: 'border-box',
+              }}
+            >
+              <span
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: '3px',
+                  background: '#C45E0A',
+                }}
+              />
+              {loading ? 'Joining...' : 'Join the beta'}
+            </button>
+
+            {error && (
+              <p style={{ fontSize: '12px', color: '#C45E0A', marginTop: '8px', marginBottom: 0 }}>
+                {error}
+              </p>
+            )}
+
+            <p style={{ fontSize: '11px', color: '#B0ACA6', marginTop: '8px', marginBottom: 0 }}>
+              Already have an account?{' '}
+              <a
+                href="/login"
+                style={{ color: '#6B6B6B', textDecoration: 'underline', cursor: 'pointer' }}
+              >
+                Sign in
+              </a>
+            </p>
+          </form>
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ── */}
+      <section
+        className="lp-hiw"
+        style={{
+          borderTop: '1px solid #E4E0DA',
+          background: '#FAF8F4',
+          padding: '56px 48px 56px 288px',
+        }}
+      >
+        <div
+          style={{
+            fontSize: '9px',
+            letterSpacing: '0.16em',
+            textTransform: 'uppercase',
+            color: '#C45E0A',
+            marginBottom: '20px',
+            fontFamily: 'Inter, sans-serif',
+          }}
+        >
+          How it works
+        </div>
+
+        <div
+          style={{
+            fontFamily: 'Georgia, serif',
+            fontSize: '22px',
+            color: '#1A1A1A',
+            marginBottom: '40px',
+            fontStyle: 'normal',
+          }}
+        >
+          Three steps to a richer reading life.
+        </div>
+
+        <div className="lp-steps" style={{ display: 'flex', gap: '32px' }}>
+          {[
+            {
+              num: '01',
+              title: 'Build your library',
+              body: "Add the books you've read — start with 5 to 10. Roga builds a picture of your intellectual world from what you've actually consumed.",
+            },
+            {
+              num: '02',
+              title: 'Let Roga initiate',
+              body: 'Ask Roga to surprise you. It surfaces unexpected connections between your books — threads you didn\'t know were there.',
+            },
+            {
+              num: '03',
+              title: 'Follow the thread',
+              body: "Dig deeper with a thinking partner that knows your library. Every conversation starts from what you've actually read.",
+            },
+          ].map(({ num, title, body }) => (
+            <div key={num} style={{ flex: 1 }}>
+              <div
+                style={{
+                  fontFamily: 'Georgia, serif',
+                  fontSize: '28px',
+                  color: '#E4E0DA',
+                  lineHeight: 1,
+                  marginBottom: '12px',
+                }}
+              >
+                {num}
+              </div>
+              <hr
+                style={{
+                  width: '24px',
+                  height: '2px',
+                  background: '#C45E0A',
+                  border: 'none',
+                  marginBottom: '12px',
+                  display: 'block',
+                  marginLeft: 0,
+                }}
+              />
+              <div
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  color: '#1A1A1A',
+                  marginBottom: '6px',
+                }}
+              >
+                {title}
+              </div>
+              <div
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '12px',
+                  color: '#6B6B6B',
+                  lineHeight: 1.65,
+                }}
+              >
+                {body}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer
+        className="lp-footer"
+        style={{
+          borderTop: '1px solid #E4E0DA',
+          background: '#FAF8F4',
+          padding: '20px 48px 20px 288px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <span
+          style={{
+            fontFamily: 'Georgia, serif',
+            fontSize: '14px',
+            color: '#B0ACA6',
+          }}
+        >
+          Roga
+        </span>
+        <span
+          style={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '10px',
+            letterSpacing: '0.04em',
+            color: '#B0ACA6',
+          }}
+        >
+          &copy; 2026 Roga. Private beta.
+        </span>
+      </footer>
+    </>
   )
 }
