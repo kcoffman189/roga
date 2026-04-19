@@ -26,6 +26,19 @@ export default function LandingPage() {
     }
   }
 
+  const handleLogIn = async () => {
+    setLoading(true)
+    setError('')
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+    } else {
+      router.push('/home')
+      router.refresh()
+    }
+  }
+
   return (
     <>
       <style>{`
@@ -342,21 +355,48 @@ export default function LandingPage() {
               {loading ? 'Joining...' : 'Join the beta'}
             </button>
 
+            <button
+              className="lp-btn"
+              type="button"
+              disabled={loading}
+              onClick={handleLogIn}
+              style={{
+                background: '#272C32',
+                color: '#EEECEA',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '11px',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                padding: '13px 24px',
+                border: 'none',
+                borderRadius: '2px',
+                width: '100%',
+                cursor: loading ? 'default' : 'pointer',
+                position: 'relative',
+                transition: 'background 150ms ease',
+                display: 'block',
+                boxSizing: 'border-box',
+                marginTop: '10px',
+              }}
+            >
+              <span
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: '3px',
+                  background: '#C45E0A',
+                }}
+              />
+              {loading ? 'Loading...' : 'Log in'}
+            </button>
+
             {error && (
               <p style={{ fontSize: '12px', color: '#C45E0A', marginTop: '8px', marginBottom: 0 }}>
                 {error}
               </p>
             )}
-
-            <p style={{ fontSize: '11px', color: '#B0ACA6', marginTop: '8px', marginBottom: 0 }}>
-              Already have an account?{' '}
-              <a
-                href="/login"
-                style={{ color: '#6B6B6B', textDecoration: 'underline', cursor: 'pointer' }}
-              >
-                Sign in
-              </a>
-            </p>
           </form>
         </div>
       </section>
