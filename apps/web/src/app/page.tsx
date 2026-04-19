@@ -68,7 +68,7 @@ export default function LandingPage() {
           .lp-sidebar-wordmark { font-size: 28px !important; }
           .lp-sidebar-bottom { display: none !important; }
           .lp-hero-content { padding: 32px 24px !important; }
-          .lp-hiw { padding: 40px 24px !important; }
+          .lp-hiw { padding: 28px 24px !important; }
           .lp-steps { flex-direction: column !important; }
           .lp-footer { padding: 20px 24px !important; }
         }
@@ -77,7 +77,7 @@ export default function LandingPage() {
       {/* ── HERO ── */}
       <section
         className="lp-hero"
-        style={{ display: 'flex', minHeight: '100vh' }}
+        style={{ display: 'flex', minHeight: 'auto' }}
       >
         {/* Sidebar */}
         <div
@@ -215,7 +215,7 @@ export default function LandingPage() {
           style={{
             flex: 1,
             background: '#FAF8F4',
-            padding: '52px 48px',
+            padding: '32px 48px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -255,8 +255,8 @@ export default function LandingPage() {
               color: '#6B6B6B',
               lineHeight: 1.7,
               maxWidth: '340px',
-              marginTop: '8px',
-              marginBottom: '32px',
+              marginTop: '6px',
+              marginBottom: '16px',
             }}
           >
             A thinking partner built around your personal library. Add the books you&apos;ve read. Let Roga surface the threads between them.
@@ -269,7 +269,7 @@ export default function LandingPage() {
               height: '2px',
               background: '#C45E0A',
               border: 'none',
-              marginBottom: '32px',
+              marginBottom: '16px',
               display: 'block',
               marginLeft: 0,
             }}
@@ -293,7 +293,7 @@ export default function LandingPage() {
                 fontFamily: 'Inter, sans-serif',
                 color: '#1A1A1A',
                 width: '100%',
-                marginBottom: '10px',
+                marginBottom: '8px',
                 boxSizing: 'border-box',
                 display: 'block',
               }}
@@ -314,7 +314,7 @@ export default function LandingPage() {
                 fontFamily: 'Inter, sans-serif',
                 color: '#1A1A1A',
                 width: '100%',
-                marginBottom: '10px',
+                marginBottom: '8px',
                 boxSizing: 'border-box',
                 display: 'block',
               }}
@@ -376,7 +376,7 @@ export default function LandingPage() {
                 transition: 'background 150ms ease',
                 display: 'block',
                 boxSizing: 'border-box',
-                marginTop: '10px',
+                marginTop: '8px',
               }}
             >
               <span
@@ -407,7 +407,7 @@ export default function LandingPage() {
         style={{
           borderTop: '1px solid #E4E0DA',
           background: '#FAF8F4',
-          padding: '56px 48px 56px 288px',
+          padding: '32px 48px 32px 288px',
         }}
       >
         <div
@@ -416,7 +416,7 @@ export default function LandingPage() {
             letterSpacing: '0.16em',
             textTransform: 'uppercase',
             color: '#C45E0A',
-            marginBottom: '20px',
+            marginBottom: '12px',
             fontFamily: 'Inter, sans-serif',
           }}
         >
@@ -428,7 +428,7 @@ export default function LandingPage() {
             fontFamily: 'Georgia, serif',
             fontSize: '22px',
             color: '#1A1A1A',
-            marginBottom: '40px',
+            marginBottom: '24px',
             fontStyle: 'normal',
           }}
         >
