@@ -41,6 +41,12 @@ type BookEntry = {
   familiarity_state: string
 }
 
+type WelcomeQuote = {
+  quote: string | null
+  book: string | null
+  empty_library: boolean
+}
+
 export default function GroupViewPage() {
   const [group, setGroup] = useState<Group | null>(null)
   const [conversations, setConversations] = useState<GroupConversation[]>([])
@@ -50,6 +56,7 @@ export default function GroupViewPage() {
   const [addingBook, setAddingBook] = useState(false)
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
+  const [welcome, setWelcome] = useState<WelcomeQuote | null>(null)
   const params = useParams()
   const router = useRouter()
   const groupId = params.id as string
@@ -62,17 +69,20 @@ export default function GroupViewPage() {
       if (!user) { window.location.href = '/login'; return }
       setUserId(user.id)
 
-      const [groupsRes, convsRes] = await Promise.all([
+      const [groupsRes, convsRes, quoteRes] = await Promise.all([
         fetch(`${API_URL}/groups/${user.id}`),
-        fetch(`${API_URL}/group-conversations/${groupId}`)
+        fetch(`${API_URL}/group-conversations/${groupId}`),
+        fetch(`${API_URL}/group-welcome-quote/${groupId}`)
       ])
 
       const groupsData = await groupsRes.json()
       const convsData = await convsRes.json()
+      const quoteData = await quoteRes.json()
 
       const found = (groupsData.groups || []).find((g: Group) => g.id === groupId) || null
       setGroup(found)
       setConversations(convsData.conversations || [])
+      setWelcome(quoteData)
 
       await fetchGroupBooks()
       setLoading(false)
@@ -291,13 +301,19 @@ export default function GroupViewPage() {
       <div
         style={{ display: isMobile ? 'none' : 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', padding: '40px' }}
       >
-        <div style={{ textAlign: 'center', color: '#999' }}>
-          <div style={{ fontSize: '15px' }}>
-            {paused
-              ? 'Add more books to this group to resume conversations.'
-              : 'Start a conversation or pick up where you left off.'}
+        {paused ? (
+          <div style={{ textAlign: 'center', color: '#999' }}>
+            <div style={{ fontSize: '15px' }}>Add more books to this group to resume conversations.</div>
           </div>
-        </div>
+        ) : welcome?.quote && welcome?.book ? (
+          <div style={{ textAlign: 'center', maxWidth: '400px', margin: '0 auto', padding: '48px' }}>
+            <p style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '21px', lineHeight: '1.68', color: 'var(--color-text-primary)', textAlign: 'center', margin: 0 }}>
+              &ldquo;{welcome.quote}&rdquo;
+            </p>
+            <hr style={{ width: '44px', height: '2px', backgroundColor: 'var(--color-accent)', border: 'none', display: 'block', margin: '22px auto 14px' }} />
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-tertiary)', textAlign: 'center', margin: 0 }}>{welcome.book}</p>
+          </div>
+        ) : null}
       </div>
 
       {/* Mobile Main Content */}

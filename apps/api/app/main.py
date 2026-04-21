@@ -582,6 +582,51 @@ Respond with ONLY a JSON object in this exact format, no other text:
         return {"quote": None, "book": None, "empty_library": False}
 
 
+@app.get("/group-welcome-quote/{group_id}")
+def get_group_welcome_quote(group_id: str):
+    gb_result = supabase.from_("group_books").select("library_entry_id").eq("group_id", group_id).execute()
+    book_ids = [row["library_entry_id"] for row in gb_result.data]
+
+    if not book_ids:
+        return {"quote": None, "book": None, "empty_library": True}
+
+    entries_result = supabase.from_("library_entries").select("title, familiarity_score, is_unread, notes").in_("id", book_ids).execute()
+    entries = entries_result.data
+
+    if not entries:
+        return {"quote": None, "book": None, "empty_library": True}
+
+    library_lines = []
+    for entry in entries:
+        library_lines.append(f"- {entry['title']} ({_familiarity_label(entry)})")
+    library_text = "\n".join(library_lines)
+
+    try:
+        response = anthropic_client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=200,
+            messages=[{
+                "role": "user",
+                "content": f"""From this person's book library, select one memorable, thought-provoking quote worth sitting with.
+
+Prioritize books the user knows well (score 4-5) first. Deprioritize books they haven't read yet.
+
+The quote should be 1-3 sentences — readable at a glance. Choose something that opens a door rather than closes one.
+
+Library:
+{library_text}
+
+Respond with ONLY a JSON object in this exact format, no other text:
+{{"quote": "the quote text here", "book": "Book Title"}}"""
+            }]
+        )
+        text = response.content[0].text.strip()
+        data = json.loads(text)
+        return {"quote": data["quote"], "book": data["book"], "empty_library": False}
+    except:
+        return {"quote": None, "book": None, "empty_library": False}
+
+
 @app.get("/conversation/{conversation_id}/messages")
 def get_messages(conversation_id: str):
     result = supabase.from_("messages").select("role, content, created_at").eq("conversation_id", conversation_id).order("created_at").execute()
