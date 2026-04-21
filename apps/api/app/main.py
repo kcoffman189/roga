@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Header
+from fastapi import FastAPI, HTTPException, Header, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -193,6 +193,68 @@ def generate_title(messages: list) -> str:
     )
     return response.content[0].text.strip()
 
+SUMMARY_SYSTEM_PROMPT = """You are summarising a conversation from Roga — an AI thinking partner that helps users explore their personal book library.
+
+Your job is not to summarise what was discussed. Your job is to capture the intellectual shape of the conversation — what the user was genuinely wrestling with, what landed for them, and what was left unresolved.
+
+Write a summary of 3-5 sentences that captures all four of the following:
+
+1. THE REAL TENSION: What was the user actually grappling with beneath the surface topic? Abstract up from the specific books to the genuine intellectual question or tension underneath. Do not just name the books or themes — name the question.
+
+2. WHAT RESONATED: Which ideas, connections, or reframes did the user engage with most deeply? If they moved past something quickly, it did not resonate. If they returned to it, pushed back on it, or extended it — it resonated.
+
+3. ANY SURPRISING CONNECTION: If a cross-library connection was surfaced that seemed to genuinely surprise or interest the user, note what it was and why it seemed to land.
+
+4. WHAT WAS LEFT OPEN: What question or thread was opened but not resolved? This is the thing the user is still carrying after the conversation ended.
+
+Write in plain, direct prose. Do not use headers or bullet points. Do not write in the first person. Do not summarise the conversation chronologically — capture its intellectual shape. Aim for 80-120 words total.
+
+If the conversation was very short or did not surface a meaningful intellectual tension, write a single sentence noting that the session was exploratory or introductory and did not produce a substantive thread to carry forward."""
+
+
+def generate_conversation_summary(conversation_id: str, messages: list, is_group: bool = False):
+    transcript_parts = []
+    for m in messages:
+        speaker = "[Roga]" if m["role"] == "assistant" else "[User]"
+        transcript_parts.append(f"{speaker}: {m['content']}")
+    transcript = "\n\n".join(transcript_parts)
+
+    if len(messages) < 4:
+        return None
+
+    try:
+        response = anthropic_client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=200,
+            system=SUMMARY_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": f"Here is the conversation transcript:\n\n{transcript}"}]
+        )
+        return response.content[0].text.strip()
+    except Exception as e:
+        print(f"[summary] EXCEPTION for conversation {conversation_id}: {e!r}", flush=True)
+        return None
+
+
+def run_summarisation_job(conversation_id: str, is_group: bool = False):
+    try:
+        if is_group:
+            result = supabase.from_("group_messages").select("role, content").eq("conversation_id", conversation_id).order("created_at").execute()
+        else:
+            result = supabase.from_("messages").select("role, content").eq("conversation_id", conversation_id).order("created_at").execute()
+
+        summary = generate_conversation_summary(conversation_id, result.data, is_group)
+
+        if summary:
+            now = datetime.now(timezone.utc).isoformat()
+            if is_group:
+                supabase.from_("group_conversations").update({"summary": summary, "summary_generated_at": now}).eq("id", conversation_id).execute()
+            else:
+                supabase.from_("conversations").update({"summary": summary, "summary_generated_at": now}).eq("id", conversation_id).execute()
+            print(f"[summary] saved for conversation {conversation_id} (group={is_group})", flush=True)
+    except Exception as e:
+        print(f"[summary] run_summarisation_job EXCEPTION for {conversation_id}: {e!r}", flush=True)
+
+
 def generate_conversation_title(user_message: str, assistant_response: str) -> str:
     print(f"[title] called — user_message[:100]: {user_message[:100]!r}", flush=True)
     print(f"[title] assistant_response[:100]: {assistant_response[:100]!r}", flush=True)
@@ -334,9 +396,25 @@ def delete_conversation(conversation_id: str):
 @app.post("/conversation/start/stream")
 def start_conversation_stream(req: StartConversationRequest):
     library_context = get_library_context(req.user_id)
-    recent_result = supabase.from_("conversations").select("title").eq("user_id", req.user_id).neq("title", "Untitled Conversation").order("updated_at", desc=True).limit(4).execute()
-    recent_titles = [r["title"] for r in recent_result.data if r.get("title")]
-    recent_context = "Recent past conversations: " + ", ".join(recent_titles) if recent_titles else ""
+
+    summary_result = supabase.from_("conversations").select("summary").eq("user_id", req.user_id).filter("summary", "not.is", "null").order("updated_at", desc=True).limit(4).execute()
+    summaries = [r["summary"] for r in summary_result.data if r.get("summary")]
+
+    if summaries:
+        selected = []
+        total_tokens = 0
+        for s in summaries:
+            est = len(s) / 4
+            if total_tokens + est > 400:
+                break
+            selected.append(f"- {s}")
+            total_tokens += est
+        recent_context = "Recent conversation context:\n" + "\n".join(selected) if selected else ""
+    else:
+        title_result = supabase.from_("conversations").select("title").eq("user_id", req.user_id).neq("title", "Untitled Conversation").order("updated_at", desc=True).limit(4).execute()
+        recent_titles = [r["title"] for r in title_result.data if r.get("title")]
+        recent_context = "Recent past conversations: " + ", ".join(recent_titles) if recent_titles else ""
+
     system_prompt = build_system_prompt(library_context, recent_context=recent_context)
 
     if req.mode == "open":
@@ -399,7 +477,7 @@ def start_conversation_stream(req: StartConversationRequest):
 
 
 @app.post("/conversation/continue/stream")
-def continue_conversation_stream(req: ContinueConversationRequest):
+def continue_conversation_stream(req: ContinueConversationRequest, background_tasks: BackgroundTasks):
     result = supabase.from_("messages").select("role, content").eq("conversation_id", req.conversation_id).order("created_at").execute()
     history = [{"role": m["role"], "content": m["content"]} for m in result.data]
 
@@ -453,6 +531,7 @@ def continue_conversation_stream(req: ContinueConversationRequest):
 
         yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
+    background_tasks.add_task(run_summarisation_job, req.conversation_id, False)
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 
@@ -634,9 +713,25 @@ def get_group_books(group_id: str) -> list:
 @app.post("/group-conversation/start/stream")
 def start_group_conversation_stream(req: StartGroupConversationRequest):
     group_books = get_group_books(req.group_id)
-    recent_result = supabase.from_("group_conversations").select("title").eq("group_id", req.group_id).neq("title", "Untitled Conversation").order("updated_at", desc=True).limit(4).execute()
-    recent_titles = [r["title"] for r in recent_result.data if r.get("title")]
-    recent_context = "Recent past conversations: " + ", ".join(recent_titles) if recent_titles else ""
+
+    summary_result = supabase.from_("group_conversations").select("summary").eq("group_id", req.group_id).filter("summary", "not.is", "null").order("updated_at", desc=True).limit(4).execute()
+    summaries = [r["summary"] for r in summary_result.data if r.get("summary")]
+
+    if summaries:
+        selected = []
+        total_tokens = 0
+        for s in summaries:
+            est = len(s) / 4
+            if total_tokens + est > 400:
+                break
+            selected.append(f"- {s}")
+            total_tokens += est
+        recent_context = "Recent conversation context:\n" + "\n".join(selected) if selected else ""
+    else:
+        title_result = supabase.from_("group_conversations").select("title").eq("group_id", req.group_id).neq("title", "Untitled Conversation").order("updated_at", desc=True).limit(4).execute()
+        recent_titles = [r["title"] for r in title_result.data if r.get("title")]
+        recent_context = "Recent past conversations: " + ", ".join(recent_titles) if recent_titles else ""
+
     system_prompt = build_system_prompt("", books_override=group_books, recent_context=recent_context)
 
     if req.mode == "open":
@@ -691,7 +786,7 @@ def start_group_conversation_stream(req: StartGroupConversationRequest):
 
 
 @app.post("/group-conversation/continue/stream")
-def continue_group_conversation_stream(req: ContinueGroupConversationRequest):
+def continue_group_conversation_stream(req: ContinueGroupConversationRequest, background_tasks: BackgroundTasks):
     history_result = supabase.from_("group_messages").select("role, content").eq("conversation_id", req.conversation_id).order("created_at").execute()
     history = [{"role": m["role"], "content": m["content"]} for m in history_result.data]
 
@@ -738,6 +833,7 @@ def continue_group_conversation_stream(req: ContinueGroupConversationRequest):
 
         yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
+    background_tasks.add_task(run_summarisation_job, req.conversation_id, True)
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 
@@ -757,3 +853,42 @@ def get_group_messages(conversation_id: str):
 def delete_group_conversation(conversation_id: str):
     supabase.from_("group_conversations").delete().eq("id", conversation_id).execute()
     return {"success": True}
+
+
+# --- Admin ---
+
+class BackfillRequest(BaseModel):
+    secret: str
+
+@app.post("/admin/backfill-summaries")
+def backfill_summaries(req: BackfillRequest):
+    if req.secret != "roga-backfill-2026":
+        raise HTTPException(status_code=403, detail="Invalid secret.")
+
+    processed = 0
+
+    conv_result = supabase.from_("conversations").select("id").filter("summary", "is", "null").order("updated_at", desc=True).execute()
+    for conv in conv_result.data:
+        cid = conv["id"]
+        msgs = supabase.from_("messages").select("role, content").eq("conversation_id", cid).order("created_at").execute()
+        summary = generate_conversation_summary(cid, msgs.data, is_group=False)
+        if summary:
+            supabase.from_("conversations").update({
+                "summary": summary,
+                "summary_generated_at": datetime.now(timezone.utc).isoformat()
+            }).eq("id", cid).execute()
+            processed += 1
+
+    group_conv_result = supabase.from_("group_conversations").select("id").filter("summary", "is", "null").order("updated_at", desc=True).execute()
+    for conv in group_conv_result.data:
+        cid = conv["id"]
+        msgs = supabase.from_("group_messages").select("role, content").eq("conversation_id", cid).order("created_at").execute()
+        summary = generate_conversation_summary(cid, msgs.data, is_group=True)
+        if summary:
+            supabase.from_("group_conversations").update({
+                "summary": summary,
+                "summary_generated_at": datetime.now(timezone.utc).isoformat()
+            }).eq("id", cid).execute()
+            processed += 1
+
+    return {"processed": processed}
