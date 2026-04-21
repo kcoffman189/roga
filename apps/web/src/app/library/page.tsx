@@ -138,7 +138,7 @@ export default function LibraryPage() {
         }}
       >
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/home')}
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#333', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
           ←
@@ -150,7 +150,7 @@ export default function LibraryPage() {
       <div
         style={{ display: isMobile ? 'none' : 'flex', width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px', flexShrink: 0 }}
       >
-        <div style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px', cursor: 'pointer' }} onClick={() => router.push('/')}>Roga</div>
+        <div style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px', cursor: 'pointer' }} onClick={() => router.push('/home')}>Roga</div>
         <button onClick={() => router.push('/conversation/new?mode=intentional')} style={{ textAlign: 'left', padding: '10px 12px', marginBottom: '8px', borderRadius: '6px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', fontSize: '14px' }}>
           Let's dig into something
         </button>
@@ -162,7 +162,7 @@ export default function LibraryPage() {
         </a>
         <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', paddingLeft: '4px' }}>Past conversations</div>
         <div style={{ fontSize: '13px', color: '#999', padding: '4px' }}>
-          <a href="/" style={{ color: '#999', textDecoration: 'none' }}>← Back to conversations</a>
+          <a href="/home" style={{ color: '#999', textDecoration: 'none' }}>← Back to conversations</a>
         </div>
       </div>
 
