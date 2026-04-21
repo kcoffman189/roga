@@ -559,17 +559,13 @@ def get_welcome_quote(user_id: str):
         max_tokens=200,
         messages=[{
             "role": "user",
-            "content": f"""From this person's book library, select one memorable, thought-provoking quote worth sitting with.
-
-Prioritize books the user knows well (score 4-5) first. Deprioritize books they haven't read yet.
-
-The quote should be 1-3 sentences — readable at a glance. Choose something that opens a door rather than closes one.
+            "content": f"""From this person's book library, surface a single idea, tension, or question that lives somewhere in the space of these books. Write it in one to three sentences. Do not use quotation marks. Do not attribute it to a specific book or author. It should feel like something worth sitting with — a provocation, not a summary. Prioritize books the user knows well (score 4-5). Deprioritize books they haven't read yet.
 
 Library:
 {library_text}
 
 Respond with ONLY a JSON object in this exact format, no other text:
-{{"quote": "the quote text here", "book": "Book Title"}}"""
+{{"quote": "the idea text here"}}"""
         }]
     )
 
@@ -577,9 +573,9 @@ Respond with ONLY a JSON object in this exact format, no other text:
         import json
         text = response.content[0].text.strip()
         data = json.loads(text)
-        return {"quote": data["quote"], "book": data["book"], "empty_library": False}
+        return {"quote": data["quote"], "empty_library": False}
     except:
-        return {"quote": None, "book": None, "empty_library": False}
+        return {"quote": None, "empty_library": False}
 
 
 @app.get("/group-welcome-quote/{group_id}")
@@ -588,13 +584,13 @@ def get_group_welcome_quote(group_id: str):
     book_ids = [row["library_entry_id"] for row in gb_result.data]
 
     if not book_ids:
-        return {"quote": None, "book": None, "empty_library": True}
+        return {"quote": None, "empty_library": True}
 
     entries_result = supabase.from_("library_entries").select("title, familiarity_score, is_unread, notes").in_("id", book_ids).execute()
     entries = entries_result.data
 
     if not entries:
-        return {"quote": None, "book": None, "empty_library": True}
+        return {"quote": None, "empty_library": True}
 
     library_lines = []
     for entry in entries:
@@ -607,24 +603,20 @@ def get_group_welcome_quote(group_id: str):
             max_tokens=200,
             messages=[{
                 "role": "user",
-                "content": f"""From this person's book library, select one memorable, thought-provoking quote worth sitting with.
-
-Prioritize books the user knows well (score 4-5) first. Deprioritize books they haven't read yet.
-
-The quote should be 1-3 sentences — readable at a glance. Choose something that opens a door rather than closes one.
+                "content": f"""From this specific collection of books, surface a single idea, tension, or question that lives in the space these books create together. Write it in one to three sentences. Do not use quotation marks. Do not attribute it to a specific book or author. It should feel native to this particular collection — as if these books are in conversation with each other — not a generic observation.
 
 Library:
 {library_text}
 
 Respond with ONLY a JSON object in this exact format, no other text:
-{{"quote": "the quote text here", "book": "Book Title"}}"""
+{{"quote": "the idea text here"}}"""
             }]
         )
         text = response.content[0].text.strip()
         data = json.loads(text)
-        return {"quote": data["quote"], "book": data["book"], "empty_library": False}
+        return {"quote": data["quote"], "empty_library": False}
     except:
-        return {"quote": None, "book": None, "empty_library": False}
+        return {"quote": None, "empty_library": False}
 
 
 @app.get("/conversation/{conversation_id}/messages")

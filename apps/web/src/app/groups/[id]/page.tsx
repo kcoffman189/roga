@@ -43,7 +43,6 @@ type BookEntry = {
 
 type WelcomeQuote = {
   quote: string | null
-  book: string | null
   empty_library: boolean
 }
 
@@ -305,13 +304,11 @@ export default function GroupViewPage() {
           <div style={{ textAlign: 'center', color: '#999' }}>
             <div style={{ fontSize: '15px' }}>Add more books to this group to resume conversations.</div>
           </div>
-        ) : welcome?.quote && welcome?.book ? (
+        ) : welcome?.quote ? (
           <div style={{ textAlign: 'center', maxWidth: '400px', margin: '0 auto', padding: '48px' }}>
             <p style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '21px', lineHeight: '1.68', color: 'var(--color-text-primary)', textAlign: 'center', margin: 0 }}>
-              &ldquo;{welcome.quote}&rdquo;
+              {welcome.quote}
             </p>
-            <hr style={{ width: '44px', height: '2px', backgroundColor: 'var(--color-accent)', border: 'none', display: 'block', margin: '22px auto 14px' }} />
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-tertiary)', textAlign: 'center', margin: 0 }}>{welcome.book}</p>
           </div>
         ) : null}
       </div>
