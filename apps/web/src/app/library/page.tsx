@@ -250,8 +250,13 @@ export default function LibraryPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {entries.map((entry) => (
                 <div key={entry.id} style={{ border: '1px solid #e0e0e0', borderRadius: '8px', padding: '16px 20px', background: '#fff' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <div style={{ fontWeight: '500', fontSize: '15px' }}>{entry.title}</div>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <div>
+                      <div style={{ fontWeight: '500', fontSize: '15px' }}>{entry.title}</div>
+                      {entry.author && (
+                        <div style={{ fontSize: '13px', color: '#6B6B6B', marginTop: '2px' }}>{entry.author}</div>
+                      )}
+                    </div>
                     <button
                       onClick={() => handleDeleteBook(entry.id)}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '18px', lineHeight: 1, minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }}
