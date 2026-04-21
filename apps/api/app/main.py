@@ -209,6 +209,10 @@ Write a summary of 3-5 sentences that captures all four of the following:
 
 Write in plain, direct prose. Do not use headers or bullet points. Do not write in the first person. Do not summarise the conversation chronologically — capture its intellectual shape. Aim for 80-120 words total.
 
+Vary your opening sentence. Do not begin every summary with the same construction — particularly avoid opening repeatedly with "The user was wrestling with." Each summary should feel like a fresh observation, not a templated output.
+
+Strip all markdown formatting from the output. No italics, no bold, no asterisks, no special characters. Plain text only. Book titles should appear without formatting — just the title as written.
+
 If the conversation was very short or did not surface a meaningful intellectual tension, write a single sentence noting that the session was exploratory or introductory and did not produce a substantive thread to carry forward."""
 
 
