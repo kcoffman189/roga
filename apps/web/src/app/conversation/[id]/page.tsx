@@ -136,7 +136,7 @@ function ConversationInner() {
   const handleDelete = async () => {
     if (!window.confirm('Delete this conversation? This cannot be undone.')) return
     await fetch(`${API_URL}/conversation/${params.id}`, { method: 'DELETE' })
-    router.push('/')
+    router.push('/home')
   }
 
   return (
@@ -159,7 +159,7 @@ function ConversationInner() {
         }}
       >
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/home')}
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', color: 'var(--color-text-primary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
         >
           Roga
@@ -170,7 +170,7 @@ function ConversationInner() {
       <div className="sidebar-panel" style={{ display: isMobile ? 'none' : 'flex', width: '260px', flexDirection: 'column', padding: '22px 20px' }}>
         <div
           style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '58px', letterSpacing: '-0.02em', color: 'var(--color-text-on-dark)', lineHeight: 1, marginBottom: '28px', cursor: 'pointer' }}
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/home')}
         >Roga</div>
         <button onClick={() => router.push('/conversation/new?mode=intentional')} className="sidebar-cta-primary">
           Let&apos;s dig into something

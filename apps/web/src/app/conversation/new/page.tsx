@@ -94,7 +94,7 @@ function NewConversationInner() {
         }}
       >
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/home')}
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '18px', color: '#1a1a1a', padding: '4px', minHeight: '44px', display: 'flex', alignItems: 'center' }}
         >
           Roga
@@ -127,7 +127,7 @@ function NewConversationInner() {
               {loading ? 'Starting...' : 'Start'}
             </button>
             <button
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/home')}
               style={{ flex: 1, padding: '12px 24px', fontSize: '15px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #e0e0e0', background: '#fff', minHeight: '44px' }}
             >
               Cancel
