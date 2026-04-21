@@ -70,7 +70,7 @@ export default function GroupsPage() {
         }}
       >
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/home')}
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#333', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
           ←
@@ -84,14 +84,14 @@ export default function GroupsPage() {
       >
         <div
           style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px', cursor: 'pointer' }}
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/home')}
         >
           Roga
         </div>
-        <a href="/" style={{ display: 'block', padding: '10px 12px', marginBottom: '8px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0' }}>
+        <a href="/home" style={{ display: 'block', padding: '10px 12px', marginBottom: '8px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0' }}>
           Let's dig into something
         </a>
-        <a href="/" style={{ display: 'block', padding: '10px 12px', marginBottom: '24px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0' }}>
+        <a href="/home" style={{ display: 'block', padding: '10px 12px', marginBottom: '24px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0' }}>
           Tell me something interesting
         </a>
         <a href="/groups" style={{ display: 'block', padding: '10px 12px', marginBottom: '8px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0', background: '#f5f5f5', fontWeight: '500' }}>
