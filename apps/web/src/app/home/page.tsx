@@ -20,6 +20,7 @@ type Conversation = {
 
 type WelcomeQuote = {
   quote: string | null
+  author: string | null
   empty_library: boolean
 }
 
@@ -84,8 +85,14 @@ export default function Home() {
       return (
         <div style={{ textAlign: 'center', maxWidth: '400px', margin: '0 auto', padding: '48px' }}>
           <p style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '21px', lineHeight: '1.68', color: 'var(--color-text-primary)', textAlign: 'center', margin: 0 }}>
-            {welcome.quote}
+            &ldquo;{welcome.quote}&rdquo;
           </p>
+          {welcome.author && (
+            <>
+              <hr style={{ width: '44px', height: '2px', backgroundColor: 'var(--color-accent)', border: 'none', display: 'block', margin: '22px auto 14px' }} />
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '9px', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-tertiary)', textAlign: 'center', margin: 0 }}>{welcome.author}</p>
+            </>
+          )}
         </div>
       )
     }
