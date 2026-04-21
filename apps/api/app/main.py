@@ -863,6 +863,7 @@ def delete_group_conversation(conversation_id: str):
 
 class BackfillRequest(BaseModel):
     secret: str
+    force: bool = False
 
 @app.post("/admin/backfill-summaries")
 def backfill_summaries(req: BackfillRequest):
@@ -871,8 +872,10 @@ def backfill_summaries(req: BackfillRequest):
 
     processed = 0
 
-    conv_result = supabase.from_("conversations").select("id").filter("summary", "is", "null").order("updated_at", desc=True).execute()
-    for conv in conv_result.data:
+    conv_query = supabase.from_("conversations").select("id").order("updated_at", desc=True)
+    if not req.force:
+        conv_query = conv_query.filter("summary", "is", "null")
+    for conv in conv_query.execute().data:
         cid = conv["id"]
         msgs = supabase.from_("messages").select("role, content").eq("conversation_id", cid).order("created_at").execute()
         summary = generate_conversation_summary(cid, msgs.data, is_group=False)
@@ -883,8 +886,10 @@ def backfill_summaries(req: BackfillRequest):
             }).eq("id", cid).execute()
             processed += 1
 
-    group_conv_result = supabase.from_("group_conversations").select("id").filter("summary", "is", "null").order("updated_at", desc=True).execute()
-    for conv in group_conv_result.data:
+    group_query = supabase.from_("group_conversations").select("id").order("updated_at", desc=True)
+    if not req.force:
+        group_query = group_query.filter("summary", "is", "null")
+    for conv in group_query.execute().data:
         cid = conv["id"]
         msgs = supabase.from_("group_messages").select("role, content").eq("conversation_id", cid).order("created_at").execute()
         summary = generate_conversation_summary(cid, msgs.data, is_group=True)
