@@ -23,6 +23,7 @@ export default function LibraryPage() {
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [searchTitle, setSearchTitle] = useState('')
+  const [searchAuthor, setSearchAuthor] = useState('')
   const [addIsUnread, setAddIsUnread] = useState(false)
   const [adding, setAdding] = useState(false)
   const [step, setStep] = useState<1 | 2>(1)
@@ -53,12 +54,14 @@ export default function LibraryPage() {
     const { error } = await supabase.from('library_entries').insert({
       user_id: user.id,
       title: searchTitle.trim(),
+      author: searchAuthor.trim() || null,
       familiarity_score: addIsUnread ? null : 3,
       is_unread: addIsUnread,
     })
     if (!error) {
       setShowAdd(false)
       setSearchTitle('')
+      setSearchAuthor('')
       setAddIsUnread(false)
       setStep(1)
       fetchLibrary()
@@ -207,6 +210,13 @@ export default function LibraryPage() {
               {step === 2 && (
                 <>
                   <p style={{ margin: '0 0 16px', fontWeight: '500' }}>{searchTitle}</p>
+                  <input
+                    type="text"
+                    value={searchAuthor}
+                    onChange={(e) => setSearchAuthor(e.target.value)}
+                    placeholder="Author (optional)"
+                    style={{ width: '100%', padding: '12px', fontSize: '16px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box', minHeight: '44px', marginBottom: '16px' }}
+                  />
                   <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none', minHeight: '44px' }}>
                     <ToggleSwitch checked={addIsUnread} onChange={setAddIsUnread} />
                     <span style={{ fontSize: '15px', color: '#444' }}>Haven't read this yet</span>
