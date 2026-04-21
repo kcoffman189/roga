@@ -72,70 +72,150 @@ function NewConversationInner() {
 
   if (mode === 'open') {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'sans-serif' }}>
-        <div style={{ color: '#999', fontSize: '15px' }}>Finding something interesting...</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#FAF8F4' }}>
+        <div style={{ color: '#6B6B6B', fontSize: '14px', fontFamily: 'Inter, system-ui, sans-serif', fontStyle: 'italic' }}>Finding something interesting...</div>
       </div>
     )
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'sans-serif', background: '#fafafa' }}>
+    <>
+      <style>{`
+        .cn-textarea:focus {
+          border-color: #C45E0A !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        .cn-textarea::placeholder {
+          color: #B0ACA6;
+        }
+        .cn-btn-start {
+          background: #272C32;
+          color: #EEECEA;
+          font-family: Inter, system-ui, sans-serif;
+          font-size: 11px;
+          font-weight: 500;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          padding: 14px 32px;
+          border: none;
+          border-radius: 2px;
+          cursor: pointer;
+          position: relative;
+          flex: 2;
+          transition: background 150ms ease;
+          overflow: hidden;
+        }
+        .cn-btn-start::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 3px;
+          background: #C45E0A;
+        }
+        .cn-btn-start:hover:not(:disabled) {
+          background: #1A1A1A;
+        }
+        .cn-btn-start:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .cn-btn-cancel {
+          background: transparent;
+          color: #B0ACA6;
+          font-family: Inter, system-ui, sans-serif;
+          font-size: 13px;
+          font-weight: 400;
+          border: 1px solid #E4E0DA;
+          border-radius: 2px;
+          padding: 14px 32px;
+          cursor: pointer;
+          flex: 1;
+          transition: color 150ms ease, border-color 150ms ease;
+        }
+        .cn-btn-cancel:hover {
+          color: #6B6B6B;
+          border-color: #B0ACA6;
+        }
+      `}</style>
 
-      {/* Mobile Header — hidden on desktop */}
-      <div
-        style={{
-          display: isMobile ? 'flex' : 'none',
-          borderBottom: '1px solid #e0e0e0',
-          background: '#fff',
-          alignItems: 'center',
-          padding: '0 16px',
-          height: '52px',
-          flexShrink: 0,
-        }}
-      >
-        <button
-          onClick={() => router.push('/home')}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '18px', color: '#1a1a1a', padding: '4px', minHeight: '44px', display: 'flex', alignItems: 'center' }}
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#FAF8F4', fontFamily: 'Inter, system-ui, sans-serif' }}>
+
+        {/* Mobile Header — hidden on desktop */}
+        <div
+          style={{
+            display: isMobile ? 'flex' : 'none',
+            borderBottom: '1px solid #E4E0DA',
+            background: '#FAF8F4',
+            alignItems: 'center',
+            padding: '0 16px',
+            height: '52px',
+            flexShrink: 0,
+          }}
         >
-          Roga
-        </button>
-      </div>
+          <button
+            onClick={() => router.push('/home')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '18px', color: '#1a1a1a', padding: '4px', minHeight: '44px', display: 'flex', alignItems: 'center' }}
+          >
+            Roga
+          </button>
+        </div>
 
-      {/* Content */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
-        <div style={{ width: '100%', maxWidth: '600px' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px', color: '#333' }}>What do you want to dig into?</h2>
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="A chapter, a question, an idea you can't shake..."
-            rows={4}
-            style={{ width: '100%', padding: '12px', fontSize: '16px', borderRadius: '8px', border: '1px solid #e0e0e0', resize: 'none', boxSizing: 'border-box', fontFamily: 'sans-serif' }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                handleStart()
-              }
-            }}
-          />
-          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-            <button
-              onClick={() => handleStart()}
-              disabled={loading || !input.trim()}
-              style={{ flex: 1, padding: '12px 24px', fontSize: '15px', cursor: 'pointer', borderRadius: '8px', background: '#000', color: '#fff', border: 'none', minHeight: '44px' }}
-            >
-              {loading ? 'Starting...' : 'Start'}
-            </button>
-            <button
-              onClick={() => router.push('/home')}
-              style={{ flex: 1, padding: '12px 24px', fontSize: '15px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #e0e0e0', background: '#fff', minHeight: '44px' }}
-            >
-              Cancel
-            </button>
+        {/* Content */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 24px' }}>
+          <div style={{ width: '100%', maxWidth: '580px' }}>
+            <span style={{ display: 'block', width: '32px', height: '2px', background: '#C45E0A', marginBottom: '20px' }} />
+            <h2 style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '26px', fontWeight: 400, color: '#1A1A1A', marginBottom: '28px', lineHeight: 1.4, margin: '0 0 28px 0' }}>
+              What do you want to dig into?
+            </h2>
+            <textarea
+              className="cn-textarea"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="A chapter, a question, an idea you can't shake..."
+              style={{
+                width: '100%',
+                minHeight: '120px',
+                padding: '16px 18px',
+                fontSize: '15px',
+                fontFamily: 'Inter, system-ui, sans-serif',
+                color: '#1A1A1A',
+                lineHeight: 1.6,
+                background: '#FFFFFF',
+                border: '1px solid #E4E0DA',
+                borderRadius: '4px',
+                resize: 'vertical',
+                boxSizing: 'border-box',
+                marginBottom: '20px',
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  handleStart()
+                }
+              }}
+            />
+            <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+              <button
+                className="cn-btn-start"
+                onClick={() => handleStart()}
+                disabled={loading || !input.trim()}
+              >
+                {loading ? 'Starting...' : 'Start'}
+              </button>
+              <button
+                className="cn-btn-cancel"
+                onClick={() => router.push('/home')}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
