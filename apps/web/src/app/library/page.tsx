@@ -154,7 +154,7 @@ export default function LibraryPage() {
         className="sidebar-panel"
         style={{ display: isMobile ? 'none' : 'flex', width: '260px', flexDirection: 'column', padding: '22px 20px', flexShrink: 0 }}
       >
-        <div style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '58px', letterSpacing: '-0.02em', color: 'var(--color-text-on-dark)', lineHeight: 1 }}>Roga</div>
+        <div onClick={() => router.push('/home')} style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '58px', letterSpacing: '-0.02em', color: 'var(--color-text-on-dark)', lineHeight: 1, cursor: 'pointer' }}>Roga</div>
         <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-subtle-dark)', marginTop: '5px', marginBottom: '28px' }}>Beta</div>
 
         <button onClick={() => router.push('/conversation/new?mode=intentional')} className="sidebar-cta-primary">
