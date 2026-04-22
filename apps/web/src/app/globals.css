@@ -270,3 +270,130 @@ a:hover {
 .sidebar-logout:hover {
   color: var(--color-text-muted-dark);
 }
+
+/* ── Library page ─────────────────────────────────── */
+.lib-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: 4px;
+  padding: 20px 24px;
+  margin-bottom: 12px;
+  position: relative;
+}
+.lib-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--color-border-light);
+  border-radius: 4px 0 0 4px;
+  transition: background 200ms ease;
+}
+.lib-card:hover::before {
+  background: var(--color-accent);
+}
+
+.lib-add-btn {
+  background: var(--color-bg-sidebar);
+  color: var(--color-text-on-dark);
+  font-family: Inter, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: background 150ms ease;
+}
+.lib-add-btn::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--color-accent);
+}
+.lib-add-btn:hover {
+  background: var(--color-text-primary);
+}
+
+.lib-toggle {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--color-border-light);
+  position: relative;
+  cursor: pointer;
+  transition: background 150ms ease;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.lib-toggle.active {
+  background: var(--color-accent);
+}
+.lib-toggle-thumb {
+  position: absolute;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  transition: left 150ms ease;
+}
+.lib-toggle.active .lib-toggle-thumb {
+  left: 19px;
+}
+
+.lib-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: block;
+}
+.lib-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 0 0 1px var(--color-accent);
+  cursor: pointer;
+  margin-top: -6.5px;
+}
+.lib-slider::-moz-range-track {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-border-light);
+}
+.lib-slider::-moz-range-progress {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-accent);
+}
+.lib-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 0 0 1px var(--color-accent);
+  cursor: pointer;
+}

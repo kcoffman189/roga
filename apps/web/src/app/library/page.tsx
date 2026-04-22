@@ -121,7 +121,7 @@ export default function LibraryPage() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#fafafa' }}>
+    <div style={{ display: 'flex', height: '100vh', background: 'var(--color-bg-canvas)' }}>
 
       {/* Mobile Header — hidden on desktop */}
       <div
@@ -132,8 +132,8 @@ export default function LibraryPage() {
           left: 0,
           right: 0,
           zIndex: 10,
-          background: '#fff',
-          borderBottom: '1px solid #e0e0e0',
+          background: 'var(--color-bg-canvas)',
+          borderBottom: '1px solid var(--color-border-light)',
           padding: '10px 20px',
           alignItems: 'center',
           gap: '12px',
@@ -142,66 +142,80 @@ export default function LibraryPage() {
       >
         <button
           onClick={() => router.push('/home')}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#333', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: 'var(--color-text-primary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
           ←
         </button>
-        <div style={{ fontWeight: '600', fontSize: '17px' }}>My Library</div>
+        <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: '400', fontSize: '17px', color: 'var(--color-text-primary)' }}>My Library</div>
       </div>
 
       {/* Left Panel — desktop only */}
       <div
-        style={{ display: isMobile ? 'none' : 'flex', width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px', flexShrink: 0 }}
+        className="sidebar-panel"
+        style={{ display: isMobile ? 'none' : 'flex', width: '260px', flexDirection: 'column', padding: '22px 20px', flexShrink: 0 }}
       >
-        <div style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px', cursor: 'pointer' }} onClick={() => router.push('/home')}>Roga</div>
-        <button onClick={() => router.push('/conversation/new?mode=intentional')} style={{ textAlign: 'left', padding: '10px 12px', marginBottom: '8px', borderRadius: '6px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', fontSize: '14px' }}>
-          Let's dig into something
+        <div style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '58px', letterSpacing: '-0.02em', color: 'var(--color-text-on-dark)', lineHeight: 1 }}>Roga</div>
+        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-subtle-dark)', marginTop: '5px', marginBottom: '28px' }}>Beta</div>
+
+        <button onClick={() => router.push('/conversation/new?mode=intentional')} className="sidebar-cta-primary">
+          Let&apos;s dig into something
         </button>
-        <button onClick={() => router.push('/conversation/new?mode=open')} style={{ textAlign: 'left', padding: '10px 12px', marginBottom: '24px', borderRadius: '6px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', fontSize: '14px' }}>
+        <button onClick={() => router.push('/conversation/new?mode=open')} className="sidebar-cta-secondary">
           Tell me something interesting
         </button>
-        <a href="/library" style={{ display: 'block', padding: '10px 12px', marginBottom: '24px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0', background: '#f5f5f5', fontWeight: '500' }}>
-          My Library
+
+        <a href="/groups" className="sidebar-nav-link" style={{ marginTop: '24px', marginBottom: '4px' }}>Groups</a>
+        <a href="/library" className="sidebar-nav-link" style={{ color: 'var(--color-text-on-dark)', fontWeight: '500' }}>My Library</a>
+
+        <div className="sidebar-section-label">Past conversations</div>
+        <a
+          href="/home"
+          style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: '#4E5660', padding: '6px 2px', textDecoration: 'none', display: 'block', transition: 'color 150ms ease' }}
+          onMouseEnter={e => (e.currentTarget.style.color = '#B8C0C8')}
+          onMouseLeave={e => (e.currentTarget.style.color = '#4E5660')}
+        >
+          ← Back to conversations
         </a>
-        <div style={{ fontSize: '11px', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', paddingLeft: '4px' }}>Past conversations</div>
-        <div style={{ fontSize: '13px', color: '#999', padding: '4px' }}>
-          <a href="/home" style={{ color: '#999', textDecoration: 'none' }}>← Back to conversations</a>
-        </div>
       </div>
 
       {/* Main Content */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ flex: 1, overflowY: 'auto', background: 'var(--color-bg-canvas)' }}>
         <div
-          style={{ maxWidth: '680px', margin: '0 auto', padding: isMobile ? '72px 16px 80px' : '48px 40px' }}
+          style={{ maxWidth: '680px', margin: '0 auto', padding: isMobile ? '72px 16px 80px' : '48px 56px' }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h1 style={{ display: isMobile ? 'none' : 'block', fontSize: '24px', fontWeight: '600', margin: 0 }}>My Library</h1>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: isMobile ? 'flex-end' : 'space-between', marginBottom: isMobile ? '16px' : '32px' }}>
+            {!isMobile && (
+              <div>
+                <hr style={{ width: '32px', height: '2px', background: 'var(--color-accent)', border: 'none', display: 'block', margin: '0 0 16px' }} />
+                <h1 style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '28px', fontWeight: '400', color: 'var(--color-text-primary)', margin: 0 }}>My Library</h1>
+              </div>
+            )}
             <button
               onClick={() => { setShowAdd(true); setStep(1) }}
-              style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #ccc', background: '#fff', minHeight: '44px', marginLeft: 'auto' }}
+              className="lib-add-btn"
             >
               + Add book
             </button>
           </div>
 
           {showAdd && (
-            <div style={{ border: '1px solid #e0e0e0', borderRadius: '8px', padding: '24px', marginBottom: '24px', background: '#fff' }}>
+            <div style={{ border: '1px solid var(--color-border-light)', borderRadius: '4px', padding: '24px', marginBottom: '24px', background: 'var(--color-bg-surface)' }}>
               {step === 1 && (
                 <>
-                  <p style={{ margin: '0 0 12px', fontWeight: '500' }}>What book do you want to add?</p>
+                  <p style={{ margin: '0 0 12px', fontWeight: '500', fontFamily: 'Inter, sans-serif', color: 'var(--color-text-primary)' }}>What book do you want to add?</p>
                   <input
                     type="text"
                     value={searchTitle}
                     onChange={(e) => setSearchTitle(e.target.value)}
                     placeholder="Type a title..."
-                    style={{ width: '100%', padding: '12px', fontSize: '16px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box', minHeight: '44px' }}
+                    style={{ width: '100%', padding: '12px', fontSize: '16px', borderRadius: '4px', border: '1px solid var(--color-border-light)', boxSizing: 'border-box', minHeight: '44px', fontFamily: 'Inter, sans-serif' }}
                     onKeyDown={(e) => { if (e.key === 'Enter' && searchTitle.trim()) setStep(2) }}
                   />
                   <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                    <button onClick={() => setStep(2)} disabled={!searchTitle.trim()} style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '6px', background: '#000', color: '#fff', border: 'none', minHeight: '44px' }}>
+                    <button onClick={() => setStep(2)} disabled={!searchTitle.trim()} style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '4px', background: 'var(--color-text-primary)', color: '#fff', border: 'none', minHeight: '44px', fontFamily: 'Inter, sans-serif' }}>
                       Next
                     </button>
-                    <button onClick={() => { setShowAdd(false); setSearchTitle(''); setStep(1) }} style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #ccc', background: '#fff', minHeight: '44px' }}>
+                    <button onClick={() => { setShowAdd(false); setSearchTitle(''); setStep(1) }} style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '4px', border: '1px solid var(--color-border-light)', background: 'var(--color-bg-surface)', minHeight: '44px', fontFamily: 'Inter, sans-serif', color: 'var(--color-text-secondary)' }}>
                       Cancel
                     </button>
                   </div>
@@ -209,23 +223,23 @@ export default function LibraryPage() {
               )}
               {step === 2 && (
                 <>
-                  <p style={{ margin: '0 0 16px', fontWeight: '500' }}>{searchTitle}</p>
+                  <p style={{ margin: '0 0 16px', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '17px', color: 'var(--color-text-primary)' }}>{searchTitle}</p>
                   <input
                     type="text"
                     value={searchAuthor}
                     onChange={(e) => setSearchAuthor(e.target.value)}
                     placeholder="Author (optional)"
-                    style={{ width: '100%', padding: '12px', fontSize: '16px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box', minHeight: '44px', marginBottom: '16px' }}
+                    style={{ width: '100%', padding: '12px', fontSize: '16px', borderRadius: '4px', border: '1px solid var(--color-border-light)', boxSizing: 'border-box', minHeight: '44px', marginBottom: '16px', fontFamily: 'Inter, sans-serif' }}
                   />
                   <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none', minHeight: '44px' }}>
                     <ToggleSwitch checked={addIsUnread} onChange={setAddIsUnread} />
-                    <span style={{ fontSize: '15px', color: '#444' }}>Haven't read this yet</span>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'var(--color-text-secondary)' }}>Haven&apos;t read this yet</span>
                   </label>
                   <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
-                    <button onClick={handleAddBook} disabled={adding} style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '6px', background: '#000', color: '#fff', border: 'none', minHeight: '44px' }}>
+                    <button onClick={handleAddBook} disabled={adding} style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '4px', background: 'var(--color-text-primary)', color: '#fff', border: 'none', minHeight: '44px', fontFamily: 'Inter, sans-serif' }}>
                       {adding ? 'Adding...' : 'Add to library'}
                     </button>
-                    <button onClick={() => setStep(1)} style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '6px', border: '1px solid #ccc', background: '#fff', minHeight: '44px' }}>
+                    <button onClick={() => setStep(1)} style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '4px', border: '1px solid var(--color-border-light)', background: 'var(--color-bg-surface)', minHeight: '44px', fontFamily: 'Inter, sans-serif', color: 'var(--color-text-secondary)' }}>
                       Back
                     </button>
                   </div>
@@ -235,45 +249,39 @@ export default function LibraryPage() {
           )}
 
           {loading ? (
-            <p style={{ color: '#666' }}>Loading your library...</p>
+            <p style={{ fontFamily: 'Inter, sans-serif', color: 'var(--color-text-secondary)' }}>Loading your library...</p>
           ) : entries.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px 0' }}>
-              <p style={{ color: '#999', marginBottom: '20px', fontSize: '15px' }}>Your library is empty. Add your first book to get started.</p>
-              <button
-                onClick={() => { setShowAdd(true); setStep(1) }}
-                style={{ padding: '12px 24px', fontSize: '15px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #ccc', background: '#fff', minHeight: '44px' }}
-              >
-                + Add book
-              </button>
+            <div style={{ textAlign: 'center', padding: '80px 48px' }}>
+              <hr style={{ width: '32px', height: '2px', background: 'var(--color-accent)', border: 'none', display: 'block', margin: '0 auto 20px' }} />
+              <h2 style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '22px', fontWeight: '400', color: 'var(--color-text-primary)', textAlign: 'center', margin: '0 0 8px' }}>Your library is empty.</h2>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: 'var(--color-text-secondary)', textAlign: 'center', margin: 0 }}>Add 5 to 10 books to get started.</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
               {entries.map((entry) => (
-                <div key={entry.id} style={{ border: '1px solid #e0e0e0', borderRadius: '8px', padding: '16px 20px', background: '#fff' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <div>
-                      <div style={{ fontWeight: '500', fontSize: '15px' }}>{entry.title}</div>
-                      {entry.author && (
-                        <div style={{ fontSize: '13px', color: '#6B6B6B', marginTop: '2px' }}>{entry.author}</div>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => handleDeleteBook(entry.id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '18px', lineHeight: 1, minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }}
-                      onMouseEnter={e => (e.currentTarget.style.color = '#999')}
-                      onMouseLeave={e => (e.currentTarget.style.color = '#ccc')}
-                    >
-                      ✕
-                    </button>
+                <div key={entry.id} className="lib-card">
+                  <button
+                    onClick={() => handleDeleteBook(entry.id)}
+                    style={{ position: 'absolute', top: '18px', right: '18px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)', fontSize: '16px', opacity: 0.5, lineHeight: 1, padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-accent)' }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.color = 'var(--color-text-tertiary)' }}
+                  >
+                    ✕
+                  </button>
+                  <div style={{ paddingRight: '40px' }}>
+                    <div style={{ fontFamily: 'Georgia, serif', fontSize: '17px', fontWeight: '400', color: 'var(--color-text-primary)', marginBottom: entry.author ? '4px' : '16px', lineHeight: 1.3 }}>{entry.title}</div>
+                    {entry.author && (
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'var(--color-text-tertiary)', marginBottom: '16px' }}>{entry.author}</div>
+                    )}
                   </div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none', marginBottom: entry.is_unread ? 0 : '10px', minHeight: '44px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}>
                     <ToggleSwitch
                       checked={entry.is_unread}
                       onChange={(val) => {
                         handleFamiliarityChange(entry.id, { is_unread: val })
                       }}
                     />
-                    <span style={{ fontSize: '14px', color: '#666' }}>Haven't read this yet</span>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'var(--color-text-secondary)', marginLeft: '10px', verticalAlign: 'middle' }}>Haven&apos;t read this yet</span>
                   </label>
                   {!entry.is_unread && (
                     <FamiliaritySlider
@@ -297,51 +305,30 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (val:
   return (
     <div
       onClick={() => onChange(!checked)}
-      style={{
-        width: '44px',
-        height: '26px',
-        borderRadius: '13px',
-        background: checked ? '#333' : '#ddd',
-        position: 'relative',
-        cursor: 'pointer',
-        flexShrink: 0,
-        transition: 'background 0.15s',
-      }}
+      className={`lib-toggle${checked ? ' active' : ''}`}
     >
-      <div style={{
-        position: 'absolute',
-        top: '4px',
-        left: checked ? '22px' : '4px',
-        width: '18px',
-        height: '18px',
-        borderRadius: '50%',
-        background: '#fff',
-        transition: 'left 0.15s',
-      }} />
+      <div className="lib-toggle-thumb" />
     </div>
   )
 }
 
 function FamiliaritySlider({ value, onChange }: { value: number; onChange: (val: number) => void }) {
+  const pct = ((value - 1) / 4) * 100
   return (
-    <div style={{ paddingTop: '2px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{ fontSize: '12px', color: '#aaa', whiteSpace: 'nowrap' }}>Vaguely familiar</span>
-        <input
-          type="range"
-          min={1}
-          max={5}
-          step={1}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          style={{
-            flex: 1,
-            accentColor: '#333',
-            cursor: 'pointer',
-            height: '20px',
-          }}
-        />
-        <span style={{ fontSize: '12px', color: '#aaa', whiteSpace: 'nowrap' }}>Know it deeply</span>
+    <div style={{ marginTop: '12px' }}>
+      <input
+        type="range"
+        min={1}
+        max={5}
+        step={1}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="lib-slider"
+        style={{ background: `linear-gradient(to right, var(--color-accent) ${pct}%, var(--color-border-light) ${pct}%)` }}
+      />
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
+        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: 'var(--color-text-tertiary)', letterSpacing: '0.04em' }}>Vaguely familiar</span>
+        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: 'var(--color-text-tertiary)', letterSpacing: '0.04em' }}>Know it deeply</span>
       </div>
     </div>
   )
