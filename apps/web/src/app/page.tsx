@@ -9,6 +9,10 @@ export default function LandingPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [forgotOpen, setForgotOpen] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotStatus, setForgotStatus] = useState<'success' | 'error' | null>(null)
+  const [forgotLoading, setForgotLoading] = useState(false)
   const router = useRouter()
   const supabase = useRef(createSupabaseClient()).current
 
@@ -24,6 +28,16 @@ export default function LandingPage() {
       router.push('/home')
       router.refresh()
     }
+  }
+
+  const handleForgotPassword = async () => {
+    if (!forgotEmail) return
+    setForgotLoading(true)
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    setForgotLoading(false)
+    setForgotStatus(error ? 'error' : 'success')
   }
 
   const handleLogIn = async () => {
@@ -47,6 +61,8 @@ export default function LandingPage() {
         .lp-btn:hover { background: #1A1A1A !important; }
         .lp-signin-link { color: #6B6B6B; text-decoration: underline; cursor: pointer; background: none; border: none; font-size: 11px; padding: 0; }
         .lp-signin-link:hover { color: #C45E0A; }
+        .lp-forgot-link { font-size: 13px; color: var(--color-text-secondary); background: none; border: none; padding: 0; cursor: pointer; text-decoration: none; font-family: Inter, sans-serif; display: block; margin-bottom: 12px; text-align: left; }
+        .lp-forgot-link:hover { text-decoration: underline; }
         @media (max-width: 767px) {
           .lp-hero { flex-direction: column !important; min-height: unset !important; }
           .lp-sidebar {
@@ -319,6 +335,73 @@ export default function LandingPage() {
                 display: 'block',
               }}
             />
+
+            {/* Forgot password */}
+            {!forgotOpen && (
+              <button type="button" className="lp-forgot-link" onClick={() => setForgotOpen(true)}>
+                Forgot password?
+              </button>
+            )}
+            {forgotOpen && forgotStatus === null && (
+              <div style={{ marginBottom: '12px' }}>
+                <input
+                  className="lp-input"
+                  type="email"
+                  placeholder="Email address"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  style={{
+                    background: '#FFFFFF',
+                    border: '1px solid #E4E0DA',
+                    borderRadius: '4px',
+                    padding: '10px 14px',
+                    fontSize: '13px',
+                    fontFamily: 'Inter, sans-serif',
+                    color: '#1A1A1A',
+                    width: '100%',
+                    marginBottom: '8px',
+                    boxSizing: 'border-box',
+                    display: 'block',
+                  }}
+                />
+                <button
+                  type="button"
+                  className="lp-btn"
+                  onClick={handleForgotPassword}
+                  disabled={forgotLoading}
+                  style={{
+                    background: '#272C32',
+                    color: '#EEECEA',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '11px',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    padding: '13px 24px',
+                    border: 'none',
+                    borderRadius: '2px',
+                    width: '100%',
+                    cursor: forgotLoading ? 'default' : 'pointer',
+                    position: 'relative',
+                    transition: 'background 150ms ease',
+                    display: 'block',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: '#C45E0A' }} />
+                  {forgotLoading ? 'Sending...' : 'Send reset link'}
+                </button>
+              </div>
+            )}
+            {forgotOpen && forgotStatus === 'success' && (
+              <p style={{ fontSize: '12px', color: '#6B6B6B', marginBottom: '12px', marginTop: 0, fontFamily: 'Inter, sans-serif' }}>
+                If that email is registered, a reset link is on its way.
+              </p>
+            )}
+            {forgotOpen && forgotStatus === 'error' && (
+              <p style={{ fontSize: '12px', color: '#C45E0A', marginBottom: '12px', marginTop: 0, fontFamily: 'Inter, sans-serif' }}>
+                Something went wrong. Please try again.
+              </p>
+            )}
 
             <button
               className="lp-btn"
