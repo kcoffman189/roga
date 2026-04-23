@@ -559,13 +559,40 @@ def get_welcome_quote(user_id: str):
         max_tokens=200,
         messages=[{
             "role": "user",
-            "content": f"""From this person's book library, select one memorable, thought-provoking quote worth sitting with. Prioritize books the user knows well (score 4-5) first. Deprioritize books they haven't read yet. The quote should be 1-3 sentences — readable at a glance. Choose something that opens a door rather than closes one. Only use a quote you are certain is real and accurately attributed to the author. If you are not certain a quote is real, do not use it — choose a different one.
+            "content": f"""You are selecting a quote to display on the Roga welcome screen. This quote is the first thing a user sees when they open Roga. It may also be visible to anyone nearby who glances at their screen.
+
+Select one quote from the user's library that meets ALL of the following criteria:
+
+SELECTION CRITERIA — the quote must:
+- Come from a book currently in the user's library
+- Be weighted toward books the user is currently reading or has discussed recently
+- Stand alone without requiring knowledge of the book, author, or context
+- Reflect intellectual curiosity, ideas, or the experience of thinking and exploring
+- Feel like an invitation to think — something worth sitting with
+- Be between one and three sentences — readable at a glance
+- Be universally appropriate regardless of who might see it
+
+CRITICAL: The quote must NOT contain any of the following:
+- References to illegal substances, drugs, or drug use
+- Explicit violence or graphic descriptions of harm
+- Sexual or sexually suggestive content
+- Hate speech, slurs, or language targeting any group
+- Strong profanity
+- Graphic descriptions of trauma, abuse, or suffering
+- Highly partisan political statements that would be divisive out of context
+- Anything that would alarm or offend a stranger seeing it without context
+
+IMPORTANT: Apply this test before selecting any quote — ask yourself: if a stranger glanced at this quote on someone's screen for two seconds with no other context, would any reasonable person find it inappropriate, offensive, or alarming? If yes, do not use it.
+
+FALLBACK: If no quote in the library passes all criteria above, return nothing. Do not substitute a generic quote. Do not select a quote that almost passes. Return an empty response and the welcome screen will display cleanly without a quote.
 
 Library:
 {library_text}
 
 Respond with ONLY a JSON object in this exact format, no other text:
-{{"quote": "the quote text here", "author": "Author Name"}}"""
+{{"quote": "the quote text here", "author": "Author Name"}}
+
+If no appropriate quote exists, respond with ONLY: {{"quote": null, "author": null}}"""
         }]
     )
 
@@ -603,13 +630,40 @@ def get_group_welcome_quote(group_id: str):
             max_tokens=200,
             messages=[{
                 "role": "user",
-                "content": f"""From this specific collection of books, select one memorable, thought-provoking quote worth sitting with. The quote should feel native to this particular collection. Only use a quote you are certain is real and accurately attributed to the author. If you are not certain a quote is real, do not use it — choose a different one. The quote should be 1-3 sentences — readable at a glance.
+                "content": f"""You are selecting a quote to display on the Roga group welcome screen. This quote is the first thing a user sees when they open a group. It may also be visible to anyone nearby who glances at their screen.
+
+Select one quote from the user's library that meets ALL of the following criteria:
+
+SELECTION CRITERIA — the quote must:
+- Come from a book currently in the user's library
+- Be weighted toward books the user is currently reading or has discussed recently
+- Stand alone without requiring knowledge of the book, author, or context
+- Reflect intellectual curiosity, ideas, or the experience of thinking and exploring
+- Feel like an invitation to think — something worth sitting with
+- Be between one and three sentences — readable at a glance
+- Be universally appropriate regardless of who might see it
+
+CRITICAL: The quote must NOT contain any of the following:
+- References to illegal substances, drugs, or drug use
+- Explicit violence or graphic descriptions of harm
+- Sexual or sexually suggestive content
+- Hate speech, slurs, or language targeting any group
+- Strong profanity
+- Graphic descriptions of trauma, abuse, or suffering
+- Highly partisan political statements that would be divisive out of context
+- Anything that would alarm or offend a stranger seeing it without context
+
+IMPORTANT: Apply this test before selecting any quote — ask yourself: if a stranger glanced at this quote on someone's screen for two seconds with no other context, would any reasonable person find it inappropriate, offensive, or alarming? If yes, do not use it.
+
+FALLBACK: If no quote in the library passes all criteria above, return nothing. Do not substitute a generic quote. Do not select a quote that almost passes. Return an empty response and the welcome screen will display cleanly without a quote.
 
 Library:
 {library_text}
 
 Respond with ONLY a JSON object in this exact format, no other text:
-{{"quote": "the quote text here", "author": "Author Name"}}"""
+{{"quote": "the quote text here", "author": "Author Name"}}
+
+If no appropriate quote exists, respond with ONLY: {{"quote": null, "author": null}}"""
             }]
         )
         text = response.content[0].text.strip()
