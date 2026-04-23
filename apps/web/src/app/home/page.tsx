@@ -118,7 +118,7 @@ export default function Home() {
             <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '8px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginTop: '5px' }}>Beta</div>
           </div>
           <button
-            onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
+            onClick={async () => { await supabase.auth.signOut(); router.push('/') }}
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '11px', color: 'var(--color-text-tertiary)', padding: '4px', minHeight: '44px' }}
           >
             Log out
@@ -240,7 +240,7 @@ export default function Home() {
         </div>
 
         <button
-          onClick={async () => { await supabase.auth.signOut(); router.push('/login') }}
+          onClick={async () => { await supabase.auth.signOut(); router.push('/') }}
           className="sidebar-logout"
         >
           Log out
