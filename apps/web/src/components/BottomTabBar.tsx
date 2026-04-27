@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, BookOpen, Users, MessageCircle } from 'lucide-react'
+import { Home, BookOpen, Users, MessageCircle, User } from 'lucide-react'
 import { useIsMobile } from '@/hooks/useIsMobile'
 
 type Tab = {
@@ -16,6 +16,7 @@ const tabs: Tab[] = [
   { label: 'Groups', icon: Users, href: '/groups', matchPrefix: '/groups' },
   { label: 'Library', icon: BookOpen, href: '/library', matchPrefix: '/library' },
   { label: 'Chats', icon: MessageCircle, href: '/#conversations' },
+  { label: 'Account', icon: User, href: '/account', matchPrefix: '/account' },
 ]
 
 export default function BottomTabBar() {

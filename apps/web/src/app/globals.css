@@ -397,3 +397,51 @@ a:hover {
   box-shadow: 0 0 0 1px var(--color-accent);
   cursor: pointer;
 }
+
+/* ── Sidebar account link ─────────────────────────── */
+.sidebar-account-link {
+  font-family: Inter, sans-serif;
+  font-size: 16.5px;
+  color: #3E4650;
+  text-decoration: none;
+  display: block;
+  padding: 8px 2px;
+  width: 100%;
+  transition: color 150ms ease;
+}
+.sidebar-account-link:hover {
+  color: var(--color-text-muted-dark);
+  text-decoration: none;
+}
+
+/* ── Account settings rows ────────────────────────── */
+.account-section-label {
+  font-family: Inter, sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  margin-top: 28px;
+  margin-bottom: 4px;
+}
+.account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0 2px;
+  border-bottom: 1px solid var(--color-border-light);
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--color-text-primary);
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  width: 100%;
+  background: transparent;
+  box-sizing: border-box;
+  transition: background 100ms ease;
+}
+.account-row:hover {
+  background: rgba(0, 0, 0, 0.025);
+  text-decoration: none;
+}

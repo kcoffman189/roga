@@ -542,7 +542,7 @@ def continue_conversation_stream(req: ContinueConversationRequest, background_ta
 @app.get("/welcome-quote/{user_id}")
 def get_welcome_quote(user_id: str):
     # Get user's library
-    result = supabase.from_("library_entries").select("title, familiarity_score, is_unread, notes").eq("user_id", user_id).execute()
+    result = supabase.from_("library_entries").select("title, author, familiarity_score, is_unread, notes").eq("user_id", user_id).execute()
     entries = result.data
 
     if not entries:
@@ -551,7 +551,7 @@ def get_welcome_quote(user_id: str):
     # Build library summary for Claude with weighting instructions
     library_lines = []
     for entry in entries:
-        library_lines.append(f"- {entry['title']} ({_familiarity_label(entry)})")
+        library_lines.append(f"- {entry['title']}{' by ' + entry['author'] if entry.get('author') else ''} ({_familiarity_label(entry)})")
     library_text = "\n".join(library_lines)
 
     response = anthropic_client.messages.create(
@@ -561,10 +561,16 @@ def get_welcome_quote(user_id: str):
             "role": "user",
             "content": f"""You are selecting a quote to display on the Roga welcome screen. This quote is the first thing a user sees when they open Roga. It may also be visible to anyone nearby who glances at their screen.
 
-Select one quote from the user's library that meets ALL of the following criteria:
+Here is the user's current library — the ONLY source you may draw from:
+
+{library_text}
+
+CONSTRAINT: You must select a quote from a book in the library list above and nowhere else. Do not use quotes from books you know that are not in this list. Do not use quotes from authors who appear in this list but from books not in this list. The book the quote comes from must exist exactly as listed above.
+
+Select one quote from the library above that meets ALL of the following criteria:
 
 SELECTION CRITERIA — the quote must:
-- Come from a book currently in the user's library
+- Come from a book in the library list provided above
 - Be weighted toward books the user is currently reading or has discussed recently
 - Stand alone without requiring knowledge of the book, author, or context
 - Reflect intellectual curiosity, ideas, or the experience of thinking and exploring
@@ -582,12 +588,9 @@ CRITICAL: The quote must NOT contain any of the following:
 - Highly partisan political statements that would be divisive out of context
 - Anything that would alarm or offend a stranger seeing it without context
 
-IMPORTANT: Apply this test before selecting any quote — ask yourself: if a stranger glanced at this quote on someone's screen for two seconds with no other context, would any reasonable person find it inappropriate, offensive, or alarming? If yes, do not use it.
+IMPORTANT: Apply this test before selecting any quote — if a stranger glanced at this quote on someone's screen for two seconds with no other context, would any reasonable person find it inappropriate, offensive, or alarming? If yes, do not use it.
 
-FALLBACK: If no quote in the library passes all criteria above, return nothing. Do not substitute a generic quote. Do not select a quote that almost passes. Return an empty response and the welcome screen will display cleanly without a quote.
-
-Library:
-{library_text}
+FALLBACK: If no quote from the library list passes all criteria above, return nothing. Do not select a quote from outside the library. Return an empty response and the welcome screen will display cleanly without a quote.
 
 Respond with ONLY a JSON object in this exact format, no other text:
 {{"quote": "the quote text here", "author": "Author Name"}}
@@ -613,7 +616,7 @@ def get_group_welcome_quote(group_id: str):
     if not book_ids:
         return {"quote": None, "author": None, "empty_library": True}
 
-    entries_result = supabase.from_("library_entries").select("title, familiarity_score, is_unread, notes").in_("id", book_ids).execute()
+    entries_result = supabase.from_("library_entries").select("title, author, familiarity_score, is_unread, notes").in_("id", book_ids).execute()
     entries = entries_result.data
 
     if not entries:
@@ -621,7 +624,7 @@ def get_group_welcome_quote(group_id: str):
 
     library_lines = []
     for entry in entries:
-        library_lines.append(f"- {entry['title']} ({_familiarity_label(entry)})")
+        library_lines.append(f"- {entry['title']}{' by ' + entry['author'] if entry.get('author') else ''} ({_familiarity_label(entry)})")
     library_text = "\n".join(library_lines)
 
     try:
@@ -632,10 +635,16 @@ def get_group_welcome_quote(group_id: str):
                 "role": "user",
                 "content": f"""You are selecting a quote to display on the Roga group welcome screen. This quote is the first thing a user sees when they open a group. It may also be visible to anyone nearby who glances at their screen.
 
-Select one quote from the user's library that meets ALL of the following criteria:
+Here is the user's current library — the ONLY source you may draw from:
+
+{library_text}
+
+CONSTRAINT: You must select a quote from a book in the library list above and nowhere else. Do not use quotes from books you know that are not in this list. Do not use quotes from authors who appear in this list but from books not in this list. The book the quote comes from must exist exactly as listed above.
+
+Select one quote from the library above that meets ALL of the following criteria:
 
 SELECTION CRITERIA — the quote must:
-- Come from a book currently in the user's library
+- Come from a book in the library list provided above
 - Be weighted toward books the user is currently reading or has discussed recently
 - Stand alone without requiring knowledge of the book, author, or context
 - Reflect intellectual curiosity, ideas, or the experience of thinking and exploring
@@ -653,12 +662,9 @@ CRITICAL: The quote must NOT contain any of the following:
 - Highly partisan political statements that would be divisive out of context
 - Anything that would alarm or offend a stranger seeing it without context
 
-IMPORTANT: Apply this test before selecting any quote — ask yourself: if a stranger glanced at this quote on someone's screen for two seconds with no other context, would any reasonable person find it inappropriate, offensive, or alarming? If yes, do not use it.
+IMPORTANT: Apply this test before selecting any quote — if a stranger glanced at this quote on someone's screen for two seconds with no other context, would any reasonable person find it inappropriate, offensive, or alarming? If yes, do not use it.
 
-FALLBACK: If no quote in the library passes all criteria above, return nothing. Do not substitute a generic quote. Do not select a quote that almost passes. Return an empty response and the welcome screen will display cleanly without a quote.
-
-Library:
-{library_text}
+FALLBACK: If no quote from the library list passes all criteria above, return nothing. Do not select a quote from outside the library. Return an empty response and the welcome screen will display cleanly without a quote.
 
 Respond with ONLY a JSON object in this exact format, no other text:
 {{"quote": "the quote text here", "author": "Author Name"}}
@@ -992,3 +998,40 @@ def backfill_summaries(req: BackfillRequest):
             processed += 1
 
     return {"processed": processed}
+
+
+@app.post("/delete-account")
+def delete_account(authorization: str = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    token = authorization.split(" ", 1)[1]
+
+    user_resp = supabase.auth.get_user(token)
+    if not user_resp.user:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    user_id = user_resp.user.id
+
+    # Delete group data
+    group_rows = supabase.from_("groups").select("id").eq("user_id", user_id).execute()
+    group_ids = [r["id"] for r in group_rows.data]
+    if group_ids:
+        gc_rows = supabase.from_("group_conversations").select("id").in_("group_id", group_ids).execute()
+        gc_ids = [r["id"] for r in gc_rows.data]
+        if gc_ids:
+            supabase.from_("group_messages").delete().in_("conversation_id", gc_ids).execute()
+        supabase.from_("group_conversations").delete().in_("group_id", group_ids).execute()
+        supabase.from_("group_books").delete().in_("group_id", group_ids).execute()
+    supabase.from_("groups").delete().eq("user_id", user_id).execute()
+
+    # Delete conversation data
+    conv_rows = supabase.from_("conversations").select("id").eq("user_id", user_id).execute()
+    conv_ids = [r["id"] for r in conv_rows.data]
+    if conv_ids:
+        supabase.from_("messages").delete().in_("conversation_id", conv_ids).execute()
+    supabase.from_("conversations").delete().eq("user_id", user_id).execute()
+
+    supabase.from_("library_entries").delete().eq("user_id", user_id).execute()
+
+    supabase.auth.admin.delete_user(user_id)
+
+    return {"success": True}

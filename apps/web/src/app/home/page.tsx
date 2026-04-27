@@ -245,6 +245,7 @@ export default function Home() {
         >
           Log out
         </button>
+        <a href="/account" className="sidebar-account-link">Account</a>
       </div>
 
       {/* Main Canvas */}
