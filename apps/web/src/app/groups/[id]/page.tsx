@@ -7,6 +7,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import BottomTabBar from '@/components/BottomTabBar'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import ConversationGroupedList from '@/components/ConversationGroupedList'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
@@ -141,14 +142,10 @@ export default function GroupViewPage() {
     setAddingBook(false)
   }
 
-  const deleteConversation = async (e: React.MouseEvent, convId: string) => {
-    e.stopPropagation()
+  const deleteConversation = async (convId: string) => {
     await fetch(`${API_URL}/group-conversation/${convId}`, { method: 'DELETE' })
     setConversations(prev => prev.filter(c => c.id !== convId))
   }
-
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
   if (loading) return null
 
@@ -240,30 +237,11 @@ export default function GroupViewPage() {
             {conversations.length === 0 ? (
               <div style={{ fontSize: '13px', color: '#999', padding: '4px' }}>Your conversations will appear here.</div>
             ) : (
-              conversations.map(conv => (
-                <div
-                  key={conv.id}
-                  onClick={() => router.push(`/groups/${groupId}/conversation/${conv.id}`)}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', marginBottom: '2px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', color: '#333' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f5')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <div style={{ flex: 1, minWidth: 0, marginRight: '8px' }}>
-                    <div style={{ fontWeight: '500', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {conv.title || 'Untitled conversation'}
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#999' }}>{formatDate(conv.updated_at)}</div>
-                  </div>
-                  <button
-                    onClick={e => deleteConversation(e, conv.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '14px', padding: '2px 4px', borderRadius: '4px', flexShrink: 0, lineHeight: 1 }}
-                    onMouseEnter={e => (e.currentTarget.style.color = '#999')}
-                    onMouseLeave={e => (e.currentTarget.style.color = '#ccc')}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))
+              <ConversationGroupedList
+                conversations={conversations}
+                onSelect={(id) => router.push(`/groups/${groupId}/conversation/${id}`)}
+                onDelete={deleteConversation}
+              />
             )}
           </div>
 
@@ -354,26 +332,11 @@ export default function GroupViewPage() {
             {conversations.length === 0 ? (
               <div style={{ fontSize: '13px', color: '#999' }}>Your conversations will appear here.</div>
             ) : (
-              conversations.map(conv => (
-                <div
-                  key={conv.id}
-                  onClick={() => router.push(`/groups/${groupId}/conversation/${conv.id}`)}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', marginBottom: '6px', borderRadius: '8px', border: '1px solid #e0e0e0', background: '#fff', cursor: 'pointer', minHeight: '56px' }}
-                >
-                  <div style={{ flex: 1, minWidth: 0, marginRight: '8px' }}>
-                    <div style={{ fontWeight: '500', fontSize: '14px', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {conv.title || 'Untitled conversation'}
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#999' }}>{formatDate(conv.updated_at)}</div>
-                  </div>
-                  <button
-                    onClick={e => deleteConversation(e, conv.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: '16px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))
+              <ConversationGroupedList
+                conversations={conversations}
+                onSelect={(id) => router.push(`/groups/${groupId}/conversation/${id}`)}
+                onDelete={deleteConversation}
+              />
             )}
           </div>
 

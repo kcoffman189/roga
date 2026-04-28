@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import OnboardingBubbles from '@/components/OnboardingBubbles'
 import BottomTabBar from '@/components/BottomTabBar'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import ConversationGroupedList from '@/components/ConversationGroupedList'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
@@ -16,6 +17,7 @@ type Conversation = {
   id: string
   title: string | null
   created_at: string
+  updated_at: string
 }
 
 type WelcomeQuote = {
@@ -58,14 +60,10 @@ export default function Home() {
   const startConversation = (mode: 'intentional' | 'open') => router.push(`/conversation/new?mode=${mode}`)
   const resumeConversation = (id: string) => router.push(`/conversation/${id}`)
 
-  const deleteConversation = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
+  const deleteConversation = async (id: string) => {
     await fetch(`${API_URL}/conversation/${id}`, { method: 'DELETE' })
     setConversations(prev => prev.filter(c => c.id !== id))
   }
-
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
   const renderWelcome = () => {
     if (loading) return null
@@ -150,26 +148,11 @@ export default function Home() {
             ) : conversations.length === 0 ? (
               <div style={{ fontSize: '13px', color: 'var(--color-text-tertiary)' }}>Your conversations will appear here.</div>
             ) : (
-              conversations.map((conv) => (
-                <div
-                  key={conv.id}
-                  onClick={() => resumeConversation(conv.id)}
-                  style={{ display: 'flex', alignItems: 'center', padding: '10px 4px', cursor: 'pointer', borderBottom: '1px solid var(--color-border-light)' }}
-                >
-                  <div style={{ flex: 1, minWidth: 0, marginRight: '8px' }}>
-                    <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', fontWeight: '500', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '2px' }}>
-                      {conv.title || 'Untitled conversation'}
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'var(--color-text-tertiary)' }}>{formatDate(conv.created_at)}</div>
-                  </div>
-                  <button
-                    onClick={(e) => deleteConversation(e, conv.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)', fontSize: '14px', padding: '2px 4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))
+              <ConversationGroupedList
+                conversations={conversations}
+                onSelect={resumeConversation}
+                onDelete={deleteConversation}
+              />
             )}
           </div>
         </div>
@@ -216,26 +199,11 @@ export default function Home() {
           ) : conversations.length === 0 ? (
             <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted-dark)', padding: '4px 2px' }}>Your conversations will appear here.</div>
           ) : (
-            conversations.map((conv) => (
-              <div
-                key={conv.id}
-                onClick={() => resumeConversation(conv.id)}
-                className="conv-item"
-              >
-                <div style={{ flex: 1, minWidth: 0, marginRight: '8px' }}>
-                  <div className="conv-item-title">
-                    {conv.title || 'Untitled conversation'}
-                  </div>
-                  <div className="conv-item-date">{formatDate(conv.created_at)}</div>
-                </div>
-                <button
-                  onClick={(e) => deleteConversation(e, conv.id)}
-                  className="conv-item-delete"
-                >
-                  ✕
-                </button>
-              </div>
-            ))
+            <ConversationGroupedList
+              conversations={conversations}
+              onSelect={resumeConversation}
+              onDelete={deleteConversation}
+            />
           )}
         </div>
 

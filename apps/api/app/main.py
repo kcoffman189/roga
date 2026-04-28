@@ -388,7 +388,7 @@ def continue_conversation(req: ContinueConversationRequest):
 
 @app.get("/conversations/{user_id}")
 def get_conversations(user_id: str):
-    result = supabase.from_("conversations").select("id, title, created_at, updated_at").eq("user_id", user_id).order("created_at", desc=True).execute()
+    result = supabase.from_("conversations").select("id, title, created_at, updated_at").eq("user_id", user_id).order("updated_at", desc=True).execute()
     return {"conversations": result.data}
 
 @app.delete("/conversation/{conversation_id}")
