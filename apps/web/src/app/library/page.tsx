@@ -6,34 +6,69 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import BottomTabBar from '@/components/BottomTabBar'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { Pencil } from 'lucide-react'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://roga-api.fly.dev'
 
 type LibraryEntry = {
   id: string
   title: string
+  author?: string | null
   familiarity_score: number | null
   is_unread: boolean
   notes: string | null
   created_at: string
 }
 
+type BookSuggestion = {
+  title: string
+  author: string
+}
+
 export default function LibraryPage() {
   const [entries, setEntries] = useState<LibraryEntry[]>([])
   const [loading, setLoading] = useState(true)
-  const [showAdd, setShowAdd] = useState(false)
-  const [searchTitle, setSearchTitle] = useState('')
-  const [searchAuthor, setSearchAuthor] = useState('')
+
+  // Add form
+  const [addTitle, setAddTitle] = useState('')
+  const [addAuthor, setAddAuthor] = useState('')
   const [addIsUnread, setAddIsUnread] = useState(false)
+  const [addFamiliarity, setAddFamiliarity] = useState(3)
+  const [addSuggestion, setAddSuggestion] = useState<BookSuggestion | null>(null)
   const [adding, setAdding] = useState(false)
-  const [step, setStep] = useState<1 | 2>(1)
+  const [duplicateWarning, setDuplicateWarning] = useState(false)
+
+  // Edit
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editAuthor, setEditAuthor] = useState('')
+  const [editIsUnread, setEditIsUnread] = useState(false)
+  const [editFamiliarity, setEditFamiliarity] = useState(3)
+  const [editSuggestion, setEditSuggestion] = useState<BookSuggestion | null>(null)
+  const [saving, setSaving] = useState(false)
+
+  const addDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const editDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const router = useRouter()
   const supabase = useRef(createSupabaseClient()).current
   const isMobile = useIsMobile()
 
+  useEffect(() => { fetchLibrary() }, [])
+
   useEffect(() => {
-    fetchLibrary()
-  }, [])
+    if (addDebounceRef.current) clearTimeout(addDebounceRef.current)
+    if (addTitle.length < 3) { setAddSuggestion(null); return }
+    addDebounceRef.current = setTimeout(() => searchGoogleBooks(addTitle, setAddSuggestion), 300)
+    return () => { if (addDebounceRef.current) clearTimeout(addDebounceRef.current) }
+  }, [addTitle])
+
+  useEffect(() => {
+    if (editDebounceRef.current) clearTimeout(editDebounceRef.current)
+    if (editTitle.length < 3) { setEditSuggestion(null); return }
+    editDebounceRef.current = setTimeout(() => searchGoogleBooks(editTitle, setEditSuggestion), 300)
+    return () => { if (editDebounceRef.current) clearTimeout(editDebounceRef.current) }
+  }, [editTitle])
 
   const fetchLibrary = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -47,26 +82,80 @@ export default function LibraryPage() {
     setLoading(false)
   }
 
+  const searchGoogleBooks = async (title: string, setSuggestion: (s: BookSuggestion | null) => void) => {
+    try {
+      const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(title)}&maxResults=1`)
+      const json = await res.json()
+      const item = json.items?.[0]
+      if (!item) { setSuggestion(null); return }
+      const info = item.volumeInfo
+      setSuggestion({ title: info.title || title, author: info.authors?.[0] || '' })
+    } catch {
+      setSuggestion(null)
+    }
+  }
+
   const handleAddBook = async () => {
+    const trimmedTitle = addTitle.trim()
+    if (entries.some(e => e.title.toLowerCase() === trimmedTitle.toLowerCase())) {
+      setDuplicateWarning(true)
+      return
+    }
     setAdding(true)
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!user) { setAdding(false); return }
     const { error } = await supabase.from('library_entries').insert({
       user_id: user.id,
-      title: searchTitle.trim(),
-      author: searchAuthor.trim() || null,
-      familiarity_score: addIsUnread ? null : 3,
+      title: trimmedTitle,
+      author: addAuthor.trim() || null,
+      familiarity_score: addIsUnread ? null : addFamiliarity,
       is_unread: addIsUnread,
     })
     if (!error) {
-      setShowAdd(false)
-      setSearchTitle('')
-      setSearchAuthor('')
+      setAddTitle('')
+      setAddAuthor('')
       setAddIsUnread(false)
-      setStep(1)
+      setAddFamiliarity(3)
+      setAddSuggestion(null)
+      setDuplicateWarning(false)
       fetchLibrary()
     }
     setAdding(false)
+  }
+
+  const handleEditStart = (entry: LibraryEntry) => {
+    setEditingId(entry.id)
+    setEditTitle(entry.title)
+    setEditAuthor(entry.author || '')
+    setEditIsUnread(entry.is_unread)
+    setEditFamiliarity(entry.familiarity_score ?? 3)
+    setEditSuggestion(null)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingId) return
+    setSaving(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setSaving(false); return }
+    const { error } = await supabase.from('library_entries')
+      .update({
+        title: editTitle.trim(),
+        author: editAuthor.trim() || null,
+        is_unread: editIsUnread,
+        familiarity_score: editIsUnread ? null : editFamiliarity,
+      })
+      .eq('id', editingId)
+    if (!error) {
+      setEntries(prev => prev.map(e => e.id === editingId ? {
+        ...e,
+        title: editTitle.trim(),
+        author: editAuthor.trim() || null,
+        is_unread: editIsUnread,
+        familiarity_score: editIsUnread ? null : editFamiliarity,
+      } : e))
+      setEditingId(null)
+    }
+    setSaving(false)
   }
 
   const handleDeleteBook = async (id: string) => {
@@ -109,6 +198,7 @@ export default function LibraryPage() {
 
     await supabase.from('library_entries').delete().eq('id', id)
     setEntries(prev => prev.filter(e => e.id !== id))
+    if (editingId === id) setEditingId(null)
   }
 
   const handleFamiliarityChange = async (id: string, patch: { familiarity_score?: number | null; is_unread?: boolean }) => {
@@ -183,114 +273,176 @@ export default function LibraryPage() {
         <div
           style={{ maxWidth: '680px', margin: '0 auto', padding: isMobile ? '72px 16px 80px' : '48px 56px' }}
         >
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: isMobile ? 'flex-end' : 'space-between', marginBottom: isMobile ? '16px' : '32px' }}>
-            {!isMobile && (
-              <div>
-                <hr style={{ width: '32px', height: '2px', background: 'var(--color-accent)', border: 'none', display: 'block', margin: '0 0 16px' }} />
-                <h1 style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '28px', fontWeight: '400', color: 'var(--color-text-primary)', margin: 0 }}>My Library</h1>
-              </div>
-            )}
-            <button
-              onClick={() => { setShowAdd(true); setStep(1) }}
-              className="lib-add-btn"
-            >
-              + Add book
-            </button>
-          </div>
-
-          {showAdd && (
-            <div style={{ border: '1px solid var(--color-border-light)', borderRadius: '4px', padding: '24px', marginBottom: '24px', background: 'var(--color-bg-surface)' }}>
-              {step === 1 && (
-                <>
-                  <p style={{ margin: '0 0 12px', fontWeight: '500', fontFamily: 'Inter, sans-serif', color: 'var(--color-text-primary)' }}>What book do you want to add?</p>
-                  <input
-                    type="text"
-                    value={searchTitle}
-                    onChange={(e) => setSearchTitle(e.target.value)}
-                    placeholder="Type a title..."
-                    style={{ width: '100%', padding: '12px', fontSize: '16px', borderRadius: '4px', border: '1px solid var(--color-border-light)', boxSizing: 'border-box', minHeight: '44px', fontFamily: 'Inter, sans-serif' }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' && searchTitle.trim()) setStep(2) }}
-                  />
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                    <button onClick={() => setStep(2)} disabled={!searchTitle.trim()} style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '4px', background: 'var(--color-text-primary)', color: '#fff', border: 'none', minHeight: '44px', fontFamily: 'Inter, sans-serif' }}>
-                      Next
-                    </button>
-                    <button onClick={() => { setShowAdd(false); setSearchTitle(''); setStep(1) }} style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '4px', border: '1px solid var(--color-border-light)', background: 'var(--color-bg-surface)', minHeight: '44px', fontFamily: 'Inter, sans-serif', color: 'var(--color-text-secondary)' }}>
-                      Cancel
-                    </button>
-                  </div>
-                </>
-              )}
-              {step === 2 && (
-                <>
-                  <p style={{ margin: '0 0 16px', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '17px', color: 'var(--color-text-primary)' }}>{searchTitle}</p>
-                  <input
-                    type="text"
-                    value={searchAuthor}
-                    onChange={(e) => setSearchAuthor(e.target.value)}
-                    placeholder="Author (optional)"
-                    style={{ width: '100%', padding: '12px', fontSize: '16px', borderRadius: '4px', border: '1px solid var(--color-border-light)', boxSizing: 'border-box', minHeight: '44px', marginBottom: '16px', fontFamily: 'Inter, sans-serif' }}
-                  />
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none', minHeight: '44px' }}>
-                    <ToggleSwitch checked={addIsUnread} onChange={setAddIsUnread} />
-                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'var(--color-text-secondary)' }}>Haven&apos;t read this yet</span>
-                  </label>
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
-                    <button onClick={handleAddBook} disabled={adding} style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '4px', background: 'var(--color-text-primary)', color: '#fff', border: 'none', minHeight: '44px', fontFamily: 'Inter, sans-serif' }}>
-                      {adding ? 'Adding...' : 'Add to library'}
-                    </button>
-                    <button onClick={() => setStep(1)} style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '4px', border: '1px solid var(--color-border-light)', background: 'var(--color-bg-surface)', minHeight: '44px', fontFamily: 'Inter, sans-serif', color: 'var(--color-text-secondary)' }}>
-                      Back
-                    </button>
-                  </div>
-                </>
-              )}
+          {!isMobile && (
+            <div style={{ marginBottom: '32px' }}>
+              <hr style={{ width: '32px', height: '2px', background: 'var(--color-accent)', border: 'none', display: 'block', margin: '0 0 16px' }} />
+              <h1 style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '28px', fontWeight: '400', color: 'var(--color-text-primary)', margin: 0 }}>My Library</h1>
             </div>
           )}
+
+          {/* Always-visible add form */}
+          <div style={{ border: '1px solid var(--color-border-light)', borderRadius: '4px', padding: '24px', marginBottom: '24px', background: 'var(--color-bg-surface)' }}>
+            <div style={{ marginBottom: '12px' }}>
+              <input
+                type="text"
+                value={addTitle}
+                onChange={(e) => { setAddTitle(e.target.value); setDuplicateWarning(false) }}
+                placeholder="Book title"
+                style={{ width: '100%', padding: '12px', fontSize: '16px', borderRadius: '4px', border: '1px solid var(--color-border-light)', boxSizing: 'border-box', minHeight: '44px', fontFamily: 'Inter, sans-serif' }}
+                onKeyDown={(e) => { if (e.key === 'Enter' && addTitle.trim().length >= 2) handleAddBook() }}
+              />
+              {duplicateWarning && (
+                <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#C0392B', marginTop: '6px' }}>
+                  This book is already in your library.
+                </div>
+              )}
+              {addSuggestion && !duplicateWarning && (
+                <div
+                  onClick={() => { setAddTitle(addSuggestion.title); setAddAuthor(addSuggestion.author); setAddSuggestion(null) }}
+                  style={{ background: '#fff', border: '1px solid var(--color-border-light)', padding: '10px 14px', fontSize: '13px', cursor: 'pointer', borderRadius: '4px', marginTop: '4px' }}
+                >
+                  <span style={{ fontFamily: 'Georgia, serif', color: 'var(--color-text-primary)' }}>{addSuggestion.title}</span>
+                  {addSuggestion.author && (
+                    <span style={{ fontFamily: 'Inter, sans-serif', color: 'var(--color-text-secondary)', marginLeft: '8px' }}>{addSuggestion.author}</span>
+                  )}
+                </div>
+              )}
+            </div>
+            <input
+              type="text"
+              value={addAuthor}
+              onChange={(e) => setAddAuthor(e.target.value)}
+              placeholder="Author (optional)"
+              style={{ width: '100%', padding: '12px', fontSize: '16px', borderRadius: '4px', border: '1px solid var(--color-border-light)', boxSizing: 'border-box', minHeight: '44px', marginBottom: '16px', fontFamily: 'Inter, sans-serif' }}
+            />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none', minHeight: '44px' }}>
+              <ToggleSwitch checked={addIsUnread} onChange={setAddIsUnread} />
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'var(--color-text-secondary)' }}>Haven&apos;t read this yet</span>
+            </label>
+            {!addIsUnread && (
+              <FamiliaritySlider value={addFamiliarity} onChange={setAddFamiliarity} />
+            )}
+            <button
+              onClick={handleAddBook}
+              disabled={adding || addTitle.trim().length < 2}
+              style={{ marginTop: '20px', padding: '10px 20px', fontSize: '15px', cursor: addTitle.trim().length >= 2 ? 'pointer' : 'default', borderRadius: '4px', background: 'var(--color-text-primary)', color: '#fff', border: 'none', minHeight: '44px', fontFamily: 'Inter, sans-serif', opacity: addTitle.trim().length < 2 ? 0.5 : 1 }}
+            >
+              {adding ? 'Adding...' : '+ Add book'}
+            </button>
+          </div>
 
           {loading ? (
             <p style={{ fontFamily: 'Inter, sans-serif', color: 'var(--color-text-secondary)' }}>Loading your library...</p>
           ) : entries.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '80px 48px' }}>
-              <hr style={{ width: '32px', height: '2px', background: 'var(--color-accent)', border: 'none', display: 'block', margin: '0 auto 20px' }} />
-              <h2 style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '22px', fontWeight: '400', color: 'var(--color-text-primary)', textAlign: 'center', margin: '0 0 8px' }}>Your library is empty.</h2>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: 'var(--color-text-secondary)', textAlign: 'center', margin: 0 }}>Add 5 to 10 books to get started.</p>
+            <div style={{ textAlign: 'center', padding: '60px 48px' }}>
+              <p style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '16px', color: 'var(--color-text-secondary)', margin: 0 }}>
+                Your library is empty. Add your first book above.
+              </p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {entries.map((entry) => (
-                <div key={entry.id} className="lib-card">
-                  <button
-                    onClick={() => handleDeleteBook(entry.id)}
-                    style={{ position: 'absolute', top: '18px', right: '18px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)', fontSize: '16px', opacity: 0.5, lineHeight: 1, padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-accent)' }}
-                    onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.color = 'var(--color-text-tertiary)' }}
-                  >
-                    ✕
-                  </button>
-                  <div style={{ paddingRight: '40px' }}>
-                    <div style={{ fontFamily: 'Georgia, serif', fontSize: '17px', fontWeight: '400', color: 'var(--color-text-primary)', marginBottom: entry.author ? '4px' : '16px', lineHeight: 1.3 }}>{entry.title}</div>
-                    {entry.author && (
-                      <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'var(--color-text-tertiary)', marginBottom: '16px' }}>{entry.author}</div>
+              {entries.map((entry) =>
+                editingId === entry.id ? (
+                  <div key={entry.id} className="lib-card">
+                    <div style={{ marginBottom: '12px' }}>
+                      <input
+                        type="text"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        placeholder="Book title"
+                        style={{ width: '100%', padding: '12px', fontSize: '16px', borderRadius: '4px', border: '1px solid var(--color-border-light)', boxSizing: 'border-box', minHeight: '44px', fontFamily: 'Inter, sans-serif' }}
+                      />
+                      {editSuggestion && (
+                        <div
+                          onClick={() => { setEditTitle(editSuggestion.title); setEditAuthor(editSuggestion.author); setEditSuggestion(null) }}
+                          style={{ background: '#fff', border: '1px solid var(--color-border-light)', padding: '10px 14px', fontSize: '13px', cursor: 'pointer', borderRadius: '4px', marginTop: '4px' }}
+                        >
+                          <span style={{ fontFamily: 'Georgia, serif', color: 'var(--color-text-primary)' }}>{editSuggestion.title}</span>
+                          {editSuggestion.author && (
+                            <span style={{ fontFamily: 'Inter, sans-serif', color: 'var(--color-text-secondary)', marginLeft: '8px' }}>{editSuggestion.author}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={editAuthor}
+                      onChange={(e) => setEditAuthor(e.target.value)}
+                      placeholder="Author (optional)"
+                      style={{ width: '100%', padding: '12px', fontSize: '16px', borderRadius: '4px', border: '1px solid var(--color-border-light)', boxSizing: 'border-box', minHeight: '44px', marginBottom: '16px', fontFamily: 'Inter, sans-serif' }}
+                    />
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none', minHeight: '44px' }}>
+                      <ToggleSwitch checked={editIsUnread} onChange={setEditIsUnread} />
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'var(--color-text-secondary)' }}>Haven&apos;t read this yet</span>
+                    </label>
+                    {!editIsUnread && (
+                      <FamiliaritySlider value={editFamiliarity} onChange={setEditFamiliarity} />
+                    )}
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
+                      <button
+                        onClick={handleSaveEdit}
+                        disabled={saving}
+                        style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '4px', background: 'var(--color-text-primary)', color: '#fff', border: 'none', minHeight: '44px', fontFamily: 'Inter, sans-serif' }}
+                      >
+                        {saving ? 'Saving...' : 'Save'}
+                      </button>
+                      <button
+                        onClick={() => { setEditingId(null); setEditSuggestion(null) }}
+                        style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '4px', border: '1px solid var(--color-border-light)', background: 'var(--color-bg-surface)', minHeight: '44px', fontFamily: 'Inter, sans-serif', color: 'var(--color-text-secondary)' }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <hr style={{ border: 'none', borderTop: '1px solid var(--color-border-light)', margin: '20px 0 16px' }} />
+                    <button
+                      onClick={() => handleDeleteBook(entry.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C0392B', fontSize: '13px', fontFamily: 'Inter, sans-serif', padding: 0 }}
+                    >
+                      Remove from library
+                    </button>
+                  </div>
+                ) : (
+                  <div key={entry.id} className="lib-card">
+                    <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex' }}>
+                      <button
+                        onClick={() => handleEditStart(entry)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)', opacity: 0.5, padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-accent)' }}
+                        onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.color = 'var(--color-text-tertiary)' }}
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBook(entry.id)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)', fontSize: '16px', opacity: 0.5, lineHeight: 1, padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-accent)' }}
+                        onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.color = 'var(--color-text-tertiary)' }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div style={{ paddingRight: '88px' }}>
+                      <div style={{ fontFamily: 'Georgia, serif', fontSize: '17px', fontWeight: '400', color: 'var(--color-text-primary)', marginBottom: entry.author ? '4px' : '16px', lineHeight: 1.3 }}>{entry.title}</div>
+                      {entry.author && (
+                        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'var(--color-text-tertiary)', marginBottom: '16px' }}>{entry.author}</div>
+                      )}
+                    </div>
+                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}>
+                      <ToggleSwitch
+                        checked={entry.is_unread}
+                        onChange={(val) => handleFamiliarityChange(entry.id, { is_unread: val })}
+                      />
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'var(--color-text-secondary)', marginLeft: '10px', verticalAlign: 'middle' }}>Haven&apos;t read this yet</span>
+                    </label>
+                    {!entry.is_unread && (
+                      <FamiliaritySlider
+                        value={entry.familiarity_score ?? 3}
+                        onChange={(val) => handleFamiliarityChange(entry.id, { familiarity_score: val })}
+                      />
                     )}
                   </div>
-                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}>
-                    <ToggleSwitch
-                      checked={entry.is_unread}
-                      onChange={(val) => {
-                        handleFamiliarityChange(entry.id, { is_unread: val })
-                      }}
-                    />
-                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: 'var(--color-text-secondary)', marginLeft: '10px', verticalAlign: 'middle' }}>Haven&apos;t read this yet</span>
-                  </label>
-                  {!entry.is_unread && (
-                    <FamiliaritySlider
-                      value={entry.familiarity_score ?? 3}
-                      onChange={(val) => handleFamiliarityChange(entry.id, { familiarity_score: val })}
-                    />
-                  )}
-                </div>
-              ))}
+                )
+              )}
             </div>
           )}
         </div>
