@@ -41,9 +41,15 @@ export default function GroupsPage() {
         window.location.href = '/login'
         return
       }
-      const res = await fetch(`${API_URL}/groups/${user.id}`)
+      const [res, profileRes] = await Promise.all([
+        fetch(`${API_URL}/groups/${user.id}`),
+        supabase.from('user_profiles').select('groups_first_visited_at').eq('id', user.id).single()
+      ])
       const data = await res.json()
       setGroups(data.groups || [])
+      if (profileRes.data && profileRes.data.groups_first_visited_at === null) {
+        fetch(`${API_URL}/groups/first-visit/${user.id}`)
+      }
       setLoading(false)
     }
     init()

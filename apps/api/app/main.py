@@ -533,6 +533,39 @@ def generate_conversation_title(user_message: str, assistant_response: str) -> s
         print(f"[title] EXCEPTION: {e!r}", flush=True)
         return "Conversation"
 
+
+GROUPS_NUDGE_INSTRUCTION = """
+
+GROUPS NUDGE — deliver this once, at the start of this session, before surfacing today's connection. Keep it brief, warm, and conversational. Do not make it sound like a product announcement or a feature tutorial. After delivering the nudge, continue naturally into the Tell Me Something Interesting session. The user has been exploring their library through Tell Me Something Interesting and hasn't yet tried Groups. Mention it as something worth knowing about — a way to focus the conversation on a particular set of books. Point them toward it without pressure. Then move on. Example tone (not a script — vary the opening): "Before we get into something — I want to mention that there's a feature called Groups you might find interesting. If you have a set of books you want to think about together — a subject you're studying, a reading list, a particular period — you can bring them into a Group and I'll keep the conversation inside those books only. Worth exploring when you're ready. Now — here's something I've been thinking about...\""""
+
+
+def check_groups_nudge(user_id: str) -> bool:
+    try:
+        profile_result = supabase.from_("user_profiles").select("groups_nudge_delivered, groups_first_visited_at").eq("id", user_id).single().execute()
+        profile = profile_result.data
+        if not profile:
+            return False
+        if profile.get("groups_nudge_delivered") is not False:
+            return False
+        if profile.get("groups_first_visited_at") is not None:
+            return False
+
+        session_result = supabase.from_("tmsi_session_log").select("id", count="exact").eq("user_id", user_id).execute()
+        session_count = session_result.count
+        if session_count is None or not (3 <= session_count <= 5):
+            return False
+
+        library_result = supabase.from_("library_entries").select("id", count="exact").eq("user_id", user_id).execute()
+        library_count = library_result.count
+        if library_count is None or library_count < 3:
+            return False
+
+        return True
+    except Exception as e:
+        print(f"[nudge] check_groups_nudge error: {e}", flush=True)
+        return False
+
+
 # --- Routes ---
 
 @app.get("/health")
@@ -672,6 +705,7 @@ def start_conversation_stream(req: StartConversationRequest):
         recent_titles = [r["title"] for r in title_result.data if r.get("title")]
         recent_context = "Recent past conversations: " + ", ".join(recent_titles) if recent_titles else ""
 
+    deliver_nudge = False
     if req.mode == "open":
         tmsi_result = compute_tmsi_scores(req.user_id)
         tmsi_pool = tmsi_result["pool"]
@@ -680,6 +714,9 @@ def start_conversation_stream(req: StartConversationRequest):
             system_prompt = build_system_prompt("", books_override=tmsi_pool, recent_context=recent_context)
         else:
             system_prompt = build_system_prompt(library_context, recent_context=recent_context)
+        deliver_nudge = check_groups_nudge(req.user_id)
+        if deliver_nudge:
+            system_prompt += GROUPS_NUDGE_INSTRUCTION
         user_message = "Surface something interesting from my library — an unexpected connection or a thread worth pulling on."
     else:
         tmsi_pool = None
@@ -697,6 +734,9 @@ def start_conversation_stream(req: StartConversationRequest):
             "title": "Untitled Conversation"
         }).execute()
         conversation_id = conv_result.data[0]["id"]
+
+        if deliver_nudge:
+            supabase.from_("user_profiles").update({"groups_nudge_delivered": True}).eq("id", req.user_id).execute()
 
         # Store user message
         supabase.from_("messages").insert({
@@ -1070,6 +1110,15 @@ def update_group(group_id: str, req: UpdateGroupRequest):
 @app.delete("/groups/{group_id}")
 def delete_group(group_id: str):
     supabase.from_("groups").delete().eq("id", group_id).execute()
+    return {"success": True}
+
+
+@app.get("/groups/first-visit/{user_id}")
+def mark_groups_first_visit(user_id: str):
+    result = supabase.from_("user_profiles").select("groups_first_visited_at").eq("id", user_id).single().execute()
+    if result.data and result.data.get("groups_first_visited_at") is None:
+        now = datetime.now(timezone.utc).isoformat()
+        supabase.from_("user_profiles").update({"groups_first_visited_at": now}).eq("id", user_id).execute()
     return {"success": True}
 
 
