@@ -134,9 +134,15 @@ export default function Home() {
           </button>
           <button
             onClick={() => startConversation('open')}
-            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '32px', background: 'transparent', border: 'none', borderLeft: '1px solid var(--color-border-light)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '15px', color: 'var(--color-text-secondary)', cursor: 'pointer', minHeight: '44px' }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '9px', background: 'transparent', border: 'none', borderLeft: '1px solid var(--color-border-light)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '15px', color: 'var(--color-text-secondary)', cursor: 'pointer', minHeight: '44px' }}
           >
             Tell me something interesting
+          </button>
+          <button
+            onClick={() => router.push('/groups')}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '32px', background: 'transparent', border: 'none', borderLeft: '1px solid var(--color-border-light)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '15px', color: 'var(--color-text-secondary)', cursor: 'pointer', minHeight: '44px' }}
+          >
+            Groups
           </button>
 
           <div id="mobile-conversations">
@@ -184,10 +190,14 @@ export default function Home() {
         >
           Tell me something interesting
         </button>
-
-        <a href="/groups" className="sidebar-nav-link" style={{ marginTop: '24px', marginBottom: '4px' }}>
+        <button
+          onClick={() => router.push('/groups')}
+          className="sidebar-cta-secondary"
+        >
           Groups
-        </a>
+        </button>
+
+        <hr style={{ border: 'none', borderTop: '1px solid var(--color-border-dark)', margin: '16px 0' }} />
         <a ref={libraryRef} href="/library" className="sidebar-nav-link">
           My Library
         </a>

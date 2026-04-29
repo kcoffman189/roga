@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import anthropic
 import os
 import json
@@ -29,6 +29,50 @@ supabase: Client = create_client(
     os.environ.get("SUPABASE_URL"),
     os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 )
+
+# ============================================================
+# ROGA — TELL ME SOMETHING INTERESTING SCORING CONFIG
+# ============================================================
+# Adjust weights here to tune book selection behavior.
+# All values are integers. Negative values are penalties.
+# Changes take effect immediately — no redeployment required.
+
+# --- FAMILIARITY BASE SCORES ---
+# Peaks at Level 3. Intentional — deeply familiar books have diminishing connection value.
+TMSI_FAMILIARITY_L1 = 15
+TMSI_FAMILIARITY_L2 = 25
+TMSI_FAMILIARITY_L3 = 40
+TMSI_FAMILIARITY_L4 = 32
+TMSI_FAMILIARITY_L5 = 22
+
+# --- RECENCY PENALTIES / BONUS ---
+TMSI_RECENCY_PENALTY_2  = -35   # Used in last 2 conversations
+TMSI_RECENCY_PENALTY_6  = -15   # Used in last 3-6 conversations
+TMSI_RECENCY_PENALTY_12 = -5    # Used in last 7-12 conversations
+TMSI_RECENCY_BONUS      = 10    # Not used in last 12+ conversations
+
+# --- UNREAD BOOK BONUS ---
+TMSI_UNREAD_BONUS = 8
+
+# --- STALENESS BONUS ---
+TMSI_STALENESS_2WK  = 5
+TMSI_STALENESS_6WK  = 10
+TMSI_STALENESS_12WK = 15
+
+# --- NEW TO LIBRARY BONUS ---
+TMSI_NEW_LIBRARY_BONUS  = 10
+TMSI_NEW_LIBRARY_WINDOW = 14   # Days
+
+# --- GROUP MEMBERSHIP BONUS ---
+TMSI_GROUP_BONUS       = 10
+TMSI_GROUP_ACTIVE_DAYS = 14   # Days since last group conversation
+
+# --- CONVERSATION DEPTH SIGNAL ---
+# STUBBED — pending structured summary data. Do not apply this score yet.
+TMSI_DEPTH_SIGNAL = 12   # Reserved for future use
+
+# --- SELECTION POOL ---
+TMSI_POOL_SIZE = 6
 
 # --- Models ---
 
@@ -180,6 +224,215 @@ RIGHT (Roga voice):
 "I've been thinking about 1984 and Man's Search for Meaning recently, and something keeps nagging at me. Frankl and Winston end up in almost identical situations — total system, no escape, maximum pressure — but they go completely opposite directions. Frankl says that last sliver of inner freedom holds. Orwell says the right system can reach in and take it from you. I'm genuinely not sure which one I believe. Which one do you?"
 
 The second version thinks out loud, expresses genuine uncertainty, and ends with a question that sounds like someone who actually wants to know the answer. That's the target for every response."""
+
+# ============================================================
+# ROGA — TELL ME SOMETHING INTERESTING SCORING CONFIG
+# ============================================================
+# Adjust weights here to tune book selection behavior.
+# All values are integers. Negative values are penalties.
+# Changes take effect immediately — no redeployment required.
+
+# --- FAMILIARITY BASE SCORES ---
+# Peaks at Level 3. Intentional — deeply familiar books have diminishing connection value.
+TMSI_FAMILIARITY_L1 = 15
+TMSI_FAMILIARITY_L2 = 25
+TMSI_FAMILIARITY_L3 = 40
+TMSI_FAMILIARITY_L4 = 32
+TMSI_FAMILIARITY_L5 = 22
+
+# --- RECENCY PENALTIES / BONUS ---
+TMSI_RECENCY_PENALTY_2  = -35   # Used in last 2 conversations
+TMSI_RECENCY_PENALTY_6  = -15   # Used in last 3-6 conversations
+TMSI_RECENCY_PENALTY_12 = -5    # Used in last 7-12 conversations
+TMSI_RECENCY_BONUS      = 10    # Not used in last 12+ conversations
+
+# --- UNREAD BOOK BONUS ---
+TMSI_UNREAD_BONUS = 8
+
+# --- STALENESS BONUS ---
+TMSI_STALENESS_2WK  = 5
+TMSI_STALENESS_6WK  = 10
+TMSI_STALENESS_12WK = 15
+
+# --- NEW TO LIBRARY BONUS ---
+TMSI_NEW_LIBRARY_BONUS  = 10
+TMSI_NEW_LIBRARY_WINDOW = 14   # Days
+
+# --- GROUP MEMBERSHIP BONUS ---
+TMSI_GROUP_BONUS       = 10
+TMSI_GROUP_ACTIVE_DAYS = 14   # Days since last group conversation
+
+# --- CONVERSATION DEPTH SIGNAL ---
+# STUBBED — pending structured summary data. Do not apply this score yet.
+TMSI_DEPTH_SIGNAL = 12   # Reserved for future use
+
+# --- SELECTION POOL ---
+TMSI_POOL_SIZE = 6
+
+def compute_tmsi_scores(user_id: str, group_id: str = None) -> dict:
+    try:
+        now = datetime.now(timezone.utc)
+        print(f"[TMSI] compute_tmsi_scores called for user_id={user_id}, group_id={group_id}", flush=True)
+
+        # 1. Fetch library entries (group-scoped if group_id provided)
+        fields = "id, title, author, familiarity_score, is_unread, created_at, last_tmsi_surfaced_at, notes"
+        if group_id:
+            gb_result = supabase.from_("group_books").select("library_entry_id").eq("group_id", group_id).execute()
+            book_ids = [row["library_entry_id"] for row in gb_result.data]
+            if not book_ids:
+                return {"pool": [], "all_scored": []}
+            entries_result = supabase.from_("library_entries").select(fields).in_("id", book_ids).execute()
+        else:
+            entries_result = supabase.from_("library_entries").select(fields).eq("user_id", user_id).execute()
+
+        entries = entries_result.data
+        if not entries:
+            return {"pool": [], "all_scored": []}
+
+        # 2. Fetch book_conversation_log — enough rows to determine last 12 conversation ranks
+        log_result = (
+            supabase.from_("book_conversation_log")
+            .select("library_entry_id, conversation_id, surfaced_at")
+            .eq("user_id", user_id)
+            .order("surfaced_at", desc=True)
+            .limit(100)
+            .execute()
+        )
+        log_rows = log_result.data
+
+        # Build ordered list of unique conversation_ids (most recent first), capped at 12
+        seen_convs: list = []
+        for row in log_rows:
+            cid = row["conversation_id"]
+            if cid not in seen_convs:
+                seen_convs.append(cid)
+            if len(seen_convs) >= 12:
+                break
+        conv_rank = {cid: i + 1 for i, cid in enumerate(seen_convs)}  # rank 1 = most recent
+
+        # Map each book to its best (lowest-numbered) rank across the last 12 conversations
+        book_best_rank: dict = {}
+        for row in log_rows:
+            lid = row["library_entry_id"]
+            rank = conv_rank.get(row["conversation_id"])
+            if rank is not None:
+                if lid not in book_best_rank or rank < book_best_rank[lid]:
+                    book_best_rank[lid] = rank
+
+        # 3. Determine which books belong to active groups (group with conversation in last TMSI_GROUP_ACTIVE_DAYS days)
+        active_group_book_ids: set = set()
+        user_groups_result = supabase.from_("groups").select("id").eq("user_id", user_id).execute()
+        user_group_ids = [r["id"] for r in user_groups_result.data]
+        if user_group_ids:
+            cutoff = (now - timedelta(days=TMSI_GROUP_ACTIVE_DAYS)).isoformat()
+            active_groups_result = (
+                supabase.from_("group_conversations")
+                .select("group_id")
+                .in_("group_id", user_group_ids)
+                .gte("updated_at", cutoff)
+                .execute()
+            )
+            active_group_ids = list({r["group_id"] for r in active_groups_result.data})
+            if active_group_ids:
+                active_books_result = (
+                    supabase.from_("group_books")
+                    .select("library_entry_id")
+                    .in_("group_id", active_group_ids)
+                    .execute()
+                )
+                active_group_book_ids = {r["library_entry_id"] for r in active_books_result.data}
+
+        # 4. Score each entry
+        fam_map = {
+            1: TMSI_FAMILIARITY_L1,
+            2: TMSI_FAMILIARITY_L2,
+            3: TMSI_FAMILIARITY_L3,
+            4: TMSI_FAMILIARITY_L4,
+            5: TMSI_FAMILIARITY_L5,
+        }
+        scored = []
+        for entry in entries:
+            score = 0
+            entry_id = entry["id"]
+
+            # Familiarity base (unread books get 0 base; their bonus comes from TMSI_UNREAD_BONUS)
+            if not entry.get("is_unread"):
+                score += fam_map.get(entry.get("familiarity_score") or 0, 0)
+
+            # Recency penalty/bonus
+            best_rank = book_best_rank.get(entry_id)
+            if best_rank is None:
+                score += TMSI_RECENCY_BONUS
+            elif best_rank <= 2:
+                score += TMSI_RECENCY_PENALTY_2
+            elif best_rank <= 6:
+                score += TMSI_RECENCY_PENALTY_6
+            else:
+                score += TMSI_RECENCY_PENALTY_12
+
+            # Staleness bonus
+            last_surfaced = entry.get("last_tmsi_surfaced_at")
+            if last_surfaced is None:
+                score += TMSI_STALENESS_12WK
+            else:
+                if isinstance(last_surfaced, str):
+                    last_dt = datetime.fromisoformat(last_surfaced.replace("Z", "+00:00"))
+                else:
+                    last_dt = last_surfaced
+                age_weeks = (now - last_dt).days / 7
+                if age_weeks > 12:
+                    score += TMSI_STALENESS_12WK
+                elif age_weeks > 6:
+                    score += TMSI_STALENESS_6WK
+                elif age_weeks > 2:
+                    score += TMSI_STALENESS_2WK
+                # within 2 weeks → 0
+
+            # New to library bonus
+            created_at_raw = entry.get("created_at")
+            if created_at_raw:
+                if isinstance(created_at_raw, str):
+                    created_dt = datetime.fromisoformat(created_at_raw.replace("Z", "+00:00"))
+                else:
+                    created_dt = created_at_raw
+                if (now - created_dt).days <= TMSI_NEW_LIBRARY_WINDOW:
+                    score += TMSI_NEW_LIBRARY_BONUS
+
+            # Unread bonus
+            if entry.get("is_unread"):
+                score += TMSI_UNREAD_BONUS
+
+            # Group membership bonus
+            if entry_id in active_group_book_ids:
+                score += TMSI_GROUP_BONUS
+
+            # DEPTH SIGNAL STUBBED — pending structured summary data
+
+            scored.append({**entry, "_tmsi_score": score})
+
+        # 5. Exclude negative-scoring books; fallback to top 3 by raw familiarity if all negative
+        non_negative = [e for e in scored if e["_tmsi_score"] >= 0]
+        if not non_negative:
+            pool = sorted(scored, key=lambda e: (e.get("familiarity_score") or 0), reverse=True)[:3]
+        else:
+            # 6 & 7. Sort by score desc, tiebreaker: most recently added; take top TMSI_POOL_SIZE
+            non_negative.sort(key=lambda e: (e["_tmsi_score"], e.get("created_at") or ""), reverse=True)
+            pool = non_negative[:TMSI_POOL_SIZE]
+
+        # 8. Full scored list for session logging (all books, sorted by score desc)
+        all_scored = [
+            {"book_id": e["id"], "title": e["title"], "score": e["_tmsi_score"]}
+            for e in sorted(scored, key=lambda e: e["_tmsi_score"], reverse=True)
+        ]
+
+        print(f"[TMSI] scoring complete. pool size={len(pool)}, all_scored size={len(all_scored)}", flush=True)
+        return {"pool": pool, "all_scored": all_scored}
+    except Exception as e:
+        print(f"[TMSI] ERROR in compute_tmsi_scores: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        return {"pool": [], "all_scored": []}
+
 
 def generate_title(messages: list) -> str:
     conversation_text = "\n".join([f"{m['role']}: {m['content']}" for m in messages[:4]])
@@ -419,11 +672,19 @@ def start_conversation_stream(req: StartConversationRequest):
         recent_titles = [r["title"] for r in title_result.data if r.get("title")]
         recent_context = "Recent past conversations: " + ", ".join(recent_titles) if recent_titles else ""
 
-    system_prompt = build_system_prompt(library_context, recent_context=recent_context)
-
     if req.mode == "open":
+        tmsi_result = compute_tmsi_scores(req.user_id)
+        tmsi_pool = tmsi_result["pool"]
+        tmsi_all_scored = tmsi_result["all_scored"]
+        if tmsi_pool:
+            system_prompt = build_system_prompt("", books_override=tmsi_pool, recent_context=recent_context)
+        else:
+            system_prompt = build_system_prompt(library_context, recent_context=recent_context)
         user_message = "Surface something interesting from my library — an unexpected connection or a thread worth pulling on."
     else:
+        tmsi_pool = None
+        tmsi_all_scored = None
+        system_prompt = build_system_prompt(library_context, recent_context=recent_context)
         user_message = req.initial_message or "I'd like to explore something."
 
     def generate():
@@ -464,6 +725,21 @@ def start_conversation_stream(req: StartConversationRequest):
             "role": "assistant",
             "content": full_response
         }).execute()
+
+        # TMSI logging
+        if tmsi_pool:
+            now_iso = datetime.now(timezone.utc).isoformat()
+            supabase.from_("book_conversation_log").insert([
+                {"user_id": req.user_id, "library_entry_id": e["id"], "conversation_id": conversation_id, "surfaced_at": now_iso}
+                for e in tmsi_pool
+            ]).execute()
+            for e in tmsi_pool:
+                supabase.from_("library_entries").update({"last_tmsi_surfaced_at": now_iso}).eq("id", e["id"]).execute()
+            supabase.from_("tmsi_session_log").insert({
+                "user_id": req.user_id,
+                "conversation_id": conversation_id,
+                "scored_pool": json.dumps(tmsi_all_scored)
+            }).execute()
 
         # Generate and store title
         title = "Untitled Conversation"
@@ -813,8 +1089,6 @@ def get_group_books(group_id: str) -> list:
 
 @app.post("/group-conversation/start/stream")
 def start_group_conversation_stream(req: StartGroupConversationRequest):
-    group_books = get_group_books(req.group_id)
-
     summary_result = supabase.from_("group_conversations").select("summary").eq("group_id", req.group_id).filter("summary", "not.is", "null").order("updated_at", desc=True).limit(4).execute()
     summaries = [r["summary"] for r in summary_result.data if r.get("summary")]
 
@@ -833,11 +1107,21 @@ def start_group_conversation_stream(req: StartGroupConversationRequest):
         recent_titles = [r["title"] for r in title_result.data if r.get("title")]
         recent_context = "Recent past conversations: " + ", ".join(recent_titles) if recent_titles else ""
 
-    system_prompt = build_system_prompt("", books_override=group_books, recent_context=recent_context)
-
     if req.mode == "open":
+        tmsi_result = compute_tmsi_scores(req.user_id, group_id=req.group_id)
+        tmsi_pool = tmsi_result["pool"]
+        tmsi_all_scored = tmsi_result["all_scored"]
+        if tmsi_pool:
+            system_prompt = build_system_prompt("", books_override=tmsi_pool, recent_context=recent_context)
+        else:
+            group_books = get_group_books(req.group_id)
+            system_prompt = build_system_prompt("", books_override=group_books, recent_context=recent_context)
         user_message = "Surface something interesting from my library — an unexpected connection or a thread worth pulling on."
     else:
+        group_books = get_group_books(req.group_id)
+        tmsi_pool = None
+        tmsi_all_scored = None
+        system_prompt = build_system_prompt("", books_override=group_books, recent_context=recent_context)
         user_message = req.message or "I'd like to explore something."
 
     def generate():
@@ -877,6 +1161,21 @@ def start_group_conversation_stream(req: StartGroupConversationRequest):
             "role": "assistant",
             "content": full_response
         }).execute()
+
+        # TMSI logging
+        if tmsi_pool:
+            now_iso = datetime.now(timezone.utc).isoformat()
+            supabase.from_("book_conversation_log").insert([
+                {"user_id": req.user_id, "library_entry_id": e["id"], "conversation_id": conversation_id, "surfaced_at": now_iso}
+                for e in tmsi_pool
+            ]).execute()
+            for e in tmsi_pool:
+                supabase.from_("library_entries").update({"last_tmsi_surfaced_at": now_iso}).eq("id", e["id"]).execute()
+            supabase.from_("tmsi_session_log").insert({
+                "user_id": req.user_id,
+                "conversation_id": conversation_id,
+                "scored_pool": json.dumps(tmsi_all_scored)
+            }).execute()
 
         title = generate_conversation_title(user_message, full_response)
         supabase.from_("group_conversations").update({"title": title}).eq("id", conversation_id).execute()
