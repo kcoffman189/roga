@@ -18,9 +18,10 @@ type Props = {
   libraryRef: RefObject<HTMLAnchorElement | null>
   digInRef: RefObject<HTMLButtonElement | null>
   interestingRef: RefObject<HTMLButtonElement | null>
+  onComplete?: () => void
 }
 
-export default function OnboardingBubbles({ userId, supabase, libraryRef, digInRef, interestingRef }: Props) {
+export default function OnboardingBubbles({ userId, supabase, libraryRef, digInRef, interestingRef, onComplete }: Props) {
   const [step, setStep] = useState<number | null>(null)
   const [complete, setComplete] = useState(false)
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
@@ -117,6 +118,7 @@ export default function OnboardingBubbles({ userId, supabase, libraryRef, digInR
         .update({ onboarding_complete: true })
         .eq('id', userId)
       setComplete(true)
+      onComplete?.()
     } else {
       const next = STEP_ORDER[idx + 1]
       await supabase

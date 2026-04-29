@@ -7,6 +7,7 @@ import { createSupabaseClient } from '@/lib/supabase/client'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import OnboardingBubbles from '@/components/OnboardingBubbles'
+import GroupsIntroCard from '@/components/GroupsIntroCard'
 import BottomTabBar from '@/components/BottomTabBar'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import ConversationGroupedList from '@/components/ConversationGroupedList'
@@ -31,12 +32,26 @@ export default function Home() {
   const [userId, setUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [welcome, setWelcome] = useState<WelcomeQuote | null>(null)
+  const [showGroupsIntroCard, setShowGroupsIntroCard] = useState(false)
   const router = useRouter()
   const supabase = useRef(createSupabaseClient()).current
   const libraryRef = useRef<HTMLAnchorElement>(null)
   const digInRef = useRef<HTMLButtonElement>(null)
   const interestingRef = useRef<HTMLButtonElement>(null)
+  const groupsButtonRef = useRef<HTMLButtonElement>(null)
   const isMobile = useIsMobile()
+
+  const handleOnboardingComplete = async () => {
+    if (!userId) return
+    const { data } = await supabase
+      .from('user_profiles')
+      .select('groups_intro_card_seen')
+      .eq('id', userId)
+      .single()
+    if (data && data.groups_intro_card_seen === false) {
+      setShowGroupsIntroCard(true)
+    }
+  }
 
   useEffect(() => {
     const init = async () => {
@@ -191,8 +206,10 @@ export default function Home() {
           Tell me something interesting
         </button>
         <button
+          ref={groupsButtonRef}
           onClick={() => router.push('/groups')}
           className="sidebar-cta-secondary"
+          style={showGroupsIntroCard ? { outline: '2px solid #c8a96e', outlineOffset: '2px' } : undefined}
         >
           Groups
         </button>
@@ -238,6 +255,15 @@ export default function Home() {
           libraryRef={libraryRef}
           digInRef={digInRef}
           interestingRef={interestingRef}
+          onComplete={handleOnboardingComplete}
+        />
+      )}
+      {showGroupsIntroCard && userId && (
+        <GroupsIntroCard
+          groupsButtonRef={groupsButtonRef}
+          supabase={supabase}
+          userId={userId}
+          onDismiss={() => setShowGroupsIntroCard(false)}
         />
       )}
     </div>
