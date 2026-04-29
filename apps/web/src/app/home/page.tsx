@@ -59,14 +59,18 @@ export default function Home() {
       if (!user) { window.location.href = '/login'; return }
       setUserId(user.id)
 
-      const [convsRes, quoteRes] = await Promise.all([
+      const [convsRes, quoteRes, profileRes] = await Promise.all([
         fetch(`${API_URL}/conversations/${user.id}`),
-        fetch(`${API_URL}/welcome-quote/${user.id}`)
+        fetch(`${API_URL}/welcome-quote/${user.id}`),
+        supabase.from('user_profiles').select('groups_intro_card_seen').eq('id', user.id).single()
       ])
       const convsData = await convsRes.json()
       const quoteData = await quoteRes.json()
       setConversations(convsData.conversations || [])
       setWelcome(quoteData)
+      if (profileRes.data && profileRes.data.groups_intro_card_seen === false) {
+        setShowGroupsIntroCard(true)
+      }
       setLoading(false)
     }
     init()
