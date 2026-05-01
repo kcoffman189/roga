@@ -25,9 +25,7 @@ export default function LandingPage() {
       setError(error.message)
       setLoading(false)
     } else {
-      router.push('/home')
-      router.refresh()
-      setTimeout(() => setLoading(false), 3000)
+      window.location.href = '/home'
     }
   }
 
@@ -49,9 +47,7 @@ export default function LandingPage() {
       setError(error.message)
       setLoading(false)
     } else {
-      router.push('/home')
-      router.refresh()
-      setTimeout(() => setLoading(false), 3000)
+      window.location.href = '/home'
     }
   }
 
