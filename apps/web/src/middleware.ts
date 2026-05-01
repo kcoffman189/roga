@@ -28,8 +28,8 @@ export async function middleware(request: NextRequest) {
   if (PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(prefix + '/'))) {
     const response = NextResponse.next()
     const supabase = createSupabaseClient(request, response)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
       return NextResponse.redirect(new URL('/', request.url))
     }
     return response
@@ -38,8 +38,8 @@ export async function middleware(request: NextRequest) {
   if (pathname === '/') {
     const response = NextResponse.next()
     const supabase = createSupabaseClient(request, response)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
       return NextResponse.redirect(new URL('/home', request.url))
     }
     return response
