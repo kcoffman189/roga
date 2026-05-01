@@ -272,7 +272,6 @@ TMSI_POOL_SIZE = 6
 def compute_tmsi_scores(user_id: str, group_id: str = None) -> dict:
     try:
         now = datetime.now(timezone.utc)
-        print(f"[TMSI] compute_tmsi_scores called for user_id={user_id}, group_id={group_id}", flush=True)
 
         # 1. Fetch library entries (group-scoped if group_id provided)
         fields = "id, title, author, familiarity_score, is_unread, created_at, last_tmsi_surfaced_at, notes"
@@ -425,12 +424,8 @@ def compute_tmsi_scores(user_id: str, group_id: str = None) -> dict:
             for e in sorted(scored, key=lambda e: e["_tmsi_score"], reverse=True)
         ]
 
-        print(f"[TMSI] scoring complete. pool size={len(pool)}, all_scored size={len(all_scored)}", flush=True)
         return {"pool": pool, "all_scored": all_scored}
     except Exception as e:
-        print(f"[TMSI] ERROR in compute_tmsi_scores: {e}", flush=True)
-        import traceback
-        traceback.print_exc()
         return {"pool": [], "all_scored": []}
 
 
