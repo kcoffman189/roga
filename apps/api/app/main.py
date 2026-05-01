@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Header, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Header, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -7,6 +7,7 @@ from datetime import datetime, timezone, timedelta
 import anthropic
 import os
 import json
+import resend
 from supabase import create_client, Client
 
 app = FastAPI()
@@ -29,6 +30,8 @@ supabase: Client = create_client(
     os.environ.get("SUPABASE_URL"),
     os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 )
+resend.api_key = os.environ.get("RESEND_API_KEY")
+FEEDBACK_EMAIL = os.environ.get("FEEDBACK_EMAIL", "kcoffman189@gmail.com")
 
 # ============================================================
 # ROGA — TELL ME SOMETHING INTERESTING SCORING CONFIG
@@ -566,6 +569,25 @@ def check_groups_nudge(user_id: str) -> bool:
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.post("/feedback")
+async def submit_feedback(request: Request):
+    body = await request.json()
+    message = body.get("message", "").strip()
+    user_email = body.get("user_email", "Unknown")
+    if not message:
+        return {"error": "Message is required"}
+    try:
+        resend.Emails.send({
+            "from": "Roga Feedback <onboarding@resend.dev>",
+            "to": FEEDBACK_EMAIL,
+            "subject": f"Roga Feedback from {user_email}",
+            "html": f"<p><strong>From:</strong> {user_email}</p><p><strong>Message:</strong></p><p>{message}</p>"
+        })
+        return {"success": True}
+    except Exception as e:
+        print(f"Feedback email error: {e}")
+        return {"error": "Failed to send feedback"}
 
 @app.patch("/library/{entry_id}/familiarity")
 def update_familiarity(entry_id: str, req: UpdateFamiliarityRequest):

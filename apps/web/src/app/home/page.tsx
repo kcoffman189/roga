@@ -33,6 +33,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [welcome, setWelcome] = useState<WelcomeQuote | null>(null)
   const [showGroupsIntroCard, setShowGroupsIntroCard] = useState(false)
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [feedbackText, setFeedbackText] = useState('')
+  const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const router = useRouter()
   const supabase = useRef(createSupabaseClient()).current
   const libraryRef = useRef<HTMLAnchorElement>(null)
@@ -40,6 +43,32 @@ export default function Home() {
   const interestingRef = useRef<HTMLButtonElement>(null)
   const groupsButtonRef = useRef<HTMLButtonElement>(null)
   const isMobile = useIsMobile()
+
+  const handleFeedbackSubmit = async () => {
+    if (feedbackText.trim().length < 10) return
+    setFeedbackStatus('submitting')
+    const { data: { user } } = await supabase.auth.getUser()
+    try {
+      const res = await fetch(`${API_URL}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: feedbackText.trim(), user_email: user?.email ?? 'Unknown' }),
+      })
+      const json = await res.json()
+      if (json.success) {
+        setFeedbackStatus('success')
+        setTimeout(() => {
+          setShowFeedback(false)
+          setFeedbackText('')
+          setFeedbackStatus('idle')
+        }, 2000)
+      } else {
+        setFeedbackStatus('error')
+      }
+    } catch {
+      setFeedbackStatus('error')
+    }
+  }
 
   const handleOnboardingComplete = async () => {
     if (!userId) return
@@ -245,6 +274,13 @@ export default function Home() {
           Log out
         </button>
         <a href="/account" className="sidebar-account-link">Account</a>
+        <button
+          onClick={() => setShowFeedback(true)}
+          className="sidebar-account-link"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0 }}
+        >
+          Send feedback
+        </button>
       </div>
 
       {/* Main Canvas */}
@@ -269,6 +305,84 @@ export default function Home() {
           userId={userId}
           onDismiss={() => setShowGroupsIntroCard(false)}
         />
+      )}
+
+      {showFeedback && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowFeedback(false); setFeedbackText(''); setFeedbackStatus('idle') } }}
+        >
+          <div style={{ background: '#FAF8F4', borderRadius: '6px', padding: '28px 28px 24px', width: '420px', maxWidth: '90vw' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '20px', color: '#1A1A1A' }}>
+                Send feedback
+              </div>
+              <button
+                onClick={() => { setShowFeedback(false); setFeedbackText(''); setFeedbackStatus('idle') }}
+                style={{ background: 'none', border: 'none', fontSize: '22px', color: '#6B6B6B', cursor: 'pointer', lineHeight: 1 }}
+              >
+                ×
+              </button>
+            </div>
+
+            {feedbackStatus === 'success' ? (
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#6B6B6B', textAlign: 'center', padding: '24px 0' }}>
+                Thanks — feedback sent.
+              </p>
+            ) : (
+              <>
+                <textarea
+                  rows={4}
+                  placeholder="What's on your mind?"
+                  value={feedbackText}
+                  onChange={(e) => { setFeedbackText(e.target.value); if (feedbackStatus === 'error') setFeedbackStatus('idle') }}
+                  style={{
+                    width: '100%',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '14px',
+                    color: '#1A1A1A',
+                    background: '#FFFFFF',
+                    border: '1px solid #E4E0DA',
+                    borderRadius: '4px',
+                    padding: '10px 12px',
+                    resize: 'vertical',
+                    boxSizing: 'border-box',
+                    marginBottom: '12px',
+                  }}
+                />
+                {feedbackStatus === 'error' && (
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#C45E0A', marginBottom: '8px', marginTop: 0 }}>
+                    Something went wrong. Please try again.
+                  </p>
+                )}
+                <button
+                  onClick={handleFeedbackSubmit}
+                  disabled={feedbackText.trim().length < 10 || feedbackStatus === 'submitting'}
+                  style={{
+                    width: '100%',
+                    background: feedbackText.trim().length < 10 ? '#E4E0DA' : '#272C32',
+                    color: feedbackText.trim().length < 10 ? '#B0ACA6' : '#EEECEA',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '11px',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    padding: '13px 24px',
+                    border: 'none',
+                    borderRadius: '2px',
+                    cursor: feedbackText.trim().length < 10 ? 'default' : 'pointer',
+                    position: 'relative',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  {feedbackText.trim().length >= 10 && (
+                    <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: '#C45E0A' }} />
+                  )}
+                  {feedbackStatus === 'submitting' ? 'Sending...' : 'Send'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )
