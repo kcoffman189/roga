@@ -27,6 +27,7 @@ export default function LandingPage() {
     } else {
       router.push('/home')
       router.refresh()
+      setTimeout(() => setLoading(false), 3000)
     }
   }
 
@@ -50,6 +51,7 @@ export default function LandingPage() {
     } else {
       router.push('/home')
       router.refresh()
+      setTimeout(() => setLoading(false), 3000)
     }
   }
 
