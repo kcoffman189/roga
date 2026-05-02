@@ -954,6 +954,17 @@ def start_conversation_stream(req: StartConversationRequest):
         recent_context = "Recent past conversations: " + ", ".join(recent_titles) if recent_titles else ""
 
     deliver_nudge = False
+    _MEMORY_BLOCK = (
+        "\n\n# MEMORY CONTEXT\n# (Internal context only — do not reference this directly in conversation.\n"
+        "# Use it to inform your thinking, not to perform recall.)\n\n"
+        "{memory_context}"
+        "\n\n# END MEMORY CONTEXT\n\nYou have memory context from past conversations above. Use it to inform your thinking — not to perform recall.\n\n"
+        "IMPORTANT: Do not announce that you remember something. Do not say 'based on our previous conversations' or 'I recall that you mentioned'. "
+        "If a past thread is relevant, let it inform your response naturally. If it is genuinely worth surfacing, do so the way a thoughtful friend would — "
+        "as your own observation, not as a retrieval. Memory informs. It does not constrain. If the user is thinking about something new, be present to that — "
+        "do not pull them back toward what you remember. One memory surface per response maximum. Never two."
+    )
+
     if req.mode == "open":
         tmsi_result = compute_tmsi_scores(req.user_id)
         tmsi_pool = tmsi_result["pool"]
@@ -965,11 +976,29 @@ def start_conversation_stream(req: StartConversationRequest):
         deliver_nudge = check_groups_nudge(req.user_id)
         if deliver_nudge:
             system_prompt += GROUPS_NUDGE_INSTRUCTION
+        memory_context = extract_memory_context(
+            user_id=req.user_id,
+            book_list=[b["title"] for b in tmsi_pool] if tmsi_pool else [],
+            mode="Tell Me Something Interesting",
+            user_input=None,
+            group_id=None
+        )
+        if memory_context:
+            system_prompt += _MEMORY_BLOCK.format(memory_context=memory_context)
         user_message = "Surface something interesting from my library — an unexpected connection or a thread worth pulling on."
     else:
         tmsi_pool = None
         tmsi_all_scored = None
         system_prompt = build_system_prompt(library_context, recent_context=recent_context)
+        memory_context = extract_memory_context(
+            user_id=req.user_id,
+            book_list=[],
+            mode="Let's Dig Into Something",
+            user_input=req.initial_message,
+            group_id=None
+        )
+        if memory_context:
+            system_prompt += _MEMORY_BLOCK.format(memory_context=memory_context)
         user_message = req.initial_message or "I'd like to explore something."
 
     def generate():
@@ -1404,6 +1433,17 @@ def start_group_conversation_stream(req: StartGroupConversationRequest):
         recent_titles = [r["title"] for r in title_result.data if r.get("title")]
         recent_context = "Recent past conversations: " + ", ".join(recent_titles) if recent_titles else ""
 
+    _MEMORY_BLOCK = (
+        "\n\n# MEMORY CONTEXT\n# (Internal context only — do not reference this directly in conversation.\n"
+        "# Use it to inform your thinking, not to perform recall.)\n\n"
+        "{memory_context}"
+        "\n\n# END MEMORY CONTEXT\n\nYou have memory context from past conversations above. Use it to inform your thinking — not to perform recall.\n\n"
+        "IMPORTANT: Do not announce that you remember something. Do not say 'based on our previous conversations' or 'I recall that you mentioned'. "
+        "If a past thread is relevant, let it inform your response naturally. If it is genuinely worth surfacing, do so the way a thoughtful friend would — "
+        "as your own observation, not as a retrieval. Memory informs. It does not constrain. If the user is thinking about something new, be present to that — "
+        "do not pull them back toward what you remember. One memory surface per response maximum. Never two."
+    )
+
     if req.mode == "open":
         tmsi_result = compute_tmsi_scores(req.user_id, group_id=req.group_id)
         tmsi_pool = tmsi_result["pool"]
@@ -1413,12 +1453,30 @@ def start_group_conversation_stream(req: StartGroupConversationRequest):
         else:
             group_books = get_group_books(req.group_id)
             system_prompt = build_system_prompt("", books_override=group_books, recent_context=recent_context)
+        memory_context = extract_memory_context(
+            user_id=req.user_id,
+            book_list=[b["title"] for b in tmsi_pool] if tmsi_pool else [],
+            mode="Tell Me Something Interesting",
+            user_input=None,
+            group_id=req.group_id
+        )
+        if memory_context:
+            system_prompt += _MEMORY_BLOCK.format(memory_context=memory_context)
         user_message = "Surface something interesting from my library — an unexpected connection or a thread worth pulling on."
     else:
         group_books = get_group_books(req.group_id)
         tmsi_pool = None
         tmsi_all_scored = None
         system_prompt = build_system_prompt("", books_override=group_books, recent_context=recent_context)
+        memory_context = extract_memory_context(
+            user_id=req.user_id,
+            book_list=[],
+            mode="Let's Dig Into Something",
+            user_input=req.message,
+            group_id=req.group_id
+        )
+        if memory_context:
+            system_prompt += _MEMORY_BLOCK.format(memory_context=memory_context)
         user_message = req.message or "I'd like to explore something."
 
     def generate():
