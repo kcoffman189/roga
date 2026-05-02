@@ -432,6 +432,108 @@ def compute_tmsi_scores(user_id: str, group_id: str = None) -> dict:
         return {"pool": [], "all_scored": []}
 
 
+def _keyword_overlap(a: str, b: str) -> int:
+    if not a or not b:
+        return 0
+    words_a = {w.lower() for w in a.split() if len(w) >= 4}
+    words_b = {w.lower() for w in b.split() if len(w) >= 4}
+    return len(words_a & words_b)
+
+
+def get_tiered_memory(user_id: str, group_id: str = None) -> dict:
+    fields = "id, title, summary, summary_tension, summary_resonance, summary_thread, summary_tags, created_at, structured_summary_generated_at"
+
+    if group_id:
+        result = (
+            supabase.from_("group_conversations")
+            .select(fields)
+            .eq("group_id", group_id)
+            .not_.is_("structured_summary_generated_at", "null")
+            .order("created_at", desc=True)
+            .execute()
+        )
+    else:
+        result = (
+            supabase.from_("conversations")
+            .select(fields)
+            .eq("user_id", user_id)
+            .not_.is_("structured_summary_generated_at", "null")
+            .order("created_at", desc=True)
+            .execute()
+        )
+
+    convs = result.data
+
+    # Compute tag frequency across all sessions
+    tag_counts: dict = {}
+    for c in convs:
+        for tag in (c.get("summary_tags") or []):
+            tag_counts[tag] = tag_counts.get(tag, 0) + 1
+    persistent_themes = [tag for tag, count in tag_counts.items() if count >= 3]
+
+    # Collect all tensions for Tier 4 pattern detection (3+ sessions with overlapping tension)
+    all_tensions = [c.get("summary_tension") or "" for c in convs]
+
+    def tension_is_recurring(tension: str) -> bool:
+        if not tension:
+            return False
+        matches = sum(1 for t in all_tensions if _keyword_overlap(tension, t) >= 2)
+        return matches >= 3  # includes itself, so 3+ means it appears in 3+ sessions
+
+    # Collect all threads for Tier 3 recurrence detection (within positions 11-20 and 21+)
+    tier3_raw = convs[10:20]
+    tier4_raw = convs[20:]
+    tier3_and_4_threads = [c.get("summary_thread") or "" for c in tier3_raw + tier4_raw]
+
+    def thread_is_recurring(thread: str) -> bool:
+        if not thread:
+            return False
+        matches = sum(1 for t in tier3_and_4_threads if t != thread and _keyword_overlap(thread, t) >= 2)
+        return matches >= 1
+
+    tier1 = []
+    for c in convs[0:3]:
+        tier1.append({
+            "conversation_id": c["id"],
+            "title": c.get("title"),
+            "tension": c.get("summary_tension"),
+            "resonance": c.get("summary_resonance"),
+            "thread": c.get("summary_thread"),
+            "tags": c.get("summary_tags"),
+            "summary": c.get("summary"),
+            "created_at": c.get("created_at"),
+        })
+
+    tier2 = []
+    for c in convs[3:10]:
+        tier2.append({
+            "conversation_id": c["id"],
+            "tension": c.get("summary_tension"),
+            "thread": c.get("summary_thread"),
+        })
+
+    tier3 = []
+    for c in tier3_raw:
+        thread = c.get("summary_thread")
+        if thread_is_recurring(thread):
+            tier3.append({"conversation_id": c["id"], "thread": thread})
+
+    tier4 = []
+    for c in tier4_raw:
+        tension = c.get("summary_tension")
+        if tension_is_recurring(tension):
+            tier4.append({"conversation_id": c["id"], "tension": tension})
+
+    return {
+        "tier1": tier1,
+        "tier2": tier2,
+        "tier3": tier3,
+        "tier4": tier4,
+        "persistent_themes": persistent_themes,
+        "total_sessions": len(convs),
+    }
+
+
 def generate_title(messages: list) -> str:
     conversation_text = "\n".join([f"{m['role']}: {m['content']}" for m in messages[:4]])
     response = anthropic_client.messages.create(
@@ -447,6 +549,8 @@ def generate_title(messages: list) -> str:
 SUMMARY_SYSTEM_PROMPT = """You are summarising a conversation from Roga — an AI thinking partner that helps users explore their personal book library.
 
 Your job is not to summarise what was discussed. Your job is to capture the intellectual shape of the conversation — what the user was genuinely wrestling with, what landed for them, and what was left unresolved.
+
+# PROSE SUMMARY
 
 Write a summary of 3-5 sentences that captures all four of the following:
 
@@ -464,7 +568,44 @@ Vary your opening sentence. Do not begin every summary with the same constructio
 
 Strip all markdown formatting from the output. No italics, no bold, no asterisks, no special characters. Plain text only. Book titles should appear without formatting — just the title as written.
 
-If the conversation was very short or did not surface a meaningful intellectual tension, write a single sentence noting that the session was exploratory or introductory and did not produce a substantive thread to carry forward."""
+If the conversation was very short or did not surface a meaningful intellectual tension, write a single sentence noting that the session was exploratory or introductory and did not produce a substantive thread to carry forward.
+
+# STRUCTURED FIELDS
+
+After the prose summary, output exactly the following four fields. Each field starts on a new line with the label shown.
+
+TENSION: [One sentence — the underlying intellectual question the user was wrestling with, abstracted above the surface topic. Not a topic description. The actual question beneath it.]
+
+RESONANCE: [One sentence — what genuinely landed for the user. What they engaged with most deeply. If nothing resonated, write: none detected.]
+
+THREAD: [One sentence — the specific question left genuinely unresolved. Only include if something was authentically left open. If the conversation resolved cleanly, write: none.]
+
+TAGS: [Two or three thematic keywords, comma-separated. Single words or short phrases. These should characterise the intellectual territory of the session — not the book titles, but the ideas.]
+
+IMPORTANT: Output the prose summary first, then the four structured fields in the exact format shown. No additional text before or after."""
+
+
+def parse_summary_fields(raw_output):
+    lines = raw_output.strip().split('\n')
+    fields = {}
+    prose_lines = []
+    in_structured = False
+    for line in lines:
+        if line.startswith('TENSION:'):
+            in_structured = True
+            fields['tension'] = line[8:].strip()
+        elif line.startswith('RESONANCE:'):
+            fields['resonance'] = line[10:].strip()
+        elif line.startswith('THREAD:'):
+            thread = line[7:].strip()
+            fields['thread'] = None if thread.lower() in ['none.', 'none'] else thread
+        elif line.startswith('TAGS:'):
+            tags_raw = line[5:].strip()
+            fields['tags'] = [t.strip() for t in tags_raw.split(',')]
+        elif not in_structured:
+            prose_lines.append(line)
+    fields['prose'] = ' '.join(prose_lines).strip()
+    return fields
 
 
 def generate_conversation_summary(conversation_id: str, messages: list, is_group: bool = False):
@@ -480,7 +621,7 @@ def generate_conversation_summary(conversation_id: str, messages: list, is_group
     try:
         response = anthropic_client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=200,
+            max_tokens=500,
             system=SUMMARY_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": f"Here is the conversation transcript:\n\n{transcript}"}]
         )
@@ -500,11 +641,21 @@ def run_summarisation_job(conversation_id: str, is_group: bool = False):
         summary = generate_conversation_summary(conversation_id, result.data, is_group)
 
         if summary:
+            parsed = parse_summary_fields(summary)
             now = datetime.now(timezone.utc).isoformat()
+            update_data = {
+                "summary": parsed["prose"],
+                "summary_tension": parsed.get("tension"),
+                "summary_resonance": parsed.get("resonance"),
+                "summary_thread": parsed.get("thread"),
+                "summary_tags": parsed.get("tags"),
+                "structured_summary_generated_at": now,
+                "summary_generated_at": now,
+            }
             if is_group:
-                supabase.from_("group_conversations").update({"summary": summary, "summary_generated_at": now}).eq("id", conversation_id).execute()
+                supabase.from_("group_conversations").update(update_data).eq("id", conversation_id).execute()
             else:
-                supabase.from_("conversations").update({"summary": summary, "summary_generated_at": now}).eq("id", conversation_id).execute()
+                supabase.from_("conversations").update(update_data).eq("id", conversation_id).execute()
             print(f"[summary] saved for conversation {conversation_id} (group={is_group})", flush=True)
     except Exception as e:
         print(f"[summary] run_summarisation_job EXCEPTION for {conversation_id}: {e!r}", flush=True)
@@ -1333,6 +1484,7 @@ def backfill_summaries(req: BackfillRequest):
         raise HTTPException(status_code=403, detail="Invalid secret.")
 
     processed = 0
+    now = datetime.now(timezone.utc).isoformat()
 
     conv_query = supabase.from_("conversations").select("id").order("updated_at", desc=True)
     if not req.force:
@@ -1342,9 +1494,15 @@ def backfill_summaries(req: BackfillRequest):
         msgs = supabase.from_("messages").select("role, content").eq("conversation_id", cid).order("created_at").execute()
         summary = generate_conversation_summary(cid, msgs.data, is_group=False)
         if summary:
+            parsed = parse_summary_fields(summary)
             supabase.from_("conversations").update({
-                "summary": summary,
-                "summary_generated_at": datetime.now(timezone.utc).isoformat()
+                "summary": parsed["prose"],
+                "summary_tension": parsed.get("tension"),
+                "summary_resonance": parsed.get("resonance"),
+                "summary_thread": parsed.get("thread"),
+                "summary_tags": parsed.get("tags"),
+                "structured_summary_generated_at": now,
+                "summary_generated_at": now,
             }).eq("id", cid).execute()
             processed += 1
 
@@ -1356,9 +1514,15 @@ def backfill_summaries(req: BackfillRequest):
         msgs = supabase.from_("group_messages").select("role, content").eq("conversation_id", cid).order("created_at").execute()
         summary = generate_conversation_summary(cid, msgs.data, is_group=True)
         if summary:
+            parsed = parse_summary_fields(summary)
             supabase.from_("group_conversations").update({
-                "summary": summary,
-                "summary_generated_at": datetime.now(timezone.utc).isoformat()
+                "summary": parsed["prose"],
+                "summary_tension": parsed.get("tension"),
+                "summary_resonance": parsed.get("resonance"),
+                "summary_thread": parsed.get("thread"),
+                "summary_tags": parsed.get("tags"),
+                "structured_summary_generated_at": now,
+                "summary_generated_at": now,
             }).eq("id", cid).execute()
             processed += 1
 
