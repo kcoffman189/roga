@@ -534,6 +534,86 @@ def get_tiered_memory(user_id: str, group_id: str = None) -> dict:
     }
 
 
+def extract_memory_context(user_id: str, book_list: list, mode: str, user_input: str = None, group_id: str = None) -> str:
+    try:
+        memory = get_tiered_memory(user_id, group_id=group_id)
+
+        if not memory["tier1"] and not memory["tier2"] and not memory["tier3"] and not memory["tier4"] and not memory["persistent_themes"]:
+            return ""
+
+        lines = []
+
+        lines.append("TIER 1 — ACTIVE MEMORY (last 3 sessions):")
+        for item in memory["tier1"]:
+            if item.get("tension"):
+                lines.append(f"  Tension: {item['tension']}")
+            if item.get("resonance"):
+                lines.append(f"  Resonance: {item['resonance']}")
+            if item.get("thread"):
+                lines.append(f"  Thread: {item['thread']}")
+            if item.get("tags"):
+                lines.append(f"  Tags: {', '.join(item['tags'])}")
+
+        lines.append("TIER 2 — RECENT MEMORY (sessions 4-10):")
+        for item in memory["tier2"]:
+            if item.get("tension"):
+                lines.append(f"  Tension: {item['tension']}")
+            if item.get("thread"):
+                lines.append(f"  Thread: {item['thread']}")
+
+        lines.append("TIER 3 — FADING MEMORY (recurring threads only):")
+        for item in memory["tier3"]:
+            if item.get("thread"):
+                lines.append(f"  Thread: {item['thread']}")
+
+        lines.append("TIER 4 — DEEP PATTERNS (themes in 3+ sessions):")
+        for item in memory["tier4"]:
+            if item.get("tension"):
+                lines.append(f"  Tension: {item['tension']}")
+
+        lines.append(f"PERSISTENT THEMES: {', '.join(memory['persistent_themes']) if memory['persistent_themes'] else 'none'}")
+
+        tiered_memory_payload = "\n".join(lines)
+        book_list_str = ", ".join(book_list) if book_list else "none"
+        user_input_str = user_input or "none"
+
+        prompt = f"""You are the memory layer for Roga — an AI thinking partner that helps users explore their personal book library. You have access to a tiered memory of this user's past conversations. Your job is to produce a brief, useful memory context block that will be passed to Roga before it begins the current session.
+
+# TIERED MEMORY PAYLOAD
+{tiered_memory_payload}
+
+# CURRENT SESSION CONTEXT
+Mode: {mode}
+Books in current selection pool: {book_list_str}
+User input (if any): {user_input_str}
+
+# YOUR TASK
+Read the memory payload and produce a memory context block of 150-200 tokens that gives Roga the most useful context for this specific session. Include:
+- The most relevant recent intellectual tension (from Tier 1 or 2)
+- Any unresolved thread directly relevant to today's session or books
+- Any deep pattern worth knowing about this user's intellectual tendencies
+- Nothing else
+
+RULE: Only include memory that is genuinely relevant to this session. Do not include memory just because it exists. An irrelevant memory is worse than no memory — it creates noise and risks making Roga feel like it is retrieving records rather than thinking.
+
+RULE: Write the context block as if you are briefing a thoughtful colleague who is about to have a conversation with this person. Not a data dump. A useful briefing. Plain prose, no headers, no bullet points.
+
+NEVER: Reference specific conversation dates, titles, or exact quotes.
+NEVER: Include anything that would feel surveillance-like if the user knew it was stored.
+
+Output only the memory context block. No explanation or preamble."""
+
+        response = anthropic_client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=300,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response.content[0].text.strip()
+    except Exception as e:
+        print(f"[memory] extract_memory_context failed for user {user_id}: {e!r}", flush=True)
+        return ""
+
+
 def generate_title(messages: list) -> str:
     conversation_text = "\n".join([f"{m['role']}: {m['content']}" for m in messages[:4]])
     response = anthropic_client.messages.create(
