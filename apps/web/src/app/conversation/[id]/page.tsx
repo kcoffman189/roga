@@ -188,7 +188,13 @@ function ConversationInner() {
         {/* Messages */}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: isMobile ? '56px' : '40px', paddingBottom: '40px', background: 'var(--color-bg-canvas)' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto', padding: '24px 16px 0' }}>
-            {messages.map((msg, i) => (
+            {messages
+              .filter((msg, index) => {
+                if (msg.content === '__stream_existing__') return false
+                if (msg.role === 'user' && index === 0) return false
+                return true
+              })
+              .map((msg, i) => (
               <div key={i} style={{ marginBottom: '24px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
                   {msg.role === 'user' ? 'You' : 'Roga'}
