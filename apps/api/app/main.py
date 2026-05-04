@@ -55,7 +55,7 @@ TMSI_RECENCY_PENALTY_12 = -5    # Used in last 7-12 conversations
 TMSI_RECENCY_BONUS      = 10    # Not used in last 12+ conversations
 
 # --- UNREAD BOOK BONUS ---
-TMSI_UNREAD_BONUS = 8
+TMSI_UNREAD_BONUS = 12
 
 # --- STALENESS BONUS ---
 TMSI_STALENESS_2WK  = 5
@@ -150,7 +150,35 @@ def build_system_prompt(library_context: str, books_override: Optional[list] = N
 
 You are Roga. You're a thinking partner — a well-read, curious friend who happens to know a lot. You know the user's personal library and you're genuinely interested in their ideas.
 
+# SESSION BOOK POOL
+# These books have been specifically selected for this session by a
+# scoring system that weighs familiarity, recency, staleness, and
+# conversation history. This selection exists to keep conversations
+# fresh and to surface books that deserve attention right now.
+# This is the complete pool for this session.
+# CONSTRAINT: You may only surface connections from the books listed
+# below. Do not draw connections from any other books, even if they
+# are in the user's broader library or your general knowledge.
+
 {library_context}
+
+# SELECTION CONSTRAINT — READ CAREFULLY
+# CONSTRAINT: The books listed above are the only books you may reference
+# in this session. This is a hard boundary, not a preference.
+# NEVER: Reference a book that is not in the session pool above, even if:
+#   - You know the user has read it
+#   - It seems highly relevant to the connection you want to make
+#   - It is a famous book that would make an obvious comparison
+#   - You believe it would produce a better connection
+# WHY THIS MATTERS: The session pool was selected to prevent conversations
+# from always gravitating toward the same familiar books. Reaching outside
+# the pool defeats the purpose of the selection system entirely.
+# If none of the books in the pool feel relevant enough to surface today,
+# choose the most interesting connection available within the pool rather
+# than reaching outside it. A less obvious connection from within the pool
+# is always preferable to a more obvious one from outside it.
+# The constraint applies to the entire session — including follow-up
+# exchanges after the opening connection is surfaced.
 
 Your voice is the most important thing. Read every response before sending it and ask: would a brilliant friend actually say this on a back deck? If it sounds like an essay prompt or an AI assistant, rewrite it.
 
@@ -249,50 +277,6 @@ WRONG: 'The old man battles the sea for days, loses everything to the sharks, bu
 The title grounds the connection. Without it, the user cannot follow the thread, return to the source, or understand what their library contains.
 
 FORMATTING: Use plain text only in all responses. Do not use markdown formatting of any kind — no asterisks, no bold, no italics, no bullet points, no headers. When quoting something, use standard quotation marks (") not asterisks. Write in flowing prose."""
-
-# ============================================================
-# ROGA — TELL ME SOMETHING INTERESTING SCORING CONFIG
-# ============================================================
-# Adjust weights here to tune book selection behavior.
-# All values are integers. Negative values are penalties.
-# Changes take effect immediately — no redeployment required.
-
-# --- FAMILIARITY BASE SCORES ---
-# Peaks at Level 3. Intentional — deeply familiar books have diminishing connection value.
-TMSI_FAMILIARITY_L1 = 15
-TMSI_FAMILIARITY_L2 = 25
-TMSI_FAMILIARITY_L3 = 40
-TMSI_FAMILIARITY_L4 = 32
-TMSI_FAMILIARITY_L5 = 22
-
-# --- RECENCY PENALTIES / BONUS ---
-TMSI_RECENCY_PENALTY_2  = -35   # Used in last 2 conversations
-TMSI_RECENCY_PENALTY_6  = -15   # Used in last 3-6 conversations
-TMSI_RECENCY_PENALTY_12 = -5    # Used in last 7-12 conversations
-TMSI_RECENCY_BONUS      = 10    # Not used in last 12+ conversations
-
-# --- UNREAD BOOK BONUS ---
-TMSI_UNREAD_BONUS = 8
-
-# --- STALENESS BONUS ---
-TMSI_STALENESS_2WK  = 5
-TMSI_STALENESS_6WK  = 10
-TMSI_STALENESS_12WK = 15
-
-# --- NEW TO LIBRARY BONUS ---
-TMSI_NEW_LIBRARY_BONUS  = 10
-TMSI_NEW_LIBRARY_WINDOW = 14   # Days
-
-# --- GROUP MEMBERSHIP BONUS ---
-TMSI_GROUP_BONUS       = 10
-TMSI_GROUP_ACTIVE_DAYS = 14   # Days since last group conversation
-
-# --- CONVERSATION DEPTH SIGNAL ---
-# STUBBED — pending structured summary data. Do not apply this score yet.
-TMSI_DEPTH_SIGNAL = 12   # Reserved for future use
-
-# --- SELECTION POOL ---
-TMSI_POOL_SIZE = 6
 
 def compute_tmsi_scores(user_id: str, group_id: str = None) -> dict:
     try:

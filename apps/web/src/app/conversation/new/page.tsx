@@ -155,12 +155,10 @@ function NewConversationInner() {
             flexShrink: 0,
           }}
         >
-          <button
-            onClick={() => router.push('/home')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '18px', color: '#1a1a1a', padding: '4px', minHeight: '44px', display: 'flex', alignItems: 'center' }}
-          >
-            Roga
-          </button>
+          <div>
+            <div style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', lineHeight: 1, color: 'var(--color-text-primary)' }}>Roga</div>
+            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '8px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginTop: '5px' }}>Beta</div>
+          </div>
         </div>
 
         {/* Content */}
