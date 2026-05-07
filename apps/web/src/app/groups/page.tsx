@@ -56,19 +56,17 @@ export default function GroupsPage() {
   }, [])
 
   return (
-    <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#fafafa' }}>
+    <div style={{ display: 'flex', height: '100vh', fontFamily: 'Inter, sans-serif', background: 'var(--color-bg-canvas)' }}>
 
       {/* Mobile Header — hidden on desktop */}
       <div
         style={{
           display: isMobile ? 'flex' : 'none',
           position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
+          top: 0, left: 0, right: 0,
           zIndex: 10,
-          background: '#fff',
-          borderBottom: '1px solid #e0e0e0',
+          background: 'var(--color-bg-canvas)',
+          borderBottom: '1px solid var(--color-border-light)',
           padding: '10px 20px',
           alignItems: 'center',
           gap: '12px',
@@ -77,93 +75,190 @@ export default function GroupsPage() {
       >
         <button
           onClick={() => router.push('/home')}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#333', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', color: 'var(--color-text-primary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
         >
-          ←
+          Roga
         </button>
-        <div style={{ fontWeight: '600', fontSize: '17px' }}>Groups</div>
+        <div style={{ fontWeight: '600', fontSize: '17px', color: 'var(--color-text-primary)' }}>Groups</div>
       </div>
 
       {/* Left Panel — desktop only */}
       <div
-        style={{ display: isMobile ? 'none' : 'flex', width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px', flexShrink: 0 }}
+        style={{
+          display: isMobile ? 'none' : 'flex',
+          width: '260px',
+          flexDirection: 'column',
+          padding: '22px 20px',
+          background: 'var(--color-bg-sidebar)',
+          flexShrink: 0,
+          position: 'relative',
+        }}
       >
-        <div
-          style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px', cursor: 'pointer' }}
-          onClick={() => router.push('/home')}
-        >
-          Roga
+        <div style={{
+          position: 'absolute', right: 0, top: 0, bottom: 0,
+          width: '3px', background: 'var(--color-accent)',
+        }} />
+
+        <div style={{ display: 'block', marginBottom: '28px', width: '100%', maxWidth: '330px', marginLeft: '-12px' }}>
+          <svg width="300" height="auto" viewBox="0 0 290 76" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(14, 2)">
+              <g transform="rotate(-30 24 24)">
+                <line x1="14" y1="33" x2="36" y2="12" stroke="#C45E0A" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="12" y1="12" x2="36" y2="36" stroke="#C45E0A" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="12" y1="12" x2="36" y2="12" stroke="#C45E0A" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="36" y1="12" x2="36" y2="36" stroke="#C45E0A" strokeWidth="2" strokeLinecap="round"/>
+                <circle cx="12" cy="12" r="4" fill="#C45E0A"/>
+                <circle cx="36" cy="12" r="4" fill="#C45E0A"/>
+                <circle cx="14" cy="33" r="5" fill="#C45E0A"/>
+                <circle cx="36" cy="36" r="4" fill="#C45E0A"/>
+              </g>
+            </g>
+            <text x="62" y="42" fontFamily="Georgia, serif" fontSize="40" fontWeight="700" fill="#EEECEA">Roga</text>
+            <text x="62" y="63" fontFamily="Inter, Arial, sans-serif" fontSize="9" fontWeight="500" letterSpacing="1.5" fill="#C45E0A">YOUR LIBRARY. MORE CONNECTED.</text>
+          </svg>
         </div>
-        <a href="/home" style={{ display: 'block', padding: '10px 12px', marginBottom: '8px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0' }}>
-          Let's dig into something
-        </a>
-        <a href="/home" style={{ display: 'block', padding: '10px 12px', marginBottom: '24px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0' }}>
+
+        <button
+          onClick={() => router.push('/home')}
+          style={{
+            display: 'block', width: '100%', textAlign: 'left',
+            padding: '9px 14px', marginBottom: '9px',
+            background: 'transparent', border: 'none',
+            borderLeft: '3px solid var(--color-accent)',
+            fontFamily: 'Georgia, serif', fontStyle: 'italic',
+            fontSize: '19.5px', color: '#B8C0C8',
+            cursor: 'pointer', minHeight: '44px',
+          }}
+        >
+          Let&apos;s dig into something
+        </button>
+
+        <button
+          onClick={() => router.push('/home')}
+          style={{
+            display: 'block', width: '100%', textAlign: 'left',
+            padding: '9px 14px', marginBottom: '24px',
+            background: 'transparent', border: 'none',
+            borderLeft: '1px solid var(--color-border-dark)',
+            fontFamily: 'Georgia, serif', fontStyle: 'italic',
+            fontSize: '19.5px', color: '#3E4650',
+            cursor: 'pointer', minHeight: '44px',
+          }}
+        >
           Tell me something interesting
-        </a>
-        <a href="/groups" style={{ display: 'block', padding: '10px 12px', marginBottom: '8px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0', background: '#f5f5f5', fontWeight: '500' }}>
+        </button>
+
+        <a href="/groups" style={{
+          display: 'block', padding: '7px 2px',
+          fontFamily: 'Inter, sans-serif', fontSize: '17px',
+          color: '#EEECEA', fontWeight: '500',
+          textDecoration: 'none', marginBottom: '4px',
+        }}>
           Groups
         </a>
-        <a href="/library" style={{ display: 'block', padding: '10px 12px', marginBottom: '24px', borderRadius: '6px', color: '#333', textDecoration: 'none', fontSize: '14px', border: '1px solid #e0e0e0' }}>
+
+        <a href="/library" style={{
+          display: 'block', padding: '7px 2px',
+          fontFamily: 'Inter, sans-serif', fontSize: '17px',
+          color: '#4E5660', textDecoration: 'none',
+        }}>
           My Library
         </a>
       </div>
 
       {/* Main Content */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
-        <div
-          style={{ maxWidth: '680px', margin: '0 auto', padding: isMobile ? '72px 16px 80px' : '48px 40px' }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h1 style={{ display: isMobile ? 'none' : 'block', fontSize: '24px', fontWeight: '600', margin: 0 }}>Groups</h1>
+        <div style={{ maxWidth: '680px', margin: '0 auto', padding: isMobile ? '72px 16px 80px' : '48px 56px' }}>
+
+          {/* Header row */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '32px' }}>
+            <div>
+              <span style={{ display: 'block', width: '32px', height: '2px', background: 'var(--color-accent)', marginBottom: '16px', border: 'none' }} />
+              <h1 style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '28px', fontWeight: 400, color: 'var(--color-text-primary)', margin: 0 }}>Groups</h1>
+            </div>
             <button
               onClick={() => router.push('/groups/new')}
-              style={{ padding: '10px 20px', fontSize: '15px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #ccc', background: '#fff', minHeight: '44px', marginLeft: 'auto' }}
+              style={{
+                background: 'var(--color-bg-sidebar)',
+                color: 'var(--color-text-on-dark)',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '11px', fontWeight: '500',
+                letterSpacing: '0.1em', textTransform: 'uppercase',
+                padding: '12px 24px', border: 'none',
+                borderRadius: '2px', cursor: 'pointer',
+                position: 'relative', marginLeft: 'auto',
+                minHeight: '44px',
+              }}
             >
+              <span style={{
+                position: 'absolute', left: 0, top: 0, bottom: 0,
+                width: '3px', background: 'var(--color-accent)',
+                borderRadius: '2px 0 0 2px',
+              }} />
               + New Group
             </button>
           </div>
 
+          {/* Content */}
           {loading ? (
-            <p style={{ color: '#999', fontSize: '14px' }}>Loading...</p>
+            <p style={{ color: 'var(--color-text-tertiary)', fontSize: '14px' }}>Loading...</p>
           ) : groups.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '64px 0' }}>
-              <p style={{ color: '#999', fontSize: '15px', lineHeight: '1.6', marginBottom: '20px' }}>
-                You don't have any groups yet. Create one to start a focused conversation.
-              </p>
-              <button
-                onClick={() => router.push('/groups/new')}
-                style={{ padding: '12px 24px', fontSize: '15px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #ccc', background: '#fff', minHeight: '44px' }}
-              >
-                + New Group
-              </button>
+            <div style={{ textAlign: 'center', padding: '80px 48px' }}>
+              <span style={{ display: 'block', width: '32px', height: '2px', background: 'var(--color-accent)', margin: '0 auto 20px', border: 'none' }} />
+              <p style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '22px', color: 'var(--color-text-primary)', marginBottom: '8px' }}>No groups yet.</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: 'var(--color-text-secondary)', marginBottom: '0' }}>Create a group to explore a specific set of books together.</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {groups.map((group) => (
                 <div
                   key={group.id}
                   onClick={() => router.push(`/groups/${group.id}`)}
-                  style={{ border: '1px solid #e0e0e0', borderRadius: '8px', padding: '18px 20px', background: '#fff', cursor: 'pointer', minHeight: '64px' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#fafafa')}
-                  onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+                  style={{
+                    background: 'var(--color-bg-surface)',
+                    border: '1px solid var(--color-border-light)',
+                    borderRadius: '4px',
+                    padding: '20px 24px',
+                    position: 'relative',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget.querySelector('.card-spine') as HTMLElement).style.background = 'var(--color-accent)'
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget.querySelector('.card-spine') as HTMLElement).style.background = 'var(--color-border-light)'
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                    <div>
-                      <div style={{ fontWeight: '500', fontSize: '15px', marginBottom: '4px' }}>{group.name}</div>
-                      <div style={{ fontSize: '13px', color: '#999' }}>
-                        {group.book_count} {group.book_count === 1 ? 'book' : 'books'}
-                        <span style={{ margin: '0 8px', color: '#ddd' }}>·</span>
-                        {group.last_conversation_at
-                          ? formatRelativeDate(group.last_conversation_at)
-                          : 'No conversations yet'}
-                      </div>
-                    </div>
-                    {group.is_paused && (
-                      <div style={{ fontSize: '12px', color: '#b8860b', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '4px', padding: '3px 8px', whiteSpace: 'nowrap', marginLeft: '12px' }}>
-                        Add a book to resume
-                      </div>
-                    )}
+                  <span
+                    className="card-spine"
+                    style={{
+                      position: 'absolute', left: 0, top: 0, bottom: 0,
+                      width: '3px', background: 'var(--color-border-light)',
+                      borderRadius: '4px 0 0 4px',
+                      transition: 'background 200ms ease',
+                    }}
+                  />
+                  <div style={{ fontFamily: 'Georgia, serif', fontSize: '18px', fontWeight: 400, color: 'var(--color-text-primary)', marginBottom: '6px', lineHeight: 1.3 }}>
+                    {group.name}
                   </div>
+                  <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'var(--color-text-tertiary)' }}>
+                      {group.book_count} {group.book_count === 1 ? 'book' : 'books'}
+                    </span>
+                    <span style={{ color: 'var(--color-border-light)', fontSize: '12px' }}>·</span>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'var(--color-text-tertiary)' }}>
+                      {group.last_conversation_at
+                        ? formatRelativeDate(group.last_conversation_at)
+                        : 'No conversations yet'}
+                    </span>
+                  </div>
+                  {group.is_paused && (
+                    <div style={{ fontSize: '12px', color: '#b8860b', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '4px', padding: '3px 8px', whiteSpace: 'nowrap', marginTop: '8px', display: 'inline-block' }}>
+                      Add a book to resume
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
