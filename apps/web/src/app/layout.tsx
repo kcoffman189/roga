@@ -10,7 +10,7 @@ export const revalidate = 0
 export const metadata: Metadata = {
   title: "Roga — The art of asking",
   description: "Duolingo for Question Intelligence.",
-  icons: { icon: "/favicon.ico" },        // <-- favicon in /public
+  icons: { icon: [{ url: "/favicon.svg", type: "image/svg+xml" }, { url: "/favicon.ico" }] },
   openGraph: {
     title: "Roga — The art of asking",
     description: "Train your Question Intelligence.",

@@ -159,9 +159,23 @@ export default function Home() {
           background: 'var(--color-bg-canvas)', borderBottom: '1px solid var(--color-border-light)',
           padding: '10px 20px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
         }}>
-          <div>
-            <div style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', lineHeight: 1, color: 'var(--color-text-primary)' }}>Roga</div>
-            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '8px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginTop: '5px' }}>Beta</div>
+          <div style={{ display: 'block', width: '100%', maxWidth: '180px' }}>
+            <svg width="100%" height="auto" viewBox="0 0 290 76" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g transform="translate(14, 2)">
+                <g transform="rotate(-30 24 24)">
+                  <line x1="14" y1="33" x2="36" y2="12" stroke="#C45E0A" strokeWidth="2" strokeLinecap="round"/>
+                  <line x1="12" y1="12" x2="36" y2="36" stroke="#C45E0A" strokeWidth="2" strokeLinecap="round"/>
+                  <line x1="12" y1="12" x2="36" y2="12" stroke="#C45E0A" strokeWidth="2" strokeLinecap="round"/>
+                  <line x1="36" y1="12" x2="36" y2="36" stroke="#C45E0A" strokeWidth="2" strokeLinecap="round"/>
+                  <circle cx="12" cy="12" r="4" fill="#C45E0A"/>
+                  <circle cx="36" cy="12" r="4" fill="#C45E0A"/>
+                  <circle cx="14" cy="33" r="5" fill="#C45E0A"/>
+                  <circle cx="36" cy="36" r="4" fill="#C45E0A"/>
+                </g>
+              </g>
+              <text x="62" y="42" fontFamily="Georgia, serif" fontSize="40" fontWeight="700" fill="#1A1A1A">Roga</text>
+              <text x="62" y="57" fontFamily="Inter, Arial, sans-serif" fontSize="9" fontWeight="500" letterSpacing="1.5" fill="#C45E0A">YOUR LIBRARY. MORE CONNECTED.</text>
+            </svg>
           </div>
           <button
             onClick={async () => { await supabase.auth.signOut(); router.push('/') }}
@@ -221,8 +235,24 @@ export default function Home() {
     <div style={{ display: 'flex', height: '100vh', background: 'var(--color-bg-canvas)' }}>
       {/* Left Panel */}
       <div className="sidebar-panel" style={{ width: '260px', display: 'flex', flexDirection: 'column', padding: '22px 20px' }}>
-        <div style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '58px', letterSpacing: '-0.02em', color: 'var(--color-text-on-dark)', lineHeight: 1 }}>Roga</div>
-        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-subtle-dark)', marginTop: '5px', marginBottom: '28px' }}>Beta</div>
+        <div style={{ display: 'block', marginBottom: '24px', width: '100%', maxWidth: '220px' }}>
+          <svg width="200" height="auto" viewBox="0 0 290 76" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(14, 2)">
+              <g transform="rotate(-30 24 24)">
+                <line x1="14" y1="33" x2="36" y2="12" stroke="#C45E0A" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="12" y1="12" x2="36" y2="36" stroke="#C45E0A" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="12" y1="12" x2="36" y2="12" stroke="#C45E0A" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="36" y1="12" x2="36" y2="36" stroke="#C45E0A" strokeWidth="2" strokeLinecap="round"/>
+                <circle cx="12" cy="12" r="4" fill="#C45E0A"/>
+                <circle cx="36" cy="12" r="4" fill="#C45E0A"/>
+                <circle cx="14" cy="33" r="5" fill="#C45E0A"/>
+                <circle cx="36" cy="36" r="4" fill="#C45E0A"/>
+              </g>
+            </g>
+            <text x="62" y="42" fontFamily="Georgia, serif" fontSize="40" fontWeight="700" fill="#EEECEA">Roga</text>
+            <text x="62" y="57" fontFamily="Inter, Arial, sans-serif" fontSize="9" fontWeight="500" letterSpacing="1.5" fill="#C45E0A">YOUR LIBRARY. MORE CONNECTED.</text>
+          </svg>
+        </div>
 
         <button
           ref={digInRef}
