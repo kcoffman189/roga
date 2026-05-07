@@ -521,8 +521,8 @@ export default function LandingPage() {
             },
             {
               num: '03',
-              title: 'Follow the thread',
-              body: "Dig deeper with a thinking partner that knows your library. Every conversation starts from what you've actually read.",
+              title: 'Curate your collections',
+              body: "Group books together around a theme, topic, or moment in your reading life. Then let Roga find the connections within that specific collection.",
             },
           ].map(({ num, title, body }) => (
             <div key={num} style={{ flex: 1 }}>
