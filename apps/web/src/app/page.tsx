@@ -120,7 +120,7 @@ export default function LandingPage() {
           `}</style>
 
           {/* Top: wordmark */}
-          <div style={{ display: 'block', marginBottom: '24px', width: '100%', maxWidth: '330px' }}>
+          <div style={{ display: 'block', marginBottom: '24px', width: '100%', maxWidth: '330px', marginLeft: '-12px' }}>
             <svg width="300" height="auto" viewBox="0 0 290 76" fill="none" xmlns="http://www.w3.org/2000/svg">
               <g transform="translate(14, 2)">
                 <g transform="rotate(-30 24 24)">

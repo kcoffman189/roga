@@ -159,7 +159,7 @@ export default function Home() {
           background: 'var(--color-bg-canvas)', borderBottom: '1px solid var(--color-border-light)',
           padding: '10px 20px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
         }}>
-          <div style={{ display: 'block', width: '100%', maxWidth: '270px' }}>
+          <div style={{ display: 'block', width: '100%', maxWidth: '270px', marginLeft: '-12px' }}>
             <svg width="100%" height="auto" viewBox="0 0 290 76" fill="none" xmlns="http://www.w3.org/2000/svg">
               <g transform="translate(14, 2)">
                 <g transform="rotate(-30 24 24)">
@@ -235,7 +235,7 @@ export default function Home() {
     <div style={{ display: 'flex', height: '100vh', background: 'var(--color-bg-canvas)' }}>
       {/* Left Panel */}
       <div className="sidebar-panel" style={{ width: '260px', display: 'flex', flexDirection: 'column', padding: '22px 20px' }}>
-        <div style={{ display: 'block', marginBottom: '24px', width: '100%', maxWidth: '330px' }}>
+        <div style={{ display: 'block', marginBottom: '24px', width: '100%', maxWidth: '330px', marginLeft: '-12px' }}>
           <svg width="300" height="auto" viewBox="0 0 290 76" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g transform="translate(14, 2)">
               <g transform="rotate(-30 24 24)">
