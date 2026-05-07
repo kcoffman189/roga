@@ -72,21 +72,21 @@ function GroupNewConversationInner() {
 
   if (mode === 'open') {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'sans-serif' }}>
-        <div style={{ color: '#999', fontSize: '15px' }}>Finding something interesting...</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'Inter, sans-serif', background: 'var(--color-bg-canvas)' }}>
+        <div style={{ color: 'var(--color-text-tertiary)', fontSize: '15px' }}>Finding something interesting...</div>
       </div>
     )
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'sans-serif', background: '#fafafa' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'Inter, sans-serif', background: 'var(--color-bg-canvas)' }}>
 
-      {/* Mobile Header — hidden on desktop */}
+      {/* Mobile Header */}
       <div
         style={{
           display: isMobile ? 'flex' : 'none',
-          background: '#fff',
-          borderBottom: '1px solid #e0e0e0',
+          background: 'var(--color-bg-canvas)',
+          borderBottom: '1px solid var(--color-border-light)',
           alignItems: 'center',
           height: '52px',
           padding: '0 16px',
@@ -95,7 +95,7 @@ function GroupNewConversationInner() {
       >
         <button
           onClick={() => router.push(`/groups/${groupId}`)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '18px', color: '#1a1a1a', padding: '4px', minHeight: '44px', display: 'flex', alignItems: 'center' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', color: 'var(--color-text-primary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
         >
           Roga
         </button>
@@ -103,33 +103,67 @@ function GroupNewConversationInner() {
 
       {/* Content */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
-        <div style={{ width: '100%', maxWidth: '600px' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px', color: '#333' }}>What's on your mind?</h2>
+        <div style={{ width: '100%', maxWidth: '580px' }}>
+          <span style={{ display: 'block', width: '32px', height: '2px', background: 'var(--color-accent)', marginBottom: '20px', border: 'none' }} />
+          <h2 style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '26px', fontWeight: 400, marginBottom: '24px', color: 'var(--color-text-primary)', margin: '0 0 28px 0', lineHeight: 1.4 }}>What do you want to dig into?</h2>
           <textarea
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="A chapter, a question, an idea you can't shake..."
             rows={4}
             autoFocus
-            style={{ width: '100%', padding: '12px', fontSize: '16px', borderRadius: '8px', border: '1px solid #e0e0e0', resize: 'none', boxSizing: 'border-box', fontFamily: 'sans-serif' }}
-            onKeyDown={e => {
+            style={{
+              width: '100%',
+              padding: '16px 18px',
+              fontSize: '15px',
+              fontFamily: 'Inter, system-ui, sans-serif',
+              color: 'var(--color-text-primary)',
+              lineHeight: 1.6,
+              background: 'var(--color-bg-surface)',
+              border: '1px solid var(--color-border-light)',
+              borderRadius: '4px',
+              resize: 'vertical',
+              boxSizing: 'border-box',
+              marginBottom: '20px',
+              outline: 'none',
+            }}
+            onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault()
                 if (!loading && input.trim()) handleStart()
               }
             }}
           />
-          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
             <button
               onClick={() => handleStart()}
               disabled={loading || !input.trim()}
-              style={{ flex: 1, padding: '12px 24px', fontSize: '15px', cursor: 'pointer', borderRadius: '8px', background: '#000', color: '#fff', border: 'none', minHeight: '44px' }}
+              style={{
+                flex: 2, padding: '14px 32px',
+                fontSize: '11px', fontWeight: '500',
+                letterSpacing: '0.1em', textTransform: 'uppercase',
+                background: 'var(--color-bg-sidebar)',
+                color: 'var(--color-text-on-dark)',
+                border: 'none', borderRadius: '2px',
+                cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
+                opacity: loading || !input.trim() ? 0.5 : 1,
+                position: 'relative', minHeight: '44px',
+              }}
             >
+              <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: 'var(--color-accent)', borderRadius: '2px 0 0 2px' }} />
               {loading ? 'Starting...' : 'Start'}
             </button>
             <button
               onClick={() => router.push(`/groups/${groupId}`)}
-              style={{ flex: 1, padding: '12px 24px', fontSize: '15px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #e0e0e0', background: '#fff', minHeight: '44px' }}
+              style={{
+                flex: 1, padding: '14px 32px',
+                fontSize: '13px', fontWeight: '400',
+                background: 'transparent',
+                color: 'var(--color-text-tertiary)',
+                border: '1px solid var(--color-border-light)',
+                borderRadius: '2px', cursor: 'pointer',
+                minHeight: '44px',
+              }}
             >
               Cancel
             </button>
