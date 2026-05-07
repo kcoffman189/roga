@@ -155,12 +155,12 @@ export default function GroupEditPage() {
       <div
         style={{ display: isMobile ? 'none' : 'flex', width: '260px', borderRight: '1px solid #e0e0e0', background: '#fff', flexDirection: 'column', padding: '24px 16px', flexShrink: 0 }}
       >
-        <div
-          style={{ fontWeight: '700', fontSize: '18px', marginBottom: '32px', paddingLeft: '8px', cursor: 'pointer' }}
+        <button
           onClick={() => router.push(`/groups/${groupId}`)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', color: 'var(--color-text-primary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
         >
           Roga
-        </div>
+        </button>
         <span
           style={{ fontSize: '13px', color: '#999', paddingLeft: '4px', cursor: 'pointer' }}
           onClick={() => router.push(`/groups/${groupId}`)}
