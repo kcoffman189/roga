@@ -134,7 +134,7 @@ export default function LandingPage() {
                   <circle cx="36" cy="36" r="4" fill="#C45E0A"/>
                 </g>
               </g>
-              <text x="62" y="42" fontFamily="Georgia, serif" fontSize="40" fontWeight="700" fill="#EEECEA">Roga</text>
+              <text x="62" y="42" fontFamily="Georgia, serif" fontSize="40" fontWeight="700" fill="#EEECEA">Cephos</text>
               <text x="62" y="63" fontFamily="Inter, Arial, sans-serif" fontSize="9" fontWeight="500" letterSpacing="1.5" fill="#C45E0A">YOUR LIBRARY. MORE CONNECTED.</text>
             </svg>
           </div>
