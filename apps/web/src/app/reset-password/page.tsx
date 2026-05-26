@@ -73,7 +73,7 @@ export default function ResetPasswordPage() {
               marginBottom: '6px',
             }}
           >
-            Roga
+            Cephos
           </div>
           <div
             style={{

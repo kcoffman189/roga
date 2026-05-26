@@ -52,7 +52,7 @@ export default function SessionComplete({
         {/* Logo positioned like home page */}
         <div className="absolute top-8 flex items-center gap-4" style={{left: '86px'}}>
           <BrandMark size={50} />
-          <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '3rem', color: 'white'}}>roga</span>
+          <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '3rem', color: 'white'}}>cephos</span>
         </div>
 
         {/* Centered hero content */}

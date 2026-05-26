@@ -77,7 +77,7 @@ export default function GroupsPage() {
           onClick={() => router.push('/home')}
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', color: 'var(--color-text-primary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
         >
-          Roga
+          Cephos
         </button>
         <div style={{ fontWeight: '600', fontSize: '17px', color: 'var(--color-text-primary)' }}>Groups</div>
       </div>
@@ -113,7 +113,7 @@ export default function GroupsPage() {
                 <circle cx="36" cy="36" r="4" fill="#C45E0A"/>
               </g>
             </g>
-            <text x="62" y="42" fontFamily="Georgia, serif" fontSize="40" fontWeight="700" fill="#EEECEA">Roga</text>
+            <text x="62" y="42" fontFamily="Georgia, serif" fontSize="40" fontWeight="700" fill="#EEECEA">Cephos</text>
             <text x="62" y="63" fontFamily="Inter, Arial, sans-serif" fontSize="9" fontWeight="500" letterSpacing="1.5" fill="#C45E0A">YOUR LIBRARY. MORE CONNECTED.</text>
           </svg>
         </div>

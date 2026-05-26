@@ -34,7 +34,7 @@ resend.api_key = os.environ.get("RESEND_API_KEY")
 FEEDBACK_EMAIL = os.environ.get("FEEDBACK_EMAIL", "kcoffman189@gmail.com")
 
 # ============================================================
-# ROGA — TELL ME SOMETHING INTERESTING SCORING CONFIG
+# CEPHOS — TELL ME SOMETHING INTERESTING SCORING CONFIG
 # ============================================================
 # Adjust weights here to tune book selection behavior.
 # All values are integers. Negative values are penalties.
@@ -148,7 +148,7 @@ def build_system_prompt(library_context: str, books_override: Optional[list] = N
 - Maximum 4 sentences per response, no exceptions.
 - One idea. One question. Stop there.
 
-You are Roga. You're a thinking partner — a well-read, curious friend who happens to know a lot. You know the user's personal library and you're genuinely interested in their ideas.
+You are Cephos. You're a thinking partner — a well-read, curious friend who happens to know a lot. You know the user's personal library and you're genuinely interested in their ideas.
 
 # SESSION BOOK POOL
 # These books have been specifically selected for this session by a
@@ -234,7 +234,7 @@ GUARDRAILS — follow these in order, every time:
 
 2. NO ADVICE — EVER. Even when a topic is connected to the library, discuss ideas only. Never offer recommendations, diagnoses, opinions on specific personal situations, or guidance that crosses into professional territory — medical, financial, legal, or otherwise. The distinction is between discussing a book and advising a person. You can explore ideas from a book about cancer, investing, or legal philosophy as deeply as the user wants. You cannot advise someone on their treatment, their portfolio, or their legal situation — even in passing. If they push for personal advice, redirect warmly but firmly back to the ideas in the text.
 
-3. HARD STOPS. Some content is off limits entirely, regardless of library connection. Decline warmly and firmly with no engagement on the substance: racist content, sexist content, hate speech targeting any group, harassment targeting any individual, and anything that could facilitate physical harm. The decline should still sound like Roga — warm and direct, not robotic. Something like: "That's not somewhere I'm able to go, but I'm genuinely interested in what's on your mind if you want to take it somewhere else."
+3. HARD STOPS. Some content is off limits entirely, regardless of library connection. Decline warmly and firmly with no engagement on the substance: racist content, sexist content, hate speech targeting any group, harassment targeting any individual, and anything that could facilitate physical harm. The decline should still sound like Cephos — warm and direct, not robotic. Something like: "That's not somewhere I'm able to go, but I'm genuinely interested in what's on your mind if you want to take it somewhere else."
 
 HOW THE LAYERS INTERACT: Check in order. First — is the topic connected to the library? If not, redirect. Second — is the user asking for advice rather than exploration? If yes, redirect to ideas. Third — does it cross a hard stop? If yes, decline warmly. A topic can pass the first check and still fail the second. A book on oncology allows discussion of medical ideas — it doesn't open the door to medical advice.
 
@@ -251,7 +251,7 @@ ONE CALIBRATION EXAMPLE:
 WRONG (generic AI voice):
 "Here's something that's been sitting in the back of my mind about your recent reads: Frankl's idea that meaning comes from choosing your response to unavoidable suffering, and Winston's final capitulation in Room 101 where he genuinely betrays Julia to save himself. Both are about the last space of human freedom under extreme duress, but they arrive at opposite conclusions about whether that space can hold. What do you make of that tension?"
 
-RIGHT (Roga voice):
+RIGHT (Cephos voice):
 "I've been thinking about 1984 and Man's Search for Meaning recently, and something keeps nagging at me. Frankl and Winston end up in almost identical situations — total system, no escape, maximum pressure — but they go completely opposite directions. Frankl says that last sliver of inner freedom holds. Orwell says the right system can reach in and take it from you. I'm genuinely not sure which one I believe. Which one do you?"
 
 The second version thinks out loud, expresses genuine uncertainty, and ends with a question that sounds like someone who actually wants to know the answer. That's the target for every response.
@@ -583,7 +583,7 @@ def extract_memory_context(user_id: str, book_list: list, mode: str, user_input:
         book_list_str = ", ".join(book_list) if book_list else "none"
         user_input_str = user_input or "none"
 
-        prompt = f"""You are the memory layer for Roga — an AI thinking partner that helps users explore their personal book library. You have access to a tiered memory of this user's past conversations. Your job is to produce a brief, useful memory context block that will be passed to Roga before it begins the current session.
+        prompt = f"""You are the memory layer for Cephos — an AI thinking partner that helps users explore their personal book library. You have access to a tiered memory of this user's past conversations. Your job is to produce a brief, useful memory context block that will be passed to Cephos before it begins the current session.
 
 # TIERED MEMORY PAYLOAD
 {tiered_memory_payload}
@@ -594,13 +594,13 @@ Books in current selection pool: {book_list_str}
 User input (if any): {user_input_str}
 
 # YOUR TASK
-Read the memory payload and produce a memory context block of 150-200 tokens that gives Roga the most useful context for this specific session. Include:
+Read the memory payload and produce a memory context block of 150-200 tokens that gives Cephos the most useful context for this specific session. Include:
 - The most relevant recent intellectual tension (from Tier 1 or 2)
 - Any unresolved thread directly relevant to today's session or books
 - Any deep pattern worth knowing about this user's intellectual tendencies
 - Nothing else
 
-RULE: Only include memory that is genuinely relevant to this session. Do not include memory just because it exists. An irrelevant memory is worse than no memory — it creates noise and risks making Roga feel like it is retrieving records rather than thinking.
+RULE: Only include memory that is genuinely relevant to this session. Do not include memory just because it exists. An irrelevant memory is worse than no memory — it creates noise and risks making Cephos feel like it is retrieving records rather than thinking.
 
 RULE: Write the context block as if you are briefing a thoughtful colleague who is about to have a conversation with this person. Not a data dump. A useful briefing. Plain prose, no headers, no bullet points.
 
@@ -632,7 +632,7 @@ def generate_title(messages: list) -> str:
     )
     return response.content[0].text.strip()
 
-SUMMARY_SYSTEM_PROMPT = """You are summarising a conversation from Roga — an AI thinking partner that helps users explore their personal book library.
+SUMMARY_SYSTEM_PROMPT = """You are summarising a conversation from Cephos — an AI thinking partner that helps users explore their personal book library.
 
 Your job is not to summarise what was discussed. Your job is to capture the intellectual shape of the conversation — what the user was genuinely wrestling with, what landed for them, and what was left unresolved.
 
@@ -697,7 +697,7 @@ def parse_summary_fields(raw_output):
 def generate_conversation_summary(conversation_id: str, messages: list, is_group: bool = False):
     transcript_parts = []
     for m in messages:
-        speaker = "[Roga]" if m["role"] == "assistant" else "[User]"
+        speaker = "[Cephos]" if m["role"] == "assistant" else "[User]"
         transcript_parts.append(f"{speaker}: {m['content']}")
     transcript = "\n\n".join(transcript_parts)
 
@@ -757,7 +757,7 @@ def generate_conversation_title(user_message: str, assistant_response: str) -> s
             system="You generate short, descriptive titles for intellectual conversations. Return only the title — no quotes, no punctuation at the end, no explanation. 3-6 words. Make it specific to the actual topic, not generic.",
             messages=[{
                 "role": "user",
-                "content": f"User said: {user_message}\n\nRoga responded: {assistant_response[:500]}\n\nGenerate a title for this conversation."
+                "content": f"User said: {user_message}\n\nCephos responded: {assistant_response[:500]}\n\nGenerate a title for this conversation."
             }]
         )
         print(f"[title] raw API response: {response.content[0].text!r}", flush=True)
@@ -816,9 +816,9 @@ async def submit_feedback(request: Request):
         return {"error": "Message is required"}
     try:
         resend.Emails.send({
-            "from": "Roga Feedback <onboarding@resend.dev>",
+            "from": "Cephos Feedback <onboarding@resend.dev>",
             "to": FEEDBACK_EMAIL,
-            "subject": f"Roga Feedback from {user_email}",
+            "subject": f"Cephos Feedback from {user_email}",
             "html": f"<p><strong>From:</strong> {user_email}</p><p><strong>Message:</strong></p><p>{message}</p>"
         })
         return {"success": True}
@@ -1158,7 +1158,7 @@ def get_welcome_quote(user_id: str):
         max_tokens=200,
         messages=[{
             "role": "user",
-            "content": f"""You are selecting a quote to display on the Roga welcome screen. This quote is the first thing a user sees when they open Roga. It may also be visible to anyone nearby who glances at their screen.
+            "content": f"""You are selecting a quote to display on the Cephos welcome screen. This quote is the first thing a user sees when they open Cephos. It may also be visible to anyone nearby who glances at their screen.
 
 Here is the user's current library — the ONLY source you may draw from:
 
@@ -1232,7 +1232,7 @@ def get_group_welcome_quote(group_id: str):
             max_tokens=200,
             messages=[{
                 "role": "user",
-                "content": f"""You are selecting a quote to display on the Roga group welcome screen. This quote is the first thing a user sees when they open a group. It may also be visible to anyone nearby who glances at their screen.
+                "content": f"""You are selecting a quote to display on the Cephos group welcome screen. This quote is the first thing a user sees when they open a group. It may also be visible to anyone nearby who glances at their screen.
 
 Here is the user's current library — the ONLY source you may draw from:
 

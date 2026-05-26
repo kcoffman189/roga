@@ -195,7 +195,7 @@ export default function ChangePasswordPage() {
               lineHeight: 1, color: 'var(--color-text-primary)', textDecoration: 'none',
             }}
           >
-            Roga
+            Cephos
           </a>
         </div>
         <div style={{ flex: 1, paddingTop: '72px' }}>{form}</div>
@@ -213,7 +213,7 @@ export default function ChangePasswordPage() {
             letterSpacing: '-0.02em', color: 'var(--color-text-on-dark)', lineHeight: 1, textDecoration: 'none',
           }}
         >
-          Roga
+          Cephos
         </a>
         <div
           style={{

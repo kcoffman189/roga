@@ -119,7 +119,7 @@ export default function Home() {
       return (
         <div style={{ textAlign: 'center', maxWidth: '400px', padding: '48px' }}>
           <p style={{ fontSize: '15px', color: 'var(--color-text-secondary)', lineHeight: '1.6' }}>
-            Add some books to your library and Roga will have something to think about.
+            Add some books to your library and Cephos will have something to think about.
           </p>
           <a href="/library" style={{ display: 'inline-block', marginTop: '16px', fontSize: '14px', color: 'var(--color-accent)', textDecoration: 'underline' }}>
             Go to My Library
@@ -173,7 +173,7 @@ export default function Home() {
                   <circle cx="36" cy="36" r="4" fill="#C45E0A"/>
                 </g>
               </g>
-              <text x="62" y="42" fontFamily="Georgia, serif" fontSize="40" fontWeight="700" fill="#1A1A1A">Roga</text>
+              <text x="62" y="42" fontFamily="Georgia, serif" fontSize="40" fontWeight="700" fill="#1A1A1A">Cephos</text>
               <text x="62" y="63" fontFamily="Inter, Arial, sans-serif" fontSize="9" fontWeight="500" letterSpacing="1.5" fill="#C45E0A">YOUR LIBRARY. MORE CONNECTED.</text>
             </svg>
           </div>
@@ -249,7 +249,7 @@ export default function Home() {
                 <circle cx="36" cy="36" r="4" fill="#C45E0A"/>
               </g>
             </g>
-            <text x="62" y="42" fontFamily="Georgia, serif" fontSize="40" fontWeight="700" fill="#EEECEA">Roga</text>
+            <text x="62" y="42" fontFamily="Georgia, serif" fontSize="40" fontWeight="700" fill="#EEECEA">Cephos</text>
             <text x="62" y="63" fontFamily="Inter, Arial, sans-serif" fontSize="9" fontWeight="500" letterSpacing="1.5" fill="#C45E0A">YOUR LIBRARY. MORE CONNECTED.</text>
           </svg>
         </div>

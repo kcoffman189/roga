@@ -150,7 +150,7 @@ function GroupConversationInner() {
           onClick={() => router.push(`/groups/${groupId}`)}
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', color: 'var(--color-text-primary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
         >
-          Roga
+          Cephos
         </button>
       </div>
 
@@ -178,7 +178,7 @@ function GroupConversationInner() {
                 <circle cx="36" cy="36" r="4" fill="#C45E0A"/>
               </g>
             </g>
-            <text x="62" y="42" fontFamily="Georgia, serif" fontSize="40" fontWeight="700" fill="#EEECEA">Roga</text>
+            <text x="62" y="42" fontFamily="Georgia, serif" fontSize="40" fontWeight="700" fill="#EEECEA">Cephos</text>
             <text x="62" y="63" fontFamily="Inter, Arial, sans-serif" fontSize="9" fontWeight="500" letterSpacing="1.5" fill="#C45E0A">YOUR LIBRARY. MORE CONNECTED.</text>
           </svg>
         </div>
@@ -243,7 +243,7 @@ function GroupConversationInner() {
               .map((msg, i) => (
                 <div key={i} style={{ marginBottom: '24px' }}>
                   <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
-                    {msg.role === 'user' ? 'You' : 'Roga'}
+                    {msg.role === 'user' ? 'You' : 'Cephos'}
                   </div>
                   <div style={{ fontSize: '15px', lineHeight: '1.6', color: 'var(--color-text-primary)', whiteSpace: 'pre-wrap' }}>
                     {msg.content}
@@ -253,7 +253,7 @@ function GroupConversationInner() {
               ))}
             {loading && messages[messages.length - 1]?.content === '' && (
               <div style={{ marginBottom: '24px' }}>
-                <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Roga</div>
+                <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Cephos</div>
                 <div style={{ fontSize: '15px', color: 'var(--color-text-tertiary)' }}>Thinking...</div>
               </div>
             )}

@@ -9,7 +9,7 @@ const STEP_ORDER = [1, 2, 3]
 const STEP_COPY: Record<number, string> = {
   1: "Start by adding the books you've been reading, thinking about, or just finished. Aim for 5 to 10 — the more you add, the richer things get.",
   2: "This is where you go when you want to explore a specific book, a chapter you just read, or a connection that's been on your mind. Start a conversation and see where it goes.",
-  3: "This is Roga at its most interesting. Ask it to surface something unexpected from your library — a connection you hadn't made, a tension between two things you've read. It gets better the more your library grows.",
+  3: "This is Cephos at its most interesting. Ask it to surface something unexpected from your library — a connection you hadn't made, a tension between two things you've read. It gets better the more your library grows.",
 }
 
 type Props = {

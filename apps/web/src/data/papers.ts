@@ -19,7 +19,7 @@ export const PAPERS: Paper[] = [
     abstract:
       "Define, measure, and train Question Intelligence with clarity, depth, curiosity, relevance, and empathy.",
     topic: "Question Intelligence",
-    tags: ["Framework", "Roga Originals"],
+    tags: ["Framework", "Cephos Originals"],
     date: "2025-01-05",
     popularity: 98,
     href: "/docs/roga-5-dimensions.pdf"

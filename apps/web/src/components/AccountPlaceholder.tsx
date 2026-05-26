@@ -24,7 +24,7 @@ export default function AccountPlaceholder({ message }: Props) {
             textDecoration: 'none',
           }}
         >
-          Roga
+          Cephos
         </a>
         <div
           style={{

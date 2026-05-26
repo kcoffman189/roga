@@ -18,7 +18,7 @@ export default function Privacy() {
           <p className="text-sm text-gray-600 mb-6">Effective Date: 9/11/2025</p>
           
           <p className="text-gray-700 leading-relaxed mb-6">
-            Roga (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) values your privacy. This Privacy Policy explains how we collect, use, and protect your information when you use our Service.
+            Cephos (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) values your privacy. This Privacy Policy explains how we collect, use, and protect your information when you use our Service.
           </p>
 
           <h2 className="text-2xl font-bold mt-8 mb-4">1. Information We Collect</h2>
@@ -50,8 +50,8 @@ export default function Privacy() {
           <h2 className="text-2xl font-bold mt-8 mb-4">4. Data Ownership</h2>
           <ul className="text-gray-700 leading-relaxed mb-6">
             <li>You retain ownership of your original User Content.</li>
-            <li>By contributing, you grant Roga rights to use and incorporate User Content into the Service.</li>
-            <li>Aggregated/anonymized data is solely owned by Roga.</li>
+            <li>By contributing, you grant Cephos rights to use and incorporate User Content into the Service.</li>
+            <li>Aggregated/anonymized data is solely owned by Cephos.</li>
           </ul>
 
           <h2 className="text-2xl font-bold mt-8 mb-4">5. Security</h2>

@@ -83,7 +83,7 @@ export default function DeleteAccountPage() {
               marginBottom: '32px',
             }}
           >
-            This will permanently delete your account, your library, all your groups, and every conversation you&apos;ve had in Roga. This cannot be undone.
+            This will permanently delete your account, your library, all your groups, and every conversation you&apos;ve had in Cephos. This cannot be undone.
           </p>
           <a
             href="/account"
@@ -218,7 +218,7 @@ export default function DeleteAccountPage() {
               lineHeight: 1, color: 'var(--color-text-primary)', textDecoration: 'none',
             }}
           >
-            Roga
+            Cephos
           </a>
         </div>
         <div style={{ flex: 1, paddingTop: '72px' }}>{content}</div>
@@ -236,7 +236,7 @@ export default function DeleteAccountPage() {
             letterSpacing: '-0.02em', color: 'var(--color-text-on-dark)', lineHeight: 1, textDecoration: 'none',
           }}
         >
-          Roga
+          Cephos
         </a>
         <div
           style={{

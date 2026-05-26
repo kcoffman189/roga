@@ -162,7 +162,7 @@ function ConversationInner() {
           onClick={() => router.push('/home')}
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', color: 'var(--color-text-primary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
         >
-          Roga
+          Cephos
         </button>
       </div>
 
@@ -171,7 +171,7 @@ function ConversationInner() {
         <div
           style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '58px', letterSpacing: '-0.02em', color: 'var(--color-text-on-dark)', lineHeight: 1, marginBottom: '28px', cursor: 'pointer' }}
           onClick={() => router.push('/home')}
-        >Roga</div>
+        >Cephos</div>
         <button onClick={() => router.push('/conversation/new?mode=intentional')} className="sidebar-cta-primary">
           Let&apos;s dig into something
         </button>
@@ -197,7 +197,7 @@ function ConversationInner() {
               .map((msg, i) => (
               <div key={i} style={{ marginBottom: '24px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
-                  {msg.role === 'user' ? 'You' : 'Roga'}
+                  {msg.role === 'user' ? 'You' : 'Cephos'}
                 </div>
                 <div style={{ fontSize: '15px', lineHeight: '1.6', color: 'var(--color-text-primary)', whiteSpace: 'pre-wrap' }}>
                   {msg.content}
@@ -207,7 +207,7 @@ function ConversationInner() {
             ))}
             {loading && messages[messages.length - 1]?.content === '' && (
               <div style={{ marginBottom: '24px' }}>
-                <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Roga</div>
+                <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Cephos</div>
                 <div style={{ fontSize: '15px', color: 'var(--color-text-tertiary)' }}>Thinking...</div>
               </div>
             )}

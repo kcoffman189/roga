@@ -122,7 +122,7 @@ export default function GroupsIntroCard({ groupsButtonRef, supabase, userId, onD
           color: 'var(--color-text-secondary)',
           lineHeight: '1.6',
         }}>
-          Once you have a few books in your library, you can bring them together into a Group — a focused conversation space for a particular subject, a reading list, or a period of study. Roga keeps its thinking inside those books only.
+          Once you have a few books in your library, you can bring them together into a Group — a focused conversation space for a particular subject, a reading list, or a period of study. Cephos keeps its thinking inside those books only.
         </div>
 
         <div style={{

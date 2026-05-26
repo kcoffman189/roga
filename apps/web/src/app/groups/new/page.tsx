@@ -114,7 +114,7 @@ export default function NewGroupPage() {
           onClick={() => router.push('/groups')}
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', color: 'var(--color-text-primary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
         >
-          Roga
+          Cephos
         </button>
         <div style={{ fontSize: '13px', color: '#999', paddingLeft: '4px' }}>
           <span

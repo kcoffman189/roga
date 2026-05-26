@@ -335,7 +335,7 @@ export default function RogaSessionsPage() {
           <div className="absolute top-20 flex items-center justify-between w-full" style={{left: '86px', right: '86px', width: 'calc(100% - 172px)'}}>
             <div className="flex items-center gap-4">
               <BrandMark size={80} />
-              <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '6rem', color: 'white'}}>roga</span>
+              <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '6rem', color: 'white'}}>cephos</span>
             </div>
             <Link href="/">
               <Button 
@@ -351,7 +351,7 @@ export default function RogaSessionsPage() {
 
         {/* TITLE */}
         <div className="text-center" style={{marginTop: '50px', marginBottom: '40px'}}>
-          <h1 className="text-4xl font-bold" style={{fontFamily: 'Georgia, serif', color: '#1D1B20'}}>Roga Sessions</h1>
+          <h1 className="text-4xl font-bold" style={{fontFamily: 'Georgia, serif', color: '#1D1B20'}}>Cephos Sessions</h1>
           <p className="text-lg text-coal/70 mt-2">Choose your conversation scenario for a 3-round dialogue</p>
         </div>
 
@@ -385,7 +385,7 @@ export default function RogaSessionsPage() {
           <div className="absolute top-20 flex items-center justify-between w-full" style={{left: '86px', right: '86px', width: 'calc(100% - 172px)'}}>
             <div className="flex items-center gap-4">
               <BrandMark size={80} />
-              <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '6rem', color: 'white'}}>roga</span>
+              <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '6rem', color: 'white'}}>cephos</span>
             </div>
             <div className="flex gap-4">
               <Button
@@ -483,7 +483,7 @@ export default function RogaSessionsPage() {
         <div className="absolute top-20 flex items-center justify-between w-full" style={{left: '86px', right: '86px', width: 'calc(100% - 172px)'}}>
           <div className="flex items-center gap-4">
             <BrandMark size={80} />
-            <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '6rem', color: 'white'}}>roga</span>
+            <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '6rem', color: 'white'}}>cephos</span>
           </div>
           <Button 
             onClick={resetSession}
@@ -695,7 +695,7 @@ export default function RogaSessionsPage() {
       {/* FOOTER */}
       <footer className="bg-fog border-t border-black/5 mt-16">
         <div className="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between text-sm text-coal/70">
-          <p>Roga Sessions • v1 • powered by gpt-4o-mini</p>
+          <p>Cephos Sessions • v1 • powered by gpt-4o-mini</p>
           <nav className="flex gap-4">
             <a href="/privacy" className="hover:underline">Privacy</a>
             <a href="/terms" className="hover:underline">Terms</a>

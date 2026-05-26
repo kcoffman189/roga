@@ -415,7 +415,7 @@ export default function DailyChallengePage() {
         <div className="absolute top-20 flex items-center justify-between w-full" style={{left: '86px', right: '86px', width: 'calc(100% - 172px)'}}>
           <div className="flex items-center gap-4">
             <BrandMark size={80} />
-            <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '6rem', color: 'white'}}>roga</span>
+            <span className="text-white" style={{fontFamily: 'Georgia, serif', fontSize: '6rem', color: 'white'}}>cephos</span>
           </div>
           <Link href="/">
             <Button 
@@ -645,7 +645,7 @@ export default function DailyChallengePage() {
 
                   {/* Technique Spotlight */}
                   <div className="mb-4">
-                    <h4 className="font-semibold mb-2 text-purple-700">🔍 Roga Technique Spotlight:</h4>
+                    <h4 className="font-semibold mb-2 text-purple-700">🔍 Cephos Technique Spotlight:</h4>
                     <div className="bg-purple-50 p-3 rounded">
                       <h5 className="font-medium text-purple-800 mb-1">{enhancedFeedback.coach_feedback.technique_spotlight.name}</h5>
                       <p className="text-sm text-purple-700">{enhancedFeedback.coach_feedback.technique_spotlight.description}</p>

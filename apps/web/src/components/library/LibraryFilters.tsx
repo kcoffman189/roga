@@ -52,7 +52,7 @@ export default function LibraryFilters({ papers, topic, setTopic, sort, setSort,
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search Roga Originals…"
+          placeholder="Search Cephos Originals…"
           aria-label="Search papers"
           className="w-full rounded-xl border border-black/10 bg-fog px-3 py-2"
         />

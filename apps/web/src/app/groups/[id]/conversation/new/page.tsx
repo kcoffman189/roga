@@ -97,7 +97,7 @@ function GroupNewConversationInner() {
           onClick={() => router.push(`/groups/${groupId}`)}
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '29px', letterSpacing: '-0.02em', color: 'var(--color-text-primary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center' }}
         >
-          Roga
+          Cephos
         </button>
       </div>
 

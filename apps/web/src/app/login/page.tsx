@@ -63,7 +63,7 @@ export default function LoginPage() {
       }}
     >
       <div style={{ width: '100%', maxWidth: '360px' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '4px', textAlign: 'center' }}>Roga</h1>
+        <h1 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '4px', textAlign: 'center' }}>Cephos</h1>
         <p style={{ color: '#999', textAlign: 'center', marginBottom: '32px', fontSize: '15px' }}>Sign in or create an account</p>
 
         <input

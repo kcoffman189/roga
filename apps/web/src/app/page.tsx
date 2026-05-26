@@ -248,7 +248,7 @@ export default function LandingPage() {
                 fontStyle: 'italic',
               }}
             >
-              Roga finds what your books have been saying to each other.
+              Cephos finds what your books have been saying to each other.
             </div>
           </div>
 
@@ -264,7 +264,7 @@ export default function LandingPage() {
               marginBottom: '16px',
             }}
           >
-            A thinking partner built around your personal library. Add the books you&apos;ve read. Let Roga surface the threads between them.
+            A thinking partner built around your personal library. Add the books you&apos;ve read. Let Cephos surface the threads between them.
           </p>
 
           {/* Divider */}
@@ -512,17 +512,17 @@ export default function LandingPage() {
             {
               num: '01',
               title: 'Build your library',
-              body: "Add the books you've read — start with 5 to 10. Roga builds a picture of your intellectual world from what you've actually consumed.",
+              body: "Add the books you've read — start with 5 to 10. Cephos builds a picture of your intellectual world from what you've actually consumed.",
             },
             {
               num: '02',
-              title: 'Let Roga initiate',
-              body: 'Ask Roga to surprise you. It surfaces unexpected connections between your books — threads you didn\'t know were there.',
+              title: 'Let Cephos initiate',
+              body: 'Ask Cephos to surprise you. It surfaces unexpected connections between your books — threads you didn\'t know were there.',
             },
             {
               num: '03',
               title: 'Curate your collections',
-              body: "Group books together around a theme, topic, or moment in your reading life. Then let Roga find the connections within that specific collection.",
+              body: "Group books together around a theme, topic, or moment in your reading life. Then let Cephos find the connections within that specific collection.",
             },
           ].map(({ num, title, body }) => (
             <div key={num} style={{ flex: 1 }}>
@@ -593,7 +593,7 @@ export default function LandingPage() {
             color: '#B0ACA6',
           }}
         >
-          Roga
+          Cephos
         </span>
         <span
           style={{
@@ -603,7 +603,7 @@ export default function LandingPage() {
             color: '#B0ACA6',
           }}
         >
-          &copy; 2026 Roga. Private beta.
+          &copy; 2026 Cephos. Private beta.
         </span>
       </footer>
     </>
