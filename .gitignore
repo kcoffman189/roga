@@ -1,3 +1,20 @@
 
 # Local helper script
 goto-roga.ps1
+
+# Credentials and sensitive docs
+Roga v2.0/
+
+# Python env files
+.env
+.env.*
+*.env
+
+# Node
+node_modules/
+.next/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
