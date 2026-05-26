@@ -18,6 +18,8 @@ app.add_middleware(
         "http://localhost:3000",
         "https://roga.me",
         "https://www.roga.me",
+        "https://cephos.io",
+        "https://www.cephos.io",
     ],
     allow_credentials=True,
     allow_methods=["*"],
