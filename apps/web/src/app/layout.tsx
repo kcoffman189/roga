@@ -27,6 +27,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <meta name="description" content="Cephos finds unexpected connections between the books you've read. Add your library and discover what your books have been saying to each other." />
+        <meta property="og:title" content="Cephos" />
+        <meta property="og:description" content="You've read a lot. Cephos finds what your books have been saying to each other. Add your personal book library and let Cephos surface the connections you didn't know were there." />
+        <meta property="og:image" content="/brand/og.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Cephos" />
+        <meta name="twitter:description" content="You've read a lot. Cephos finds what your books have been saying to each other. Add your library and discover the unexpected connections between everything you've read." />
       </head>
       <body className={`${inter.variable} ${poppins.variable} ${merriweather.variable} ${lora.variable}`}>
         <KeepAlive />
