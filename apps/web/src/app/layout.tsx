@@ -8,11 +8,11 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export const metadata: Metadata = {
-  title: "Cephos — Your library. More connected.",
+  title: "Cephos — Many books. One mind.",
   description: "Duolingo for Question Intelligence.",
   icons: { icon: [{ url: "/favicon.svg", type: "image/svg+xml" }] },
   openGraph: {
-    title: "Cephos — Your library. More connected.",
+    title: "Cephos — Many books. One mind.",
     description: "Train your Question Intelligence.",
     images: ["/brand/og.png"],            // <-- optional, if present
   },

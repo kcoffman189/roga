@@ -174,7 +174,7 @@ export default function Home() {
                 </g>
               </g>
               <text x="62" y="42" fontFamily="Georgia, serif" fontSize="40" fontWeight="700" fill="#1A1A1A">Cephos</text>
-              <text x="62" y="63" fontFamily="Inter, Arial, sans-serif" fontSize="9" fontWeight="500" letterSpacing="1.5" fill="#C45E0A">YOUR LIBRARY. MORE CONNECTED.</text>
+              <text x="62" y="63" fontFamily="Inter, Arial, sans-serif" fontSize="9" fontWeight="500" letterSpacing="1.5" fill="#C45E0A">MANY BOOKS. ONE MIND.</text>
             </svg>
           </div>
           <button
@@ -250,7 +250,7 @@ export default function Home() {
               </g>
             </g>
             <text x="62" y="42" fontFamily="Georgia, serif" fontSize="40" fontWeight="700" fill="#EEECEA">Cephos</text>
-            <text x="62" y="63" fontFamily="Inter, Arial, sans-serif" fontSize="9" fontWeight="500" letterSpacing="1.5" fill="#C45E0A">YOUR LIBRARY. MORE CONNECTED.</text>
+            <text x="62" y="63" fontFamily="Inter, Arial, sans-serif" fontSize="9" fontWeight="500" letterSpacing="1.5" fill="#C45E0A">MANY BOOKS. ONE MIND.</text>
           </svg>
         </div>
 
