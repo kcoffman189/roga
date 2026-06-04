@@ -2,6 +2,20 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
+  const userAgent = request.headers.get('user-agent') || ''
+  const isSocialBot = [
+    'facebookexternalhit',
+    'Twitterbot',
+    'LinkedInBot',
+    'Slackbot',
+    'WhatsApp',
+    'Googlebot',
+  ].some(bot => userAgent.includes(bot))
+
+  if (isSocialBot) {
+    return NextResponse.next()
+  }
+
   if (request.nextUrl.pathname === '/') {
     const response = NextResponse.next()
 
