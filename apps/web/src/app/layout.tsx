@@ -9,12 +9,16 @@ export const revalidate = 0
 
 export const metadata: Metadata = {
   title: "Cephos — Many books. One mind.",
-  description: "Duolingo for Question Intelligence.",
+  description: "Cephos finds unexpected connections between the books you've read. Add your library and discover what your books have been saying to each other.",
   icons: { icon: [{ url: "/favicon.svg", type: "image/svg+xml" }] },
   openGraph: {
     title: "Cephos — Many books. One mind.",
-    description: "Train your Question Intelligence.",
+    description: "You've read a lot. Cephos finds what your books have been saying to each other. Add your personal book library and let Cephos surface the connections you didn't know were there.",
     images: ["/brand/og.png"],            // <-- optional, if present
+  },
+  twitter: {
+    card: "summary_large_image",
+    description: "You've read a lot. Cephos finds what your books have been saying to each other. Add your library and discover the unexpected connections between everything you've read.",
   },
 };
 
