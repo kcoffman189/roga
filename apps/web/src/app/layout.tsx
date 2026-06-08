@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Cephos — Many books. One mind.",
     description: "You've read a lot. Cephos finds what your books have been saying to each other. Add your personal book library and let Cephos surface the connections you didn't know were there.",
-    images: ["/brand/og.png"],            // <-- optional, if present
+    images: ["/brand/og-v2.png"],            // <-- optional, if present
   },
   twitter: {
     card: "summary_large_image",
