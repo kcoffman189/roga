@@ -33,8 +33,8 @@ const sections: Section[] = [
   {
     label: 'Legal',
     rows: [
-      { label: 'Privacy Policy', href: '/account/privacy' },
-      { label: 'Terms of Service', href: '/account/terms' },
+      { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Terms of Service', href: '/terms' },
     ],
   },
   {
