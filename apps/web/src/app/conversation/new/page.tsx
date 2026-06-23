@@ -73,7 +73,7 @@ function NewConversationInner() {
   if (mode === 'open') {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#FAF8F4' }}>
-        <div style={{ color: '#6B6B6B', fontSize: '14px', fontFamily: 'Inter, system-ui, sans-serif', fontStyle: 'italic' }}>Finding something interesting...</div>
+        <div style={{ color: '#6B6B6B', fontSize: '14px', fontFamily: 'Inter, system-ui, sans-serif', fontStyle: 'italic' }}>Finding connections in your library...</div>
       </div>
     )
   }

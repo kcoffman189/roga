@@ -73,7 +73,7 @@ function GroupNewConversationInner() {
   if (mode === 'open') {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'Inter, sans-serif', background: 'var(--color-bg-canvas)' }}>
-        <div style={{ color: 'var(--color-text-tertiary)', fontSize: '15px' }}>Finding something interesting...</div>
+        <div style={{ color: 'var(--color-text-tertiary)', fontSize: '15px' }}>Finding connections in your library...</div>
       </div>
     )
   }
