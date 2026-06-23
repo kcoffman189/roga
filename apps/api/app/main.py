@@ -649,7 +649,7 @@ NEVER: Include anything that would feel surveillance-like if the user knew it wa
 Output only the memory context block. No explanation or preamble."""
 
         response = anthropic_client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-5",
             max_tokens=300,
             messages=[{"role": "user", "content": prompt}]
         )
@@ -662,7 +662,7 @@ Output only the memory context block. No explanation or preamble."""
 def generate_title(messages: list) -> str:
     conversation_text = "\n".join([f"{m['role']}: {m['content']}" for m in messages[:4]])
     response = anthropic_client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model="claude-sonnet-4-5",
         max_tokens=20,
         messages=[{
             "role": "user",
@@ -745,7 +745,7 @@ def generate_conversation_summary(conversation_id: str, messages: list, is_group
 
     try:
         response = anthropic_client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-5",
             max_tokens=500,
             system=SUMMARY_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": f"Here is the conversation transcript:\n\n{transcript}"}]
@@ -791,7 +791,7 @@ def generate_conversation_title(user_message: str, assistant_response: str) -> s
     print(f"[title] assistant_response[:100]: {assistant_response[:100]!r}", flush=True)
     try:
         response = anthropic_client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-5",
             max_tokens=20,
             system="You generate short, descriptive titles for intellectual conversations. Return only the title — no quotes, no punctuation at the end, no explanation. 3-6 words. Make it specific to the actual topic, not generic.",
             messages=[{
@@ -901,7 +901,7 @@ def start_conversation(req: StartConversationRequest):
     messages = [{"role": "user", "content": user_message}]
 
     response = anthropic_client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model="claude-sonnet-4-5",
         max_tokens=1000,
         system=system_prompt,
         messages=messages
@@ -946,7 +946,7 @@ def continue_conversation(req: ContinueConversationRequest):
     history.append({"role": "user", "content": req.message})
 
     response = anthropic_client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model="claude-sonnet-4-5",
         max_tokens=1000,
         system=system_prompt,
         messages=history
@@ -1072,7 +1072,7 @@ def start_conversation_stream(req: StartConversationRequest):
 
         # Stream Claude response
         with anthropic_client.messages.stream(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-5",
             max_tokens=1000,
             system=system_prompt,
             messages=[{"role": "user", "content": user_message}]
@@ -1143,7 +1143,7 @@ def continue_conversation_stream(req: ContinueConversationRequest, background_ta
     def generate():
         full_response = ""
         with anthropic_client.messages.stream(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-5",
             max_tokens=1000,
             system=system_prompt,
             messages=history
@@ -1193,7 +1193,7 @@ def get_welcome_quote(user_id: str):
     library_text = "\n".join(library_lines)
 
     response = anthropic_client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model="claude-sonnet-4-5",
         max_tokens=200,
         messages=[{
             "role": "user",
@@ -1267,7 +1267,7 @@ def get_group_welcome_quote(group_id: str):
 
     try:
         response = anthropic_client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-5",
             max_tokens=200,
             messages=[{
                 "role": "user",
@@ -1547,7 +1547,7 @@ def start_group_conversation_stream(req: StartGroupConversationRequest):
         yield f"data: {json.dumps({'type': 'conversation_id', 'conversation_id': conversation_id})}\n\n"
 
         with anthropic_client.messages.stream(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-5",
             max_tokens=1000,
             system=system_prompt,
             messages=[{"role": "user", "content": user_message}]
@@ -1609,7 +1609,7 @@ def continue_group_conversation_stream(req: ContinueGroupConversationRequest, ba
     def generate():
         full_response = ""
         with anthropic_client.messages.stream(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-5",
             max_tokens=1000,
             system=system_prompt,
             messages=history

@@ -1,0 +1,153 @@
+Delivered-To: kcoffman189@gmail.com
+Received: by 2002:a05:612c:4f92:b0:5a2:916b:cd52 with SMTP id j18csp2819237vqa;
+        Tue, 2 Jun 2026 08:25:15 -0700 (PDT)
+X-Received: by 2002:a05:690e:400b:b0:660:56ee:ec03 with SMTP id 956f58d0204a3-660d5edfbecmr216466d50.21.1780413915613;
+        Tue, 02 Jun 2026 08:25:15 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1780413915; cv=none;
+        d=google.com; s=arc-20240605;
+        b=OixNfh9Hz7LkzSfg81jHSnYD28r3Vub858asY/4E03VcyYwO7+OzuwWoD+IEMSIBLW
+         x/58RgUFDVt91m+diKOwTtZjO7C/irzQc1Pubjj1/8GfgLZWeTDEy9Eqfm/D4Bi8fn8h
+         IBW24KfD91ZnWKi9lCf2yv4IRqclnHmSBLfJhZgpKFIp8hjL2Tx6trkTwnlRSvY/LVB6
+         AlWgWBSq0s3MegejnsxL+Hs5+o4WXrf2VxTi9lWFdNbFUmoGAoMbT+tkN9BCICjea/Tb
+         AVgup0+5xUjkGVS2l+6TFenJWyjO0czJQnY4ObL7lGRSJ4bNsf4kbVZlnsuLmnG3iVYP
+         AleQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-disposition:mime-version:subject:message-id:to:from:date
+         :dkim-signature;
+        bh=GrF2+3tsE3msCbr/u5oFYy9f62dsT5S6tby3yh66BJc=;
+        fh=5j59TMVG6F6iD0xt0wGliE2qVX5VlBa1CuXxoFZv5w8=;
+        b=lWF6ZcgsAagf0/Z0WjuAc9Rmstrcbx7U9tM9u4hf5Hbni+nG1QaGVNak5yqSbh6vLR
+         rOogNZtGmEbbScrbwN0vrcoc61e77F8RC7E2P9Vknknf7W0nAHFgwOyq6CjBQ6IGLrwQ
+         UvcPyoyRmnYisTtbIf18ch3LtaPk5iGftkuPJoR6jJyJtFtdlVvy2/uepMQSb5yi9696
+         6kh29+E+tygfqgeilK2mWmzf/DFgoiVZqioeNg1L3vgRnSxexL6kxfGtTjSfHkqRSaiM
+         hfD4STtIeWZEP95PdRSEptZq97NkjevbPd429bTVQoiEP9scANlUl164DSWi+BOfxw+E
+         jXvg==;
+        dara=google.com
+ARC-Authentication-Results: i=1; mx.google.com;
+       dkim=pass header.i=@coloradosos.gov header.s=proofpoint1 header.b=AofQD8Kf;
+       spf=pass (google.com: domain of prvs=1613eb2994=entity.subscribe@coloradosos.gov designates 205.220.173.14 as permitted sender) smtp.mailfrom="prvs=1613eb2994=entity.subscribe@coloradosos.gov";
+       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=coloradosos.gov
+Return-Path: <prvs=1613eb2994=entity.subscribe@coloradosos.gov>
+Received: from mx0b-003d9701.pphosted.com (mx0b-003d9701.pphosted.com. [205.220.173.14])
+        by mx.google.com with ESMTPS id 956f58d0204a3-660d67ca5fesi59380d50.204.2026.06.02.08.25.15
+        for <KCOFFMAN189@gmail.com>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 02 Jun 2026 08:25:15 -0700 (PDT)
+Received-SPF: pass (google.com: domain of prvs=1613eb2994=entity.subscribe@coloradosos.gov designates 205.220.173.14 as permitted sender) client-ip=205.220.173.14;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@coloradosos.gov header.s=proofpoint1 header.b=AofQD8Kf;
+       spf=pass (google.com: domain of prvs=1613eb2994=entity.subscribe@coloradosos.gov designates 205.220.173.14 as permitted sender) smtp.mailfrom="prvs=1613eb2994=entity.subscribe@coloradosos.gov";
+       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=coloradosos.gov
+Received: from pps.filterd (m0184745.ppops.net [127.0.0.1])
+	by mx0b-003d9701.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 652DKuxj3142868
+	for <KCOFFMAN189@GMAIL.COM>; Tue, 2 Jun 2026 09:25:15 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=coloradosos.gov;
+	 h=content-type:date:from:message-id:mime-version:subject:to; s=
+	proofpoint1; bh=GrF2+3tsE3msCbr/u5oFYy9f62dsT5S6tby3yh66BJc=; b=
+	AofQD8KfDBXRhF68kEHqjd91QYo6s5097ldG5eKgAeEdZXGyY7M9JAZc/KJ5Z3RO
+	w2e3SuTvH/6ixKYqDJi6JAwo/q0xAUcQVvcLNSptsQbfLlhYBt1U1ghmPeeGss0b
+	eh0TmuNjbyVIYVGTtfI2EIXjuuKxhEB5n4bPP5489Wg/D7jjG72zRAnbXoY1DeEM
+	9iEczy0g2UFoe5rSvnBIGSVB1REUK+fDcqWPZsfN0CU1Z6Dmg7bRgc3SXC/ss/zr
+	4H0FXEqgL1sS+h6hBEryLNZJ+f2VMil8mAmDYfbZUpicNiadBBSYwtb0dNQIGfP0
+	EN22wLmpirTuhrmLQkRuDA==
+Received: from montego.sos.state.co.us (montego.sos.state.co.us [165.127.77.133])
+	by mx0b-003d9701.pphosted.com (PPS) with ESMTPS id 4efvgkspsx-11
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
+	for <KCOFFMAN189@GMAIL.COM>; Tue, 02 Jun 2026 09:25:15 -0600 (MDT)
+Received: from WEX2.DSSC.SOS.STATE.CO.US (10.4.11.90) by
+ WEX2.DSSC.SOS.STATE.CO.US (10.4.11.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Tue, 2 Jun 2026 09:25:08 -0600
+Received: from rh8wapp6.sos.state.co.us (10.5.11.116) by
+ WEX2.DSSC.SOS.STATE.CO.US (10.4.11.90) with Microsoft SMTP Server id
+ 15.2.2562.37 via Frontend Transport; Tue, 2 Jun 2026 09:25:08 -0600
+Date: Tue, 2 Jun 2026 09:24:08 -0600
+From: Colorado Department of State <entity.subscribe@coloradosos.gov>
+To: <KCOFFMAN189@GMAIL.COM>
+Message-ID: <-104936424.8883.1780413908237@sos.state.co.us>
+Subject: Welcome Cephos LLC - 20261676445
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_Part_8882_-1099032283.1780413908235"
+Content-Disposition: inline
+X-Authority-Analysis: v=2.4 cv=PqOjqQM3 c=1 sm=1 tr=0 ts=6a1ef5db cx=c_pps
+ a=NgI0oGxkOLocROZ1Wyelbw==:117 a=NgI0oGxkOLocROZ1Wyelbw==:17
+ a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=8CNTkoHKM3KxCuL0nZd0:22
+ a=19zoW8sTeeIYuwHDm8VH:22 a=haXuH4cNAAAA:8 a=2iPgNChnAAAA:8 a=yxO3Op9WAAAA:8
+ a=JqEG_dyiAAAA:8 a=3j4BkbkPAAAA:8 a=SSmOFEACAAAA:8 a=3kgEE8zDINoaLFDEiLcA:9
+ a=GGsh1Zr_2ab6NyBa:21 a=_W_S_7VecoQA:10 a=lqcHg5cX4UMA:10 a=CjuIK1q_8ugA:10
+ a=_C6zaqPeZVUA:10 a=lW1JAqxfYwr_bt3K47IJ:22 a=AOBOxKo-xPj6DD5Gyh9S:22
+ a=9_2qxKiVmHe7zyq3v4kx:22
+X-Proofpoint-GUID: XUEo-SH52U4NJUKxbQLktbMblEGleb1E
+X-Proofpoint-ORIG-GUID: XUEo-SH52U4NJUKxbQLktbMblEGleb1E
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjAyMDE0OSBTYWx0ZWRfXwuF4dEjNv2UU
+ DYt8p/+djXdHGfj3EFGDZ+0a228ZmpvP0SAQxXXD5k0uhQD0JOSMv4XOMdM76lFnKn6XHzj4fqn
+ cW0Re967G1zYuf7v7Ymtpo5HPXgA017CnXpnTA7sRazEFPbURXKLIRj/p291G6g28wpTSRSDujl
+ WEYpfwQA7x5csCeVWIq/vSEWFDGTMuDqhKEfVvG95kfKGlHOfEmNdL3xkM8KgwCCOwh1PjdhHfA
+ sIPFpZSukedkDFPIYFgZOguxCpKw785WGzXLc5/tSPbHrzu4UnE/ARTsyEqWNKF5FrdJDDE+Cai
+ 77e0yOgdNMHl2J6Ejfsc+OFf8oyDYv2H99zQDkdeFfKj9pvwOoMKGxgyaUKYXZKOuahWJTBK6xg
+ G0ue9CTEUqUYfUIm5U8UbaGQK7/ElVVKI6RJlhXnG5gzFLzEBlCX5h1e7ZUtz0ldZGg633B+ulO
+ hfNg/6Oder5rWpLPvnw==
+X-Proofpoint-Virus-Version: vendor=nai engine=6900 definitions=11805
+ signatures=596817
+X-Proofpoint-Spam-Reason: safe
+
+------=_Part_8882_-1099032283.1780413908235
+Content-Type: text/html; name="newbiz1.html"; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+<title>A message from the Colorado Secretary of State</title>
+<link href="http://www.sos.state.co.us/pubs/css/static.css" rel="stylesheet" type="text/css" />
+
+
+</head>
+<body bottommargin="0" leftmargin="0" marginheight="0" marginwidth="0" rightmargin="0" topmargin="0">
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tr>
+<td><table style="background-color: #5f8fd7; width: 100%;">
+<tbody>
+<tr>
+<td style="width: 60px;"><a href="https://coloradosos.gov" style="line-height: 50px;"><img alt="Secretary of State logo" border="0" height="50" src="https://coloradosos.gov/pubs/images/general/logo.png" style="border: 0 none; float: left; margin-left: 5px;" width="44" /> </a></td>
+<td style="width: 300px;"><span style="color: #ffffff; font-size: 14pt;"><strong>Colorado Secretary of State</strong></span><br /><span style="color: #ffffff;"><span style="font-size: 14pt;"><strong>Jena Griswold</strong></span><br /></span></td>
+<td style="align: right;"><a href="https://coloradosos.gov" style="text-decoration: none; float: right !important;"><span style="color: #ffffff; font-size: 14pt; margin-right: 5px;">coloradosos.gov</span></a></td>
+</tr>
+</tbody>
+</table></td>
+</tr>
+</table>
+<table border="0" cellpadding="10" cellspacing="10" width="100%">
+<tr>
+<td height="390" valign="top" width="100%">
+<div align="left"><p>Congratulations on starting a new business. Here is a link to your home page: <a href="https://www.sos.state.co.us/biz/BusinessEntityDetail.do?masterFileId=20261676445">https://www.sos.state.co.us/biz/BusinessEntityDetail.do?masterFileId=20261676445</a>. On your home page, you can get a copy of your filed document or a Good Standing certificate. You can also see other information for your entity.</p>
+<p>&#160;</p>
+<p>&#160;</p>
+<p>This is an automatically generated email. If you would like to contact our office, please send an email to <a href="mailto:business@coloradosos.gov">business@coloradosos.gov</a> or call 303-894-2200 and press 2.</p>
+<p>If you would like to unsubscribe from this email notification service, visit our website, <a href="https://coloradosos.gov/">coloradosos.gov</a>, select "Business Organizations" in the menu on the left, then click on "Email Notifications".</p><br />
+</div>
+</td>
+</tr>
+</table>
+<hr align="left" style="width: 100%;" />
+<div style="font-family: Arial, Verdana, sans-serif; font-size: 1em;">
+<table border="0" cellpadding="4" cellspacing="0">
+<tbody>
+<tr valign="middle">
+<td>Colorado Secretary of State</td>
+<td align="center" style="width: 10px;">|</td>
+<td style="text-align: center;">1700 Broadway, Ste. 550, Denver, CO 80290</td>
+<td align="center" style="width: 10px;">|</td>
+<td style="text-align: center;">303-894-2200</td>
+<td style="text-align: center; width: 10px;">|</td>
+<td><a href="https://public.govdelivery.com/accounts/COSOS/subscriber/new?topic_id=COSOS"><img alt="Sign up for email updates" border="none" height="17" src="https://www.sos.state.co.us/pubs/images/general/envelope.gif" width="17" /></a>&#160;&#160; <a href="https://twitter.com/COSecofState"><img alt="Follow us on Twitter" border="none" class="imagelink" height="20" src="https://www.sos.state.co.us/pubs/images/home/twitter.png" width="20" /></a>&#160;&#160; <a href="https://www.facebook.com/ColoradoSoS/"><img alt="Like us on Facebook" border="none" class="imagelink" height="20" src="https://www.sos.state.co.us/pubs/images/home/facebook.png" width="20" /></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+</body>
+</html>
+------=_Part_8882_-1099032283.1780413908235--
