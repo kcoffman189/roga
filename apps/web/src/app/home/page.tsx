@@ -282,20 +282,13 @@ export default function Home() {
           My Library
         </a>
 
-        <div className="sidebar-section-label">Past conversations</div>
-        <div className="conv-list-scroll" style={{ flex: 1, overflowY: 'auto' }}>
-          {loading ? (
-            <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted-dark)', padding: '4px 2px' }}>Loading...</div>
-          ) : conversations.length === 0 ? (
-            <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted-dark)', padding: '4px 2px' }}>Your conversations will appear here.</div>
-          ) : (
-            <ConversationGroupedList
-              conversations={conversations}
-              onSelect={resumeConversation}
-              onDelete={deleteConversation}
-            />
-          )}
-        </div>
+        <button
+          onClick={() => router.push('/conversations')}
+          className="sidebar-nav-link"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0, width: '100%' }}
+        >
+          Past conversations
+        </button>
 
         <button
           onClick={async () => { await supabase.auth.signOut(); router.push('/') }}
