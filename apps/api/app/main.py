@@ -1240,9 +1240,16 @@ If no appropriate quote exists, respond with ONLY: {{"quote": null, "author": nu
     try:
         import json
         text = response.content[0].text.strip()
+        # Strip markdown code fences if present
+        if text.startswith("```"):
+            text = text.split("```")[1]
+            if text.startswith("json"):
+                text = text[4:]
+            text = text.strip()
         data = json.loads(text)
         return {"quote": data["quote"], "author": data["author"], "empty_library": False}
-    except:
+    except Exception as e:
+        print(f"[welcome-quote] JSON parse error: {e} | raw response: {response.content[0].text!r}", flush=True)
         return {"quote": None, "author": None, "empty_library": False}
 
 
