@@ -1115,7 +1115,7 @@ def start_conversation_stream(req: StartConversationRequest):
             print(f"[stream] skipping title update — title not 'Untitled Conversation'", flush=True)
         yield f"data: {json.dumps({'type': 'done', 'conversation_id': conversation_id, 'title': title})}\n\n"
 
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"})
 
 
 @app.post("/conversation/continue/stream")
@@ -1174,7 +1174,7 @@ def continue_conversation_stream(req: ContinueConversationRequest, background_ta
         yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
     background_tasks.add_task(run_summarisation_job, req.conversation_id, False)
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"})
 
 
 @app.get("/welcome-quote/{user_id}")
@@ -1582,7 +1582,7 @@ def start_group_conversation_stream(req: StartGroupConversationRequest):
 
         yield f"data: {json.dumps({'type': 'done', 'conversation_id': conversation_id, 'title': title})}\n\n"
 
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"})
 
 
 @app.post("/group-conversation/continue/stream")
@@ -1634,7 +1634,7 @@ def continue_group_conversation_stream(req: ContinueGroupConversationRequest, ba
         yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
     background_tasks.add_task(run_summarisation_job, req.conversation_id, True)
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"})
 
 
 @app.get("/group-conversations/{group_id}")
