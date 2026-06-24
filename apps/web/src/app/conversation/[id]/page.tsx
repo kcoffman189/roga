@@ -58,7 +58,9 @@ function ConversationInner() {
   }, [])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (!isMobile) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [messages])
 
   const streamNewConversation = async (convId: string, uid: string) => {
@@ -69,7 +71,7 @@ function ConversationInner() {
     if (existingMessages.length > 0) {
       const userMsg = existingMessages[existingMessages.length - 1]
       const filteredMessages = existingMessages.filter(
-        (m: Message) => !(m.role === 'user' && m.content.includes('Surface something interesting'))
+        (m: Message) => !(m.role === 'user' && m.content.includes('Tell me something interesting'))
       )
       setMessages([...filteredMessages, { role: 'assistant', content: '', streaming: true }])
       await streamContinue(convId, uid, null, filteredMessages)
