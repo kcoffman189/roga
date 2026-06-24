@@ -127,6 +127,11 @@ function GroupConversationInner() {
     if (!input.trim() || !userId || loading) return
     const userMessage = input.trim()
     setInput('')
+    if (isMobile) {
+      setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 50)
+    }
     await streamContinue(conversationId, userId, userMessage)
   }
 
