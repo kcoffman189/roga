@@ -1179,68 +1179,117 @@ def continue_conversation_stream(req: ContinueConversationRequest, background_ta
 
 @app.get("/welcome-quote/{user_id}")
 def get_welcome_quote(user_id: str):
+    import json, requests
+
     # Get user's library
     result = supabase.from_("library_entries").select("title, author, familiarity_score, is_unread, notes").eq("user_id", user_id).execute()
     entries = result.data
-
     if not entries:
-        return {"quote": None, "book": None, "empty_library": True}
+        return {"quote": None, "author": None, "empty_library": True}
 
-    # Build library summary for Claude with weighting instructions
-    library_lines = []
-    for entry in entries:
-        library_lines.append(f"- {entry['title']}{' by ' + entry['author'] if entry.get('author') else ''} ({_familiarity_label(entry)})")
-    library_text = "\n".join(library_lines)
+    # Score entries — prefer familiar, read books
+    def score_entry(e):
+        score = e.get("familiarity_score") or 0
+        if e.get("is_unread"):
+            score -= 2
+        return score
 
-    response = anthropic_client.messages.create(
-        model="claude-sonnet-4-5",
-        max_tokens=200,
-        messages=[{
-            "role": "user",
-            "content": f"""You are selecting a quote to display on the Cephos welcome screen. This quote is the first thing a user sees when they open Cephos. It may also be visible to anyone nearby who glances at their screen.
+    sorted_entries = sorted(entries, key=score_entry, reverse=True)
+    top_entries = sorted_entries[:6]
 
-Here is the user's current library — the ONLY source you may draw from:
+    # Fetch real snippets from Google Books for top entries
+    GOOGLE_BOOKS_API_KEY = os.environ.get("GOOGLE_BOOKS_API_KEY", "")
+    snippet_candidates = []
 
-{library_text}
+    for entry in top_entries:
+        try:
+            title = entry["title"]
+            author = entry.get("author", "")
+            query = f"intitle:{title}"
+            if author:
+                query += f"+inauthor:{author}"
+            url = f"https://www.googleapis.com/books/v1/volumes?q={requests.utils.quote(query)}&printType=books&maxResults=3&key={GOOGLE_BOOKS_API_KEY}"
+            res = requests.get(url, timeout=5)
+            data = res.json()
+            items = data.get("items", [])
+            for item in items[:2]:
+                snippet = item.get("volumeInfo", {}).get("description", "")
+                if snippet and len(snippet) > 60:
+                    snippet_candidates.append({
+                        "title": title,
+                        "author": author or item.get("volumeInfo", {}).get("authors", [""])[0],
+                        "snippet": snippet[:400]
+                    })
+                    break
+        except Exception:
+            continue
 
-CONSTRAINT: You must select a quote from a book in the library list above and nowhere else. Do not use quotes from books you know that are not in this list. Do not use quotes from authors who appear in this list but from books not in this list. The book the quote comes from must exist exactly as listed above.
+    # Build prompt with real snippets if available
+    if snippet_candidates:
+        candidates_text = "\n\n".join([
+            f"Book: {c['title']} by {c['author']}\nText: {c['snippet']}"
+            for c in snippet_candidates
+        ])
+        prompt = f"""You are selecting a quote or sentence to display on the Cephos welcome screen. This is the first thing a user sees when they open the app.
 
-Select one quote from the library above that meets ALL of the following criteria:
+Below are real text excerpts from books in the user's library. Your job is to extract one memorable, standalone sentence or short passage from these excerpts that works as a welcome quote.
 
-SELECTION CRITERIA — the quote must:
-- Come from a book in the library list provided above
-- Be weighted toward books the user is currently reading or has discussed recently
-- Stand alone without requiring knowledge of the book, author, or context
+{candidates_text}
+
+The quote must:
+- Come word-for-word from one of the excerpts above — do not paraphrase or invent
+- Stand alone without requiring knowledge of the book or context
 - Reflect intellectual curiosity, ideas, or the experience of thinking and exploring
 - Feel like an invitation to think — something worth sitting with
 - Be between one and three sentences — readable at a glance
 - Be universally appropriate regardless of who might see it
+- NOT contain: violence, sexual content, hate speech, profanity, drug references, or anything alarming out of context
 
-CRITICAL: The quote must NOT contain any of the following:
-- References to illegal substances, drugs, or drug use
-- Explicit violence or graphic descriptions of harm
-- Sexual or sexually suggestive content
-- Hate speech, slurs, or language targeting any group
-- Strong profanity
-- Graphic descriptions of trauma, abuse, or suffering
-- Highly partisan political statements that would be divisive out of context
-- Anything that would alarm or offend a stranger seeing it without context
+IMPORTANT: You must select a sentence that appears verbatim in the excerpts above. Do not generate or paraphrase.
 
-IMPORTANT: Apply this test before selecting any quote — if a stranger glanced at this quote on someone's screen for two seconds with no other context, would any reasonable person find it inappropriate, offensive, or alarming? If yes, do not use it.
+Respond with ONLY a JSON object:
+{{"quote": "exact sentence from excerpt", "author": "Author Name"}}
 
-FALLBACK: If no quote from the library list passes all criteria above, return nothing. Do not select a quote from outside the library. Return an empty response and the welcome screen will display cleanly without a quote.
+If no appropriate quote exists in the excerpts, respond with ONLY: {{"quote": null, "author": null}}"""
+    else:
+        # Fallback — Claude selects from library without snippets
+        library_lines = []
+        for entry in entries:
+            label = entry["title"]
+            if entry.get("author"):
+                label += f" by {entry['author']}"
+            library_lines.append(f"- {label}")
+        library_text = "\n".join(library_lines)
 
-Respond with ONLY a JSON object in this exact format, no other text:
+        prompt = f"""You are selecting a quote to display on the Cephos welcome screen. This quote is the first thing a user sees when they open Cephos.
+
+Here is the user's current library — the ONLY source you may draw from:
+{library_text}
+
+Select one quote from a book in this library that:
+- Stands alone without requiring knowledge of the book or context
+- Reflects intellectual curiosity, ideas, or the experience of thinking and exploring
+- Feels like an invitation to think — something worth sitting with
+- Is between one and three sentences — readable at a glance
+- Is universally appropriate regardless of who might see it
+- Does NOT contain: violence, sexual content, hate speech, profanity, drug references, or anything alarming out of context
+- Is NOT from Viktor Frankl, George Orwell, or any author used as a calibration example
+
+Vary your selection — do not default to the same author or book repeatedly.
+
+Respond with ONLY a JSON object:
 {{"quote": "the quote text here", "author": "Author Name"}}
 
 If no appropriate quote exists, respond with ONLY: {{"quote": null, "author": null}}"""
-        }]
+
+    response = anthropic_client.messages.create(
+        model="claude-sonnet-4-5",
+        max_tokens=200,
+        messages=[{"role": "user", "content": prompt}]
     )
 
     try:
-        import json
         text = response.content[0].text.strip()
-        # Strip markdown code fences if present
         if text.startswith("```"):
             text = text.split("```")[1]
             if text.startswith("json"):
