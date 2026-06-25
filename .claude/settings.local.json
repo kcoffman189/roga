@@ -7,7 +7,8 @@
       "Bash(git push *)",
       "PowerShell(\\(Get-Item \"C:\\\\Users\\\\kcoff\\\\Documents\\\\cephos\\\\apps\\\\web\\\\public\\\\brand\\\\og.png\"\\).Length)",
       "Bash(curl *)",
-      "Bash(git mv *)"
+      "Bash(git mv *)",
+      "PowerShell(git push *)"
     ],
     "deny": [],
     "ask": []
