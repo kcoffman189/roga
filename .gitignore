@@ -19,3 +19,5 @@ __pycache__/
 *.pyc
 *.pyo
 commit_review.txt
+
+.claude/
