@@ -1194,8 +1194,10 @@ def get_welcome_quote(user_id: str):
             score -= 2
         return score
 
+    import random
     sorted_entries = sorted(entries, key=score_entry, reverse=True)
     top_entries = sorted_entries[:6]
+    random.shuffle(top_entries)
 
     # Fetch real snippets from Google Books for top entries
     GOOGLE_BOOKS_API_KEY = os.environ.get("GOOGLE_BOOKS_API_KEY", "")
