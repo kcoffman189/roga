@@ -1209,11 +1209,15 @@ def get_welcome_quote(user_id: str):
             if author:
                 query += f"+inauthor:{author}"
             url = f"https://www.googleapis.com/books/v1/volumes?q={requests.utils.quote(query)}&printType=books&maxResults=3&key={GOOGLE_BOOKS_API_KEY}"
+            print(f"[welcome-quote] fetching Google Books for: {title} | url: {url}", flush=True)
             res = requests.get(url, timeout=5)
+            print(f"[welcome-quote] Google Books status: {res.status_code}", flush=True)
             data = res.json()
             items = data.get("items", [])
+            print(f"[welcome-quote] items returned: {len(items)}", flush=True)
             for item in items[:2]:
                 snippet = item.get("volumeInfo", {}).get("description", "")
+                print(f"[welcome-quote] snippet length: {len(snippet) if snippet else 0}", flush=True)
                 if snippet and len(snippet) > 60:
                     snippet_candidates.append({
                         "title": title,
@@ -1221,7 +1225,8 @@ def get_welcome_quote(user_id: str):
                         "snippet": snippet[:400]
                     })
                     break
-        except Exception:
+        except Exception as e:
+            print(f"[welcome-quote] Google Books error for {title}: {e}", flush=True)
             continue
 
     # Build prompt with real snippets if available

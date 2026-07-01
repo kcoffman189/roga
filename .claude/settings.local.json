@@ -8,7 +8,12 @@
       "PowerShell(\\(Get-Item \"C:\\\\Users\\\\kcoff\\\\Documents\\\\cephos\\\\apps\\\\web\\\\public\\\\brand\\\\og.png\"\\).Length)",
       "Bash(curl *)",
       "Bash(git mv *)",
-      "PowerShell(git push *)"
+      "PowerShell(git push *)",
+      "Bash(flyctl status *)",
+      "Bash(flyctl auth *)",
+      "Bash(flyctl releases *)",
+      "Bash(flyctl deploy *)",
+      "Bash(flyctl logs *)"
     ],
     "deny": [],
     "ask": []
