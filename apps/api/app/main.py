@@ -1794,19 +1794,21 @@ def refresh_quotes(req: BackfillRequest):
     if req.secret != "roga-backfill-2026":
         raise HTTPException(status_code=403, detail="Invalid secret.")
 
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
-
     entries_result = supabase.from_("library_entries").select("id, title, author").execute()
     entries = entries_result.data
 
-    fresh_result = supabase.from_("book_quotes").select("library_entry_id").gte("generated_at", cutoff).execute()
-    fresh_ids = {r["library_entry_id"] for r in fresh_result.data}
+    if req.force:
+        to_process = entries
+    else:
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+        fresh_result = supabase.from_("book_quotes").select("library_entry_id").gte("generated_at", cutoff).execute()
+        fresh_ids = {r["library_entry_id"] for r in fresh_result.data}
+        to_process = [e for e in entries if e["id"] not in fresh_ids]
 
-    stale = [e for e in entries if e["id"] not in fresh_ids]
-    for entry in stale:
+    for entry in to_process:
         generate_quotes_for_entry(entry["id"], entry["title"], entry.get("author") or "")
 
-    return {"processed": len(stale)}
+    return {"processed": len(to_process)}
 
 
 @app.post("/delete-account")
