@@ -463,7 +463,8 @@ def compute_tmsi_scores(user_id: str, group_id: str = None) -> dict:
             pool = sorted(scored, key=lambda e: (e.get("familiarity_score") or 0), reverse=True)[:3]
         else:
             # 6 & 7. Sort by score desc, tiebreaker: most recently added; take top TMSI_POOL_SIZE
-            non_negative.sort(key=lambda e: (e["_tmsi_score"], e.get("created_at") or ""), reverse=True)
+            import random
+	    non_negative.sort(key=lambda e: (e["_tmsi_score"] + random.uniform(0, 20), ), reverse=True)
             pool = non_negative[:TMSI_POOL_SIZE]
 
         # 8. Full scored list for session logging (all books, sorted by score desc)
