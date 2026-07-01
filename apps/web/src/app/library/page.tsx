@@ -105,14 +105,17 @@ export default function LibraryPage() {
     setAdding(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setAdding(false); return }
-    const { error } = await supabase.from('library_entries').insert({
+    const { data: inserted, error } = await supabase.from('library_entries').insert({
       user_id: user.id,
       title: trimmedTitle,
       author: addAuthor.trim() || null,
       familiarity_score: addIsUnread ? null : addFamiliarity,
       is_unread: addIsUnread,
-    })
+    }).select('id').single()
     if (!error) {
+      if (inserted?.id) {
+        fetch(`${API_BASE}/library/${inserted.id}/generate-quotes`, { method: 'POST' }).catch(() => {})
+      }
       setAddTitle('')
       setAddAuthor('')
       setAddIsUnread(false)
