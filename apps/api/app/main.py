@@ -1232,6 +1232,7 @@ def get_welcome_quote(user_id: str):
             continue
 
     # Build prompt with real snippets if available
+    print(f"[welcome-quote] candidates: {json.dumps([{'title': c['title'], 'snippet': c['snippet'][:100]} for c in snippet_candidates], indent=2)}", flush=True)
     if snippet_candidates:
         candidates_text = "\n\n".join([
             f"Book: {c['title']} by {c['author']}\nText: {c['snippet']}"
