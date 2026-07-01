@@ -13,7 +13,17 @@
       "Bash(flyctl auth *)",
       "Bash(flyctl releases *)",
       "Bash(flyctl deploy *)",
-      "Bash(flyctl logs *)"
+      "Bash(flyctl logs *)",
+      "Bash(git rm *)",
+      "PowerShell(Get-Content C:\\\\Users\\\\kcoff\\\\Documents\\\\cephos\\\\apps\\\\api\\\\app\\\\main.py | Select-Object -Index \\(1792..1830\\))",
+      "Bash(git -C C:\\\\Users\\\\kcoff\\\\Documents\\\\cephos log --oneline -5)",
+      "PowerShell(git -C \"C:\\\\Users\\\\kcoff\\\\Documents\\\\Cephos\" log --oneline -5)",
+      "PowerShell(curl -s -X POST https://roga-api.fly.dev/admin/refresh-quotes -H \"Content-Type: application/json\" -d '{\\\\\"secret\\\\\": \\\\\"roga-backfill-2026\\\\\", \\\\\"force\\\\\": true}')",
+      "PowerShell(Invoke-RestMethod -Method Post -Uri \"https://roga-api.fly.dev/admin/refresh-quotes\" -ContentType \"application/json\" -Body '{\"secret\": \"roga-backfill-2026\", \"force\": true}')",
+      "PowerShell(Invoke-RestMethod -Uri \"https://roga-api.fly.dev/health\")",
+      "PowerShell(git -C \"C:\\\\Users\\\\kcoff\\\\Documents\\\\Cephos\" status)",
+      "PowerShell(git -C \"C:\\\\Users\\\\kcoff\\\\Documents\\\\Cephos\" add -A)",
+      "PowerShell(git -C \"C:\\\\Users\\\\kcoff\\\\Documents\\\\Cephos\" commit -m \"Tune: compress TMSI familiarity range and expand pool size to increase book variety\")"
     ],
     "deny": [],
     "ask": []
