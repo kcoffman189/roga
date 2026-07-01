@@ -942,15 +942,14 @@ def continue_conversation(req: ContinueConversationRequest):
     result = supabase.from_("messages").select("role, content").eq("conversation_id", req.conversation_id).order("created_at").execute()
     history = [{"role": m["role"], "content": m["content"]} for m in result.data]
 
-library_context = get_library_context(req.user_id)
-# Retrieve session book pool if this was a TMSI conversation
-conv_meta = supabase.from_("conversations").select("session_books").eq("id", req.conversation_id).single().execute()
-session_books = conv_meta.data.get("session_books") if conv_meta.data else None
-if session_books:
-    books_override = [{"title": b["title"], "author": b.get("author")} for b in session_books]
-    system_prompt = build_system_prompt(library_context, books_override=books_override)
-else:
-    system_prompt = build_system_prompt(library_context)
+    library_context = get_library_context(req.user_id)
+    conv_meta = supabase.from_("conversations").select("session_books").eq("id", req.conversation_id).single().execute()
+    session_books = conv_meta.data.get("session_books") if conv_meta.data else None
+    if session_books:
+        books_override = [{"title": b["title"], "author": b.get("author")} for b in session_books]
+        system_prompt = build_system_prompt(library_context, books_override=books_override)
+    else:
+        system_prompt = build_system_prompt(library_context)
 
     history.append({"role": "user", "content": req.message})
 
