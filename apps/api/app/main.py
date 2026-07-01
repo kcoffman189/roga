@@ -1185,7 +1185,8 @@ def generate_quotes_for_entry(entry_id: str, title: str, author: str):
         query = f"intitle:{title}"
         if author:
             query += f"+inauthor:{author}"
-        url = f"https://www.googleapis.com/books/v1/volumes?q={req_lib.utils.quote(query)}&printType=books&maxResults=5&key={GOOGLE_BOOKS_API_KEY}"
+        from urllib.parse import quote as url_quote
+        url = f"https://www.googleapis.com/books/v1/volumes?q={url_quote(query)}&printType=books&maxResults=5&key={GOOGLE_BOOKS_API_KEY}"
 
         snippets = []
         try:
@@ -1198,11 +1199,11 @@ def generate_quotes_for_entry(entry_id: str, title: str, author: str):
         except Exception:
             pass
 
-        author_str = author or "Unknown"
+        author_str = author.strip() if author and author.strip() else None
 
         if snippets:
             context = "\n\n".join(snippets)
-            prompt = f"""Below are publisher descriptions for "{title}" by {author_str}. Use these as context about the book's themes and content, along with your knowledge of the book, to produce 3-5 memorable standalone quotes or passages that:
+            prompt = f"""Below are publisher descriptions for "{title}" by {author_str or "the author"}. Use these as context about the book's themes and content, along with your knowledge of the book, to produce 3-5 memorable standalone quotes or passages that:
 - Capture a genuine insight, idea, or moment from the book
 - Stand completely alone without requiring context
 - Are between 1 and 3 sentences
@@ -1213,9 +1214,9 @@ Book descriptions for context:
 {context}
 
 Return ONLY a JSON array with no other text:
-[{{"quote": "quote text", "author": "{author_str}"}}, ...]"""
+[{{"quote": "quote text", "author": "{author_str or "the author"}"}}, ...]"""
         else:
-            prompt = f"""Produce 3-5 memorable standalone quotes from "{title}" by {author_str} that:
+            prompt = f"""Produce 3-5 memorable standalone quotes from "{title}" by {author_str or "the author"} that:
 - Capture a genuine insight, idea, or moment from the book
 - Stand completely alone without requiring context
 - Are between 1 and 3 sentences
@@ -1223,7 +1224,7 @@ Return ONLY a JSON array with no other text:
 - Are universally appropriate (no violence, sexual content, hate speech, profanity, or anything alarming out of context)
 
 Return ONLY a JSON array with no other text:
-[{{"quote": "quote text", "author": "{author_str}"}}, ...]"""
+[{{"quote": "quote text", "author": "{author_str or "the author"}"}}, ...]"""
 
         response = anthropic_client.messages.create(
             model="claude-sonnet-4-5",
