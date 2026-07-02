@@ -1061,7 +1061,8 @@ def start_conversation_stream(req: StartConversationRequest):
         # Create conversation record first
         conv_result = supabase.from_("conversations").insert({
             "user_id": req.user_id,
-            "title": "Untitled Conversation"
+            "title": "Untitled Conversation",
+            "session_books": tmsi_pool if tmsi_pool else None
         }).execute()
         conversation_id = conv_result.data[0]["id"]
 
@@ -1137,7 +1138,13 @@ def continue_conversation_stream(req: ContinueConversationRequest, background_ta
     print(f"[continue] is_first_response={is_first_response}, messages_in_history={len(result.data)}, req.message={req.message!r}", flush=True)
 
     library_context = get_library_context(req.user_id)
-    system_prompt = build_system_prompt(library_context)
+    conv_meta = supabase.from_("conversations").select("session_books").eq("id", req.conversation_id).single().execute()
+    session_books = conv_meta.data.get("session_books") if conv_meta.data else None
+    if session_books:
+        books_override = [{"title": b["title"], "author": b.get("author")} for b in session_books]
+        system_prompt = build_system_prompt(library_context, books_override=books_override)
+    else:
+        system_prompt = build_system_prompt(library_context)
 
     history.append({"role": "user", "content": req.message})
 
