@@ -199,7 +199,7 @@ export default function BottomTabBar() {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: active ? '#1a1a1a' : '#bbb',
+                color: active ? '#C45E0A' : '#B0ACA6',
                 fontSize: '10px',
                 fontFamily: 'sans-serif',
                 minHeight: '56px',
@@ -208,7 +208,7 @@ export default function BottomTabBar() {
               }}
             >
               <Icon size={20} strokeWidth={active ? 2.5 : 1.5} />
-              <span style={{ fontWeight: active ? '600' : '400' }}>{tab.label}</span>
+              <span style={{ fontWeight: active ? '500' : '400', color: active ? '#C45E0A' : '#B0ACA6' }}>{tab.label}</span>
             </button>
           )
         })}

@@ -10,6 +10,7 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [forgotOpen, setForgotOpen] = useState(false)
+  const [showLogin, setShowLogin] = useState(false)
   const [forgotEmail, setForgotEmail] = useState('')
   const [forgotStatus, setForgotStatus] = useState<'success' | 'error' | null>(null)
   const [forgotLoading, setForgotLoading] = useState(false)
@@ -326,7 +327,7 @@ export default function LandingPage() {
             />
 
             {/* Forgot password */}
-            {!forgotOpen && (
+            {showLogin && !forgotOpen &&(
               <button type="button" className="lp-forgot-link" onClick={() => setForgotOpen(true)}>
                 Forgot password?
               </button>
@@ -431,24 +432,23 @@ export default function LandingPage() {
               className="lp-btn"
               type="button"
               disabled={loading}
-              onClick={handleLogIn}
+              onClick={() => { if (!showLogin) { setShowLogin(true) } else { handleLogIn() } }}
               style={{
-                background: '#272C32',
-                color: '#EEECEA',
+                style={{
+                background: 'transparent',
+                color: '#6B6B6B',
                 fontFamily: 'Inter, sans-serif',
-                fontSize: '11px',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                padding: '13px 24px',
+                fontSize: '13px',
+                fontWeight: '400',
                 border: 'none',
-                borderRadius: '2px',
+                padding: '12px 0',
                 width: '100%',
+                textAlign: 'center' as const,
                 cursor: loading ? 'default' : 'pointer',
-                position: 'relative',
-                transition: 'background 150ms ease',
                 display: 'block',
-                boxSizing: 'border-box',
+                boxSizing: 'border-box' as const,
                 marginTop: '8px',
+                transition: 'color 150ms ease',
               }}
             >
               <span
@@ -461,7 +461,7 @@ export default function LandingPage() {
                   background: '#C45E0A',
                 }}
               />
-              {loading ? 'Loading...' : 'Log in'}
+              {loading ? 'Logging in...' : 'Log in'}
             </button>
 
             {error && (
