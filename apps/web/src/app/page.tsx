@@ -46,6 +46,7 @@ export default function LandingPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       setError(error.message)
+      setShowLogin(true)
       setLoading(false)
     } else {
       window.location.href = '/home'
@@ -432,7 +433,7 @@ export default function LandingPage() {
               className="lp-btn"
               type="button"
               disabled={loading}
-              onClick={() => { if (!showLogin) { setShowLogin(true) } else { handleLogIn() } }}
+              onClick={handleLogIn}
               style={{
                 background: 'transparent',
                 color: '#6B6B6B',
