@@ -89,12 +89,12 @@ export default function LandingPage() {
         }
       `}</style>
 
-      
+      {/* ── HERO ── */}
       <section
         className="lp-hero"
         style={{ display: 'flex', minHeight: 'auto' }}
       >
-        
+        {/* Sidebar */}
         <div
           className="lp-sidebar"
           style={{
@@ -120,7 +120,7 @@ export default function LandingPage() {
             }
           `}</style>
 
-          
+          {/* Top: wordmark */}
           <div style={{ display: 'block', marginBottom: '24px', width: '100%', maxWidth: '330px', marginLeft: '-12px' }}>
             <svg width="300" height="auto" viewBox="0 0 290 76" fill="none" xmlns="http://www.w3.org/2000/svg">
               <g transform="translate(14, 2)">
@@ -140,7 +140,7 @@ export default function LandingPage() {
             </svg>
           </div>
 
-          
+          {/* Bottom: library preview */}
           <div className="lp-sidebar-bottom">
             <div
               style={{
@@ -215,7 +215,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        
+        {/* Right column */}
         <div
           className="lp-hero-content"
           style={{
@@ -227,7 +227,7 @@ export default function LandingPage() {
             justifyContent: 'center',
           }}
         >
-          
+          {/* Headline */}
           <div>
             <div
               style={{
@@ -253,7 +253,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          
+          {/* Subheadline */}
           <p
             style={{
               fontFamily: 'Inter, sans-serif',
@@ -268,7 +268,7 @@ export default function LandingPage() {
             A thinking partner built around your personal library. Add the books you&apos;ve read. Let Cephos surface the threads between them.
           </p>
 
-          
+          {/* Divider */}
           <hr
             style={{
               width: '44px',
@@ -281,7 +281,7 @@ export default function LandingPage() {
             }}
           />
 
-          
+          {/* Signup form */}
           <form onSubmit={handleSignUp} style={{ maxWidth: '300px' }}>
             <input
               className="lp-input"
@@ -326,8 +326,8 @@ export default function LandingPage() {
               }}
             />
 
-            
-            {showLogin && !forgotOpen &&(
+            {/* Forgot password */}
+            {showLogin && !forgotOpen && (
               <button type="button" className="lp-forgot-link" onClick={() => setForgotOpen(true)}>
                 Forgot password?
               </button>
@@ -434,7 +434,6 @@ export default function LandingPage() {
               disabled={loading}
               onClick={() => { if (!showLogin) { setShowLogin(true) } else { handleLogIn() } }}
               style={{
-                style={{
                 background: 'transparent',
                 color: '#6B6B6B',
                 fontFamily: 'Inter, sans-serif',
@@ -443,10 +442,10 @@ export default function LandingPage() {
                 border: 'none',
                 padding: '12px 0',
                 width: '100%',
-                textAlign: 'center' as const,
+                textAlign: 'center',
                 cursor: loading ? 'default' : 'pointer',
                 display: 'block',
-                boxSizing: 'border-box' as const,
+                boxSizing: 'border-box',
                 marginTop: '8px',
                 transition: 'color 150ms ease',
               }}
@@ -473,7 +472,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      
+      {/* ── HOW IT WORKS ── */}
       <section
         className="lp-hiw"
         style={{
@@ -574,7 +573,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      
+      {/* ── FOOTER ── */}
       <footer
         className="lp-footer"
         style={{
