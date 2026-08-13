@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,6 +41,19 @@ function NewConversationInner() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const uid = userId || user.id
+
+// Check for prefetched TMSI response
+    if (mode === 'open') {
+      try {
+        const prefetchRes = await fetch(`${API_URL}/tmsi-prefetch/${uid}`)
+        const prefetchData = await prefetchRes.json()
+        if (prefetchData.prefetch) {
+          sessionStorage.setItem('tmsi_prefetch', prefetchData.prefetch)
+          router.push('/conversation/prefetch')
+          return
+        }
+      } catch {}
+    }
 
     const ctrl = new AbortController()
 
