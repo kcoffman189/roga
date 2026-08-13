@@ -913,8 +913,7 @@ def start_conversation(req: StartConversationRequest):
     # Store conversation
     conv_result = supabase.from_("conversations").insert({
         "user_id": req.user_id,
-        "title": "Untitled Conversation",
-        "session_books": json.loads(req.books_used) if req.books_used else None
+            "title": "Untitled Conversation",
     }).execute()
     conversation_id = conv_result.data[0]["id"]
 
@@ -1061,8 +1060,7 @@ def start_conversation_stream(req: StartConversationRequest, background_tasks: B
         # Create conversation record first
         conv_result = supabase.from_("conversations").insert({
             "user_id": req.user_id,
-        "title": "Untitled Conversation",
-        "session_books": json.loads(req.books_used) if req.books_used else None
+            "title": "Untitled Conversation",
             "session_books": tmsi_pool if tmsi_pool else None
         }).execute()
         conversation_id = conv_result.data[0]["id"]
@@ -1364,8 +1362,8 @@ def save_prefetch_conversation(req: SavePrefetchRequest):
         
         conv_result = supabase.from_("conversations").insert({
             "user_id": req.user_id,
-        "title": "Untitled Conversation",
-        "session_books": json.loads(req.books_used) if req.books_used else None
+            "title": "Untitled Conversation",
+            "session_books": json.loads(req.books_used) if req.books_used else None
         }).execute()
         conversation_id = conv_result.data[0]["id"]
 
