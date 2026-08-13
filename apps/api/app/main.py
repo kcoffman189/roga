@@ -1351,6 +1351,41 @@ def get_tmsi_prefetch(user_id: str):
     except Exception:
         return {"prefetch": None}
 
+class SavePrefetchRequest(BaseModel):
+    user_id: str
+    content: str
+
+@app.post("/conversation/save-prefetch")
+def save_prefetch_conversation(req: SavePrefetchRequest):
+    try:
+        user_message = "Surface something interesting from my library - an unexpected connection or a thread worth pulling on."
+        
+        conv_result = supabase.from_("conversations").insert({
+            "user_id": req.user_id,
+            "title": "Untitled Conversation"
+        }).execute()
+        conversation_id = conv_result.data[0]["id"]
+
+        supabase.from_("messages").insert({
+            "conversation_id": conversation_id,
+            "role": "user",
+            "content": user_message
+        }).execute()
+
+        supabase.from_("messages").insert({
+            "conversation_id": conversation_id,
+            "role": "assistant",
+            "content": req.content
+        }).execute()
+
+        title = generate_conversation_title(user_message, req.content)
+        supabase.from_("conversations").update({"title": title}).eq("id", conversation_id).execute()
+
+        return {"conversation_id": conversation_id, "title": title}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 def get_welcome_quote(user_id: str):
     import random
