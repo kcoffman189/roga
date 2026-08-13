@@ -985,7 +985,7 @@ def delete_conversation(conversation_id: str):
     return {"success": True}
 
 @app.post("/conversation/start/stream")
-def start_conversation_stream(req: StartConversationRequest):
+def start_conversation_stream(req: StartConversationRequest, background_tasks: BackgroundTasks):
     library_context = get_library_context(req.user_id)
 
     summary_result = supabase.from_("conversations").select("summary").eq("user_id", req.user_id).filter("summary", "not.is", "null").order("updated_at", desc=True).limit(4).execute()
@@ -1124,6 +1124,8 @@ def start_conversation_stream(req: StartConversationRequest):
             print(f"[stream] skipping title update â€” title not 'Untitled Conversation'", flush=True)
         yield f"data: {json.dumps({'type': 'done', 'conversation_id': conversation_id, 'title': title})}\n\n"
 
+    if req.mode == "open":
+        background_tasks.add_task(prefetch_tmsi, req.user_id)
     return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"})
 
 
@@ -1189,6 +1191,8 @@ def continue_conversation_stream(req: ContinueConversationRequest, background_ta
         yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
     background_tasks.add_task(run_summarisation_job, req.conversation_id, False)
+    if req.mode == "open":
+        background_tasks.add_task(prefetch_tmsi, req.user_id)
     return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"})
 
 
@@ -1283,6 +1287,71 @@ def trigger_generate_quotes(entry_id: str, background_tasks: BackgroundTasks):
 
 
 @app.get("/welcome-quote/{user_id}")
+def prefetch_tmsi(user_id: str):
+    try:
+        library_context = get_library_context(user_id)
+        if not library_context:
+            return
+
+        tmsi_result = compute_tmsi_scores(user_id)
+        tmsi_pool = tmsi_result.get("pool", [])
+        if not tmsi_pool:
+            return
+
+        summary_result = supabase.from_("conversations").select("summary").eq("user_id", user_id).filter("summary", "not.is", "null").order("updated_at", desc=True).limit(4).execute()
+        summaries = [r["summary"] for r in summary_result.data if r.get("summary")]
+        if summaries:
+            selected = []
+            total_tokens = 0
+            for s in summaries:
+                est = len(s) / 4
+                if total_tokens + est > 400:
+                    break
+                selected.append(f"- {s}")
+                total_tokens += est
+            recent_context = "Recent conversation context:\n" + "\n".join(selected) if selected else ""
+        else:
+            title_result = supabase.from_("conversations").select("title").eq("user_id", user_id).neq("title", "Untitled Conversation").order("updated_at", desc=True).limit(4).execute()
+            recent_titles = [r["title"] for r in title_result.data if r.get("title")]
+            recent_context = "Recent past conversations: " + ", ".join(recent_titles) if recent_titles else ""
+
+        system_prompt = build_system_prompt("", books_override=tmsi_pool, recent_context=recent_context)
+        user_message = "Surface something interesting from my library - an unexpected connection or a thread worth pulling on."
+
+        response = anthropic_client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=1000,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_message}]
+        )
+
+        content = response.content[0].text.strip()
+
+        supabase.from_("tmsi_prefetch").upsert({
+            "user_id": user_id,
+            "content": content,
+            "books_used": json.dumps([{"id": b["id"], "title": b["title"]} for b in tmsi_pool]),
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }, on_conflict="user_id").execute()
+
+        print(f"[prefetch] TMSI prefetch generated for user {user_id}", flush=True)
+    except Exception as e:
+        print(f"[prefetch] error for user {user_id}: {e}", flush=True)
+
+
+@app.get("/tmsi-prefetch/{user_id}")
+def get_tmsi_prefetch(user_id: str):
+    try:
+        result = supabase.from_("tmsi_prefetch").select("content, books_used, generated_at").eq("user_id", user_id).single().execute()
+        if not result.data:
+            return {"prefetch": None}
+        content = result.data["content"]
+        supabase.from_("tmsi_prefetch").delete().eq("user_id", user_id).execute()
+        return {"prefetch": content}
+    except Exception:
+        return {"prefetch": None}
+
+
 def get_welcome_quote(user_id: str):
     import random
 
@@ -1668,6 +1737,8 @@ def start_group_conversation_stream(req: StartGroupConversationRequest):
 
         yield f"data: {json.dumps({'type': 'done', 'conversation_id': conversation_id, 'title': title})}\n\n"
 
+    if req.mode == "open":
+        background_tasks.add_task(prefetch_tmsi, req.user_id)
     return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"})
 
 
@@ -1720,6 +1791,8 @@ def continue_group_conversation_stream(req: ContinueGroupConversationRequest, ba
         yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
     background_tasks.add_task(run_summarisation_job, req.conversation_id, True)
+    if req.mode == "open":
+        background_tasks.add_task(prefetch_tmsi, req.user_id)
     return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"})
 
 
