@@ -21,8 +21,10 @@ export default function PrefetchConversationPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { window.location.href = '/login'; return }
 
-      const prefetch = sessionStorage.getItem('tmsi_prefetch')
+const prefetch = sessionStorage.getItem('tmsi_prefetch')
+      const booksUsed = sessionStorage.getItem('tmsi_books_used')
       sessionStorage.removeItem('tmsi_prefetch')
+      sessionStorage.removeItem('tmsi_books_used')
 
       if (!prefetch) {
         router.push('/conversation/new?mode=open')
@@ -33,7 +35,7 @@ export default function PrefetchConversationPage() {
         const res = await fetch(`${API_URL}/conversation/save-prefetch`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: user.id, content: prefetch })
+          body: JSON.stringify({ user_id: user.id, content: prefetch, books_used: booksUsed })
         })
         const data = await res.json()
         if (data.conversation_id) {
