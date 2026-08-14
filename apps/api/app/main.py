@@ -121,6 +121,7 @@ def _familiarity_label(entry: dict) -> str:
 def get_library_context(user_id: str) -> str:
     result = supabase.from_("library_entries").select("title, familiarity_score, is_unread, notes").eq("user_id", user_id).execute()
     entries = result.data
+    print(f'[welcome-quote] entries count: {len(entries) if entries else 0}', flush=True)
     if not entries:
         return "The user has not added any books to their library yet."
     lines = []
@@ -1393,6 +1394,7 @@ def get_welcome_quote(user_id: str):
 
     result = supabase.from_("library_entries").select("id, title, author, familiarity_score, is_unread").eq("user_id", user_id).execute()
     entries = result.data
+    print(f'[welcome-quote] entries count: {len(entries) if entries else 0}', flush=True)
     if not entries:
         return {"quote": None, "author": None, "empty_library": True}
 
@@ -1401,6 +1403,7 @@ def get_welcome_quote(user_id: str):
 
     quotes_result = supabase.from_("book_quotes").select("quote, author").in_("library_entry_id", top_ids).execute()
     quotes = quotes_result.data
+    print(f'[welcome-quote] quotes count: {len(quotes) if quotes else 0}, top_ids: {top_ids}', flush=True)
 
     if quotes:
         chosen = random.choice(quotes)
