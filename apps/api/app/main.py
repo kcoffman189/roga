@@ -121,7 +121,6 @@ def _familiarity_label(entry: dict) -> str:
 def get_library_context(user_id: str) -> str:
     result = supabase.from_("library_entries").select("title, familiarity_score, is_unread, notes").eq("user_id", user_id).execute()
     entries = result.data
-    print(f'[welcome-quote] entries count: {len(entries) if entries else 0}', flush=True)
     if not entries:
         return "The user has not added any books to their library yet."
     lines = []
@@ -1286,7 +1285,6 @@ def trigger_generate_quotes(entry_id: str, background_tasks: BackgroundTasks):
     return {"status": "queued"}
 
 
-@app.get("/welcome-quote/{user_id}")
 def prefetch_tmsi(user_id: str):
     try:
         library_context = get_library_context(user_id)
@@ -1389,12 +1387,12 @@ def save_prefetch_conversation(req: SavePrefetchRequest):
 
 
 
+@app.get("/welcome-quote/{user_id}")
 def get_welcome_quote(user_id: str):
     import random
 
     result = supabase.from_("library_entries").select("id, title, author, familiarity_score, is_unread").eq("user_id", user_id).execute()
     entries = result.data
-    print(f'[welcome-quote] entries count: {len(entries) if entries else 0}', flush=True)
     if not entries:
         return {"quote": None, "author": None, "empty_library": True}
 
