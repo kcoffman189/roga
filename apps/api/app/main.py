@@ -1345,7 +1345,8 @@ def get_tmsi_prefetch(user_id: str):
             return {"prefetch": None}
         content = result.data["content"]
         supabase.from_("tmsi_prefetch").delete().eq("user_id", user_id).execute()
-        return {"prefetch": content}
+        books_used = result.data.get("books_used")
+        return {"prefetch": content, "books_used": books_used}
     except Exception:
         return {"prefetch": None}
 

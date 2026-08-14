@@ -49,7 +49,7 @@ function NewConversationInner() {
         const prefetchData = await prefetchRes.json()
         if (prefetchData.prefetch) {
           sessionStorage.setItem('tmsi_prefetch', prefetchData.prefetch)
-          if (prefetchData.books_used) sessionStorage.setItem('tmsi_books_used', prefetchData.books_used)
+          if (prefetchData.books_used) sessionStorage.setItem('tmsi_books_used', JSON.stringify(prefetchData.books_used))
           router.push('/conversation/prefetch')
           return
         }
