@@ -1123,8 +1123,7 @@ def start_conversation_stream(req: StartConversationRequest, background_tasks: B
             print(f"[stream] skipping title update â€” title not 'Untitled Conversation'", flush=True)
         yield f"data: {json.dumps({'type': 'done', 'conversation_id': conversation_id, 'title': title})}\n\n"
 
-    if req.mode == "open":
-        background_tasks.add_task(prefetch_tmsi, req.user_id)
+    background_tasks.add_task(prefetch_tmsi, req.user_id)
     return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"})
 
 
@@ -1651,7 +1650,7 @@ def get_group_books(group_id: str) -> list:
 # --- Group Conversation Routes ---
 
 @app.post("/group-conversation/start/stream")
-def start_group_conversation_stream(req: StartGroupConversationRequest):
+def start_group_conversation_stream(req: StartGroupConversationRequest, background_tasks: BackgroundTasks):
     summary_result = supabase.from_("group_conversations").select("summary").eq("group_id", req.group_id).filter("summary", "not.is", "null").order("updated_at", desc=True).limit(4).execute()
     summaries = [r["summary"] for r in summary_result.data if r.get("summary")]
 
@@ -1774,8 +1773,7 @@ def start_group_conversation_stream(req: StartGroupConversationRequest):
 
         yield f"data: {json.dumps({'type': 'done', 'conversation_id': conversation_id, 'title': title})}\n\n"
 
-    if req.mode == "open":
-        background_tasks.add_task(prefetch_tmsi, req.user_id)
+    background_tasks.add_task(prefetch_tmsi, req.user_id)
     return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"})
 
 
