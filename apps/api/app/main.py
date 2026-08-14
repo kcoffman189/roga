@@ -1190,8 +1190,7 @@ def continue_conversation_stream(req: ContinueConversationRequest, background_ta
         yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
     background_tasks.add_task(run_summarisation_job, req.conversation_id, False)
-    if req.mode == "open":
-        background_tasks.add_task(prefetch_tmsi, req.user_id)
+    background_tasks.add_task(prefetch_tmsi, req.user_id)
     return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"})
 
 
@@ -1829,8 +1828,7 @@ def continue_group_conversation_stream(req: ContinueGroupConversationRequest, ba
         yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
     background_tasks.add_task(run_summarisation_job, req.conversation_id, True)
-    if req.mode == "open":
-        background_tasks.add_task(prefetch_tmsi, req.user_id)
+    background_tasks.add_task(prefetch_tmsi, req.user_id)
     return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"})
 
 
