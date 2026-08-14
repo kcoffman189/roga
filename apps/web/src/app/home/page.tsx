@@ -1,4 +1,4 @@
-// force redeploy
+﻿// force redeploy
 'use client'
 
 export const dynamic = 'force-dynamic'
@@ -88,19 +88,21 @@ export default function Home() {
       if (!user) { window.location.href = '/login'; return }
       setUserId(user.id)
 
-      const [convsRes, quoteRes, profileRes] = await Promise.all([
+      const [convsRes, profileRes] = await Promise.all([
         fetch(`${API_URL}/conversations/${user.id}`),
-        fetch(`${API_URL}/welcome-quote/${user.id}`),
         supabase.from('user_profiles').select('groups_intro_card_seen').eq('id', user.id).single()
       ])
       const convsData = await convsRes.json()
-      const quoteData = await quoteRes.json()
       setConversations(convsData.conversations || [])
-      setWelcome(quoteData)
       if (profileRes.data && profileRes.data.groups_intro_card_seen === false) {
         setShowGroupsIntroCard(true)
       }
       setLoading(false)
+      // Load welcome quote separately so it doesn't block page render
+      fetch(`${API_URL}/welcome-quote/${user.id}`)
+        .then(r => r.json())
+        .then(quoteData => setWelcome(quoteData))
+        .catch(() => {})
     }
     init()
   }, [])
@@ -344,13 +346,13 @@ export default function Home() {
                 onClick={() => { setShowFeedback(false); setFeedbackText(''); setFeedbackStatus('idle') }}
                 style={{ background: 'none', border: 'none', fontSize: '22px', color: '#6B6B6B', cursor: 'pointer', lineHeight: 1 }}
               >
-                ×
+                Ã—
               </button>
             </div>
 
             {feedbackStatus === 'success' ? (
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#6B6B6B', textAlign: 'center', padding: '24px 0' }}>
-                Thanks — feedback sent.
+                Thanks â€” feedback sent.
               </p>
             ) : (
               <>
