@@ -30,6 +30,16 @@ function NewConversationInner() {
       }
       if (mode === 'open' && !hasStarted.current) {
         hasStarted.current = true
+        try {
+          const prefetchRes = await fetch(`${API_URL}/tmsi-prefetch/${user.id}`)
+          const prefetchData = await prefetchRes.json()
+          if (prefetchData.prefetch) {
+            sessionStorage.setItem('tmsi_prefetch', prefetchData.prefetch)
+            if (prefetchData.books_used) sessionStorage.setItem('tmsi_books_used', JSON.stringify(prefetchData.books_used))
+            router.push('/conversation/prefetch')
+            return
+          }
+        } catch {}
         handleStart(user.id)
       }
     }
@@ -41,20 +51,6 @@ function NewConversationInner() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const uid = userId || user.id
-
-// Check for prefetched TMSI response
-    if (mode === 'open') {
-      try {
-        const prefetchRes = await fetch(`${API_URL}/tmsi-prefetch/${uid}`)
-        const prefetchData = await prefetchRes.json()
-        if (prefetchData.prefetch) {
-          sessionStorage.setItem('tmsi_prefetch', prefetchData.prefetch)
-          if (prefetchData.books_used) sessionStorage.setItem('tmsi_books_used', JSON.stringify(prefetchData.books_used))
-          router.push('/conversation/prefetch')
-          return
-        }
-      } catch {}
-    }
 
     const ctrl = new AbortController()
 
