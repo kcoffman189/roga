@@ -144,12 +144,7 @@ export default function Home() {
         </div>
       )
     }
-    return (
-      <div style={{ textAlign: 'center', padding: '48px' }}>
-        <div style={{ fontFamily: 'Georgia, serif', fontSize: '22px', fontWeight: '400', color: 'var(--color-text-primary)', marginBottom: '8px' }}>Good to see you.</div>
-        <div style={{ fontSize: '15px', color: 'var(--color-text-secondary)' }}>Start a conversation or pick up where you left off.</div>
-      </div>
-    )
+    return null
   }
 
   if (isMobile) {
