@@ -190,7 +190,7 @@ export default function GroupViewPage() {
       }}>
         <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '3px', background: 'var(--color-accent)' }} />
 
-        <div style={{ display: 'block', marginBottom: '28px', width: '100%', maxWidth: '330px', marginLeft: '-12px' }}>
+        <a href="/home" style={{ display: 'block', marginBottom: '28px', width: '100%', maxWidth: '330px', marginLeft: '-12px', cursor: 'pointer' }}>
           <svg width="300" height="auto" viewBox="0 0 290 76" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g transform="translate(14, 2)">
               <g transform="rotate(-30 24 24)">
@@ -207,7 +207,7 @@ export default function GroupViewPage() {
             <text x="62" y="42" fontFamily="Georgia, serif" fontSize="40" fontWeight="700" fill="#EEECEA">Cephos</text>
             <text x="62" y="63" fontFamily="Inter, Arial, sans-serif" fontSize="9" fontWeight="500" letterSpacing="1.5" fill="#C45E0A">MANY BOOKS. ONE MIND.</text>
           </svg>
-        </div>
+        </a>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingLeft: '2px', marginBottom: '16px', cursor: 'pointer' }}
           onClick={() => router.push(`/groups/${groupId}/edit`)}>
