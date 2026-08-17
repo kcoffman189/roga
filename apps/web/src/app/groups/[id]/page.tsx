@@ -190,7 +190,7 @@ export default function GroupViewPage() {
       }}>
         <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '3px', background: 'var(--color-accent)' }} />
 
-        <a href="/home" style={{ display: 'block', marginBottom: '28px', width: '100%', maxWidth: '330px', marginLeft: '-12px', cursor: 'pointer' }}>
+        <a href="/groups" style={{ display: 'block', marginBottom: '28px', width: '100%', maxWidth: '330px', marginLeft: '-12px', cursor: 'pointer' }}>
           <svg width="300" height="auto" viewBox="0 0 290 76" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g transform="translate(14, 2)">
               <g transform="rotate(-30 24 24)">
