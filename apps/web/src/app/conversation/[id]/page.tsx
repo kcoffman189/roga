@@ -128,6 +128,16 @@ function ConversationInner() {
     setLoading(false)
   }
 
+const renderContent = (text: string) => {
+    return text
+      .replace(/â€"/g, '\u2014')
+      .replace(/â€˜/g, '\u2018')
+      .replace(/â€™/g, '\u2019')
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/_(.*?)_/g, '$1')
+  }
+
   const sendMessage = async () => {
     if (!input.trim() || !userId || !conversationId || loading) return
     const userMessage = input.trim()
@@ -207,7 +217,7 @@ function ConversationInner() {
                   {msg.role === 'user' ? 'You' : 'Cephos'}
                 </div>
                 <div style={{ fontSize: '15px', lineHeight: '1.6', color: 'var(--color-text-primary)', whiteSpace: 'pre-wrap' }}>
-                  {msg.content}
+                  {renderContent(msg.content)}
                   {msg.streaming && <span style={{ opacity: 0.5 }}>▊</span>}
                 </div>
               </div>
