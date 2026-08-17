@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import BottomTabBar from '@/components/BottomTabBar'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { Pencil } from 'lucide-react'
+import CephosLogo from '@/components/CephosLogo'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://roga-api.fly.dev'
 
@@ -248,8 +249,9 @@ export default function LibraryPage() {
         className="sidebar-panel"
         style={{ display: isMobile ? 'none' : 'flex', width: '260px', flexDirection: 'column', padding: '22px 20px', flexShrink: 0 }}
       >
-        <div onClick={() => router.push('/home')} style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '58px', letterSpacing: '-0.02em', color: 'var(--color-text-on-dark)', lineHeight: 1, cursor: 'pointer' }}>Cephos</div>
-        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-text-subtle-dark)', marginTop: '5px', marginBottom: '28px' }}>Beta</div>
+        <div onClick={() => router.push('/home')} style={{ marginBottom: '28px', cursor: 'pointer', marginLeft: '-12px' }}>
+          <CephosLogo />
+        </div>
 
         <button onClick={() => router.push('/conversation/new?mode=intentional')} className="sidebar-cta-primary">
           Let&apos;s dig into something

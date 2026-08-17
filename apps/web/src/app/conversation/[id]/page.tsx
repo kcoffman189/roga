@@ -8,6 +8,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import CephosLogo from '@/components/CephosLogo'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
@@ -186,10 +187,9 @@ const renderContent = (text: string) => {
 
       {/* Left Panel — desktop only */}
       <div className="sidebar-panel" style={{ display: isMobile ? 'none' : 'flex', width: '260px', flexDirection: 'column', padding: '22px 20px' }}>
-        <div
-          style={{ fontFamily: 'Georgia, serif', fontWeight: '400', fontSize: '58px', letterSpacing: '-0.02em', color: 'var(--color-text-on-dark)', lineHeight: 1, marginBottom: '28px', cursor: 'pointer' }}
-          onClick={() => router.push('/home')}
-        >Cephos</div>
+        <div onClick={() => router.push('/home')} style={{ marginBottom: '28px', cursor: 'pointer', marginLeft: '-12px' }}>
+          <CephosLogo />
+        </div>
         <button onClick={() => router.push('/conversation/new?mode=intentional')} className="sidebar-cta-primary">
           Let&apos;s dig into something
         </button>

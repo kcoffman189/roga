@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import ConversationGroupedList from '@/components/ConversationGroupedList'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import BottomTabBar from '@/components/BottomTabBar'
+import CephosLogo from '@/components/CephosLogo'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://roga-api.fly.dev'
 
@@ -87,9 +88,9 @@ export default function ConversationsPage() {
     <div style={{ display: 'flex', height: '100vh', background: 'var(--color-bg-canvas)' }}>
       {/* Left Panel */}
       <div className="sidebar-panel" style={{ width: '260px', display: 'flex', flexDirection: 'column', padding: '22px 20px' }}>
-        <div style={{ marginBottom: '24px' }}>
-          <a href="/home" style={{ fontFamily: 'Georgia, serif', fontSize: '22px', fontWeight: '700', color: 'var(--color-text-on-dark)', textDecoration: 'none' }}>Cephos</a>
-        </div>
+        <a href="/home" style={{ display: 'block', marginBottom: '24px', marginLeft: '-12px' }}>
+          <CephosLogo />
+        </a>
         <button
           onClick={() => router.push('/home')}
           className="sidebar-nav-link"
