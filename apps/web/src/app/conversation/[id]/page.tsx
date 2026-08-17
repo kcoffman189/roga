@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -130,9 +130,10 @@ function ConversationInner() {
 
 const renderContent = (text: string) => {
     return text
-      .replace(/â€"/g, '\u2014')
-      .replace(/â€˜/g, '\u2018')
-      .replace(/â€™/g, '\u2019')
+      .replace(/\u00e2\u0080\u0093/g, '\u2013')
+      .replace(/\u00e2\u0080\u0094/g, '\u2014')
+      .replace(/\u00e2\u0080\u0098/g, '\u2018')
+      .replace(/\u00e2\u0080\u0099/g, '\u2019')
       .replace(/\*\*(.*?)\*\*/g, '$1')
       .replace(/\*(.*?)\*/g, '$1')
       .replace(/_(.*?)_/g, '$1')
