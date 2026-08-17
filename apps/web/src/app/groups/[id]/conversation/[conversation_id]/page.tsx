@@ -135,6 +135,16 @@ function GroupConversationInner() {
     await streamContinue(conversationId, userId, userMessage)
   }
 
+const renderContent = (text: string) => {
+    return text
+      .replace(/â€"/g, '\u2014')
+      .replace(/â€˜/g, '\u2018')
+      .replace(/â€™/g, '\u2019')
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/_(.*?)_/g, '$1')
+  }
+
   const handleDelete = async () => {
     if (!window.confirm('Delete this conversation? This cannot be undone.')) return
     await fetch(`${API_URL}/group-conversation/${conversationId}`, { method: 'DELETE' })
@@ -253,7 +263,7 @@ function GroupConversationInner() {
                     {msg.role === 'user' ? 'You' : 'Cephos'}
                   </div>
                   <div style={{ fontSize: '15px', lineHeight: '1.6', color: 'var(--color-text-primary)', whiteSpace: 'pre-wrap' }}>
-                    {msg.content}
+                    {renderContent(msg.content)}
                     {msg.streaming && <span style={{ opacity: 0.5 }}>▊</span>}
                   </div>
                 </div>
