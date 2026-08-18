@@ -185,23 +185,23 @@ export default function Home() {
         {/* Mobile Content */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingTop: '84px', paddingBottom: '80px' }}>
           <div style={{ marginBottom: '24px' }}>{renderWelcome()}</div>
-          <button
-            onClick={() => startConversation('intentional')}
-            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '9px', background: 'transparent', border: 'none', borderLeft: '3px solid var(--color-accent)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '15px', color: 'var(--color-text-primary)', cursor: 'pointer', minHeight: '44px' }}
-          >
-            Let&apos;s dig into something
-          </button>
-          <button
+                    <button
             onClick={() => startConversation('open')}
-            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '9px', background: 'transparent', border: 'none', borderLeft: '1px solid var(--color-border-light)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '15px', color: 'var(--color-text-secondary)', cursor: 'pointer', minHeight: '44px' }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '9px', background: 'transparent', border: 'none', borderLeft: '3px solid var(--color-accent)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '15px', color: 'var(--color-text-primary)', cursor: 'pointer', minHeight: '44px' }}
           >
             Tell me something interesting
           </button>
           <button
             onClick={() => router.push('/groups')}
-            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '32px', background: 'transparent', border: 'none', borderLeft: '1px solid var(--color-border-light)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '15px', color: 'var(--color-text-secondary)', cursor: 'pointer', minHeight: '44px' }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '9px', background: 'transparent', border: 'none', borderLeft: '1px solid var(--color-border-light)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '15px', color: 'var(--color-text-secondary)', cursor: 'pointer', minHeight: '44px' }}
           >
             Groups
+          </button>
+          <button
+            onClick={() => startConversation('intentional')}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: '32px', background: 'transparent', border: 'none', borderLeft: '1px solid var(--color-border-light)', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '15px', color: 'var(--color-text-secondary)', cursor: 'pointer', minHeight: '44px' }}
+          >
+            Let&apos;s dig into something
           </button>
 
           <div id="mobile-conversations">
@@ -251,17 +251,10 @@ export default function Home() {
           </svg>
         </div>
 
-        <button
-          ref={digInRef}
-          onClick={() => startConversation('intentional')}
-          className="sidebar-cta-primary"
-        >
-          Let&apos;s dig into something
-        </button>
-        <button
+                <button
           ref={interestingRef}
           onClick={() => startConversation('open')}
-          className="sidebar-cta-secondary"
+          className="sidebar-cta-primary"
         >
           Tell me something interesting
         </button>
@@ -272,6 +265,13 @@ export default function Home() {
           style={showGroupsIntroCard ? { outline: '2px solid #c8a96e', outlineOffset: '2px' } : undefined}
         >
           Groups
+        </button>
+        <button
+          ref={digInRef}
+          onClick={() => startConversation('intentional')}
+          className="sidebar-cta-secondary"
+        >
+          Let&apos;s dig into something
         </button>
 
         <hr style={{ border: 'none', borderTop: '1px solid var(--color-border-dark)', margin: '16px 0' }} />
