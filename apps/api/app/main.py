@@ -54,7 +54,7 @@ TMSI_FAMILIARITY_L5 = 28
 TMSI_RECENCY_PENALTY_2  = -35   # Used in last 2 conversations
 TMSI_RECENCY_PENALTY_6  = -15   # Used in last 3-6 conversations
 TMSI_RECENCY_PENALTY_12 = -5    # Used in last 7-12 conversations
-TMSI_RECENCY_BONUS      = 10    # Not used in last 12+ conversations
+TMSI_RECENCY_BONUS      = 100    # Not used in last 12+ conversations
 
 # --- UNREAD BOOK BONUS ---
 TMSI_UNREAD_BONUS = 12
