@@ -283,7 +283,7 @@ export default function LandingPage() {
           />
 
           {/* Signup form */}
-          <form onSubmit={handleSignUp} style={{ maxWidth: '300px' }}>
+            <form onSubmit={(e) => { e.preventDefault(); handleLogIn() }} style={{ maxWidth: '300px' }}>
             <input
               className="lp-input"
               type="email"
@@ -355,32 +355,7 @@ export default function LandingPage() {
                     display: 'block',
                   }}
                 />
-                <button
-                  type="button"
-                  className="lp-btn"
-                  onClick={handleForgotPassword}
-                  disabled={forgotLoading}
-                  style={{
-                    background: '#272C32',
-                    color: '#EEECEA',
-                    fontFamily: 'Inter, sans-serif',
-                    fontSize: '11px',
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    padding: '13px 24px',
-                    border: 'none',
-                    borderRadius: '2px',
-                    width: '100%',
-                    cursor: forgotLoading ? 'default' : 'pointer',
-                    position: 'relative',
-                    transition: 'background 150ms ease',
-                    display: 'block',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: '#C45E0A' }} />
-                  {forgotLoading ? 'Sending...' : 'Send reset link'}
-                </button>
+                
               </div>
             )}
             {forgotOpen && forgotStatus === 'success' && (
@@ -393,8 +368,7 @@ export default function LandingPage() {
                 Something went wrong. Please try again.
               </p>
             )}
-
-            <button
+	                <button
               className="lp-btn"
               type="submit"
               disabled={loading}
@@ -416,24 +390,14 @@ export default function LandingPage() {
                 boxSizing: 'border-box',
               }}
             >
-              <span
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: '3px',
-                  background: '#C45E0A',
-                }}
-              />
-              {loading ? 'Joining...' : 'Join the beta'}
+              <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: '#C45E0A' }} />
+              {loading ? 'Logging in...' : 'Log in'}
             </button>
-
             <button
               className="lp-btn"
               type="button"
               disabled={loading}
-              onClick={handleLogIn}
+              onClick={handleSignUp}
               style={{
                 background: 'transparent',
                 color: '#6B6B6B',
@@ -452,19 +416,9 @@ export default function LandingPage() {
                 transition: 'color 150ms ease',
               }}
             >
-              <span
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: '3px',
-                  background: '#C45E0A',
-                }}
-              />
-              {loading ? 'Logging in...' : 'Log in'}
+              Create account
             </button>
-
+            
             {error && (
               <p style={{ fontSize: '12px', color: '#C45E0A', marginTop: '8px', marginBottom: 0 }}>
                 {error}
