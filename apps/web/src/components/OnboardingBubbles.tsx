@@ -3,13 +3,13 @@
 import { useEffect, useRef, useState, RefObject } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-// A/B test flag: swap indices here to reorder steps without structural changes
-const STEP_ORDER = [1, 2, 3]
+const STEP_ORDER = [1, 2, 3, 4]
 
 const STEP_COPY: Record<number, string> = {
-  1: "Start by adding the books you've been reading, thinking about, or just finished. Aim for 5 to 10 — the more you add, the richer things get.",
-  2: "This is where you go when you want to explore a specific book, a chapter you just read, or a connection that's been on your mind. Start a conversation and see where it goes.",
-  3: "This is Cephos at its most interesting. Ask it to surface something unexpected from your library — a connection you hadn't made, a tension between two things you've read. It gets better the more your library grows.",
+  1: "Start by adding the books you've been reading, thinking about, or just finished. Aim for 5 to 10 - the more you add, the richer things get.",
+  2: "This is Cephos at its most interesting. Ask it to surface something unexpected from your library - a connection you hadn't made, a tension between two things you've read. It gets better the more your library grows.",
+  3: "Groups let you scope a conversation to a subset of your library. Useful when you want Cephos thinking about a specific set of books rather than everything you've read.",
+  4: "This is where you go when you want to explore a specific book, a chapter you just read, or a connection that's been on your mind. Start a conversation and see where it goes.",
 }
 
 type Props = {
@@ -18,16 +18,17 @@ type Props = {
   libraryRef: RefObject<HTMLAnchorElement | null>
   digInRef: RefObject<HTMLButtonElement | null>
   interestingRef: RefObject<HTMLButtonElement | null>
+  groupsRef?: RefObject<HTMLButtonElement | null>
   onComplete?: () => void
 }
 
-export default function OnboardingBubbles({ userId, supabase, libraryRef, digInRef, interestingRef, onComplete }: Props) {
+export default function OnboardingBubbles({ userId, supabase, libraryRef, digInRef, interestingRef, groupsRef, onComplete }: Props) {
   const [step, setStep] = useState<number | null>(null)
   const [complete, setComplete] = useState(false)
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const advancingRef = useRef(false)
 
-  // Load or create user_profiles row on first load
   useEffect(() => {
     if (!userId) return
     ;(async () => {
@@ -38,7 +39,6 @@ export default function OnboardingBubbles({ userId, supabase, libraryRef, digInR
         .maybeSingle()
 
       if (!data) {
-        // Pre-trigger user: insert row manually
         const { data: inserted } = await supabase
           .from('user_profiles')
           .insert({ id: userId, onboarding_step: 1, onboarding_complete: false })
@@ -55,12 +55,15 @@ export default function OnboardingBubbles({ userId, supabase, libraryRef, digInR
     })()
   }, [userId])
 
-  // Update highlight rect when active step changes
+  const refsForStep = (s: number) => {
+    const idx = STEP_ORDER.indexOf(s)
+    const refs = [libraryRef, interestingRef, groupsRef, digInRef]
+    return refs[idx]
+  }
+
   useEffect(() => {
     if (complete || step === null) return
-    const stepIndex = STEP_ORDER.indexOf(step)
-    const refs = [libraryRef, digInRef, interestingRef]
-    const el = refs[stepIndex]?.current
+    const el = refsForStep(step)?.current
 
     const updateRect = () => {
       if (el) setTargetRect(el.getBoundingClientRect())
@@ -74,7 +77,6 @@ export default function OnboardingBubbles({ userId, supabase, libraryRef, digInR
     }
   }, [step, complete])
 
-  // Step 1: poll library count every 5s, advance automatically at 3 books
   useEffect(() => {
     if (step !== STEP_ORDER[0]) return
 
@@ -83,7 +85,7 @@ export default function OnboardingBubbles({ userId, supabase, libraryRef, digInR
         .from('library_entries')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
-      if (count !== null && count >= 3) {
+      if (count !== null && count >= 1) {
         if (pollRef.current) clearInterval(pollRef.current)
         await advance(STEP_ORDER[0])
       }
@@ -94,12 +96,9 @@ export default function OnboardingBubbles({ userId, supabase, libraryRef, digInR
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [step])
 
-  // Steps 2 & 3: advance when the target button is clicked
   useEffect(() => {
-    if (step !== STEP_ORDER[1] && step !== STEP_ORDER[2]) return
-    const stepIndex = STEP_ORDER.indexOf(step)
-    const refs = [libraryRef, digInRef, interestingRef]
-    const el = refs[stepIndex]?.current
+    if (step === null || step === STEP_ORDER[0]) return
+    const el = refsForStep(step)?.current
     if (!el) return
 
     const handler = () => { advance(step) }
@@ -108,8 +107,11 @@ export default function OnboardingBubbles({ userId, supabase, libraryRef, digInR
   }, [step])
 
   const advance = async (currentStep: number) => {
+    if (advancingRef.current) return
+    advancingRef.current = true
+
     const idx = STEP_ORDER.indexOf(currentStep)
-    if (idx === -1) return
+    if (idx === -1) { advancingRef.current = false; return }
     const isLast = idx === STEP_ORDER.length - 1
 
     if (isLast) {
@@ -127,16 +129,17 @@ export default function OnboardingBubbles({ userId, supabase, libraryRef, digInR
         .eq('id', userId)
       setStep(next)
     }
+    advancingRef.current = false
   }
 
   if (complete || step === null || !targetRect) return null
 
   const stepIndex = STEP_ORDER.indexOf(step)
   const total = STEP_ORDER.length
+  const showNext = true
 
   return (
     <>
-      {/* Highlight ring around target element */}
       <div
         style={{
           position: 'fixed',
@@ -151,7 +154,6 @@ export default function OnboardingBubbles({ userId, supabase, libraryRef, digInR
         }}
       />
 
-      {/* Numbered bubble + tooltip */}
       <div
         style={{
           position: 'fixed',
@@ -163,7 +165,6 @@ export default function OnboardingBubbles({ userId, supabase, libraryRef, digInR
           gap: '10px',
         }}
       >
-        {/* Number circle */}
         <div
           style={{
             width: '26px',
@@ -183,7 +184,6 @@ export default function OnboardingBubbles({ userId, supabase, libraryRef, digInR
           {stepIndex + 1}
         </div>
 
-        {/* Tooltip card */}
         <div
           style={{
             background: '#fff',
@@ -209,6 +209,25 @@ export default function OnboardingBubbles({ userId, supabase, libraryRef, digInR
           <div style={{ fontSize: '13px', color: '#3a3028', lineHeight: '1.65' }}>
             {STEP_COPY[step]}
           </div>
+          {showNext && (
+            <button
+              onClick={() => advance(step)}
+              style={{
+                marginTop: '12px',
+                background: 'transparent',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '12px',
+                fontWeight: '600',
+                color: '#C45E0A',
+                letterSpacing: '0.04em',
+              }}
+            >
+              {stepIndex === total - 1 ? 'Done' : 'Next'}
+            </button>
+          )}
         </div>
       </div>
     </>

@@ -7,7 +7,6 @@ import { createSupabaseClient } from '@/lib/supabase/client'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import OnboardingBubbles from '@/components/OnboardingBubbles'
-import GroupsIntroCard from '@/components/GroupsIntroCard'
 import BottomTabBar from '@/components/BottomTabBar'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import ConversationGroupedList from '@/components/ConversationGroupedList'
@@ -317,14 +316,6 @@ export default function Home() {
           interestingRef={interestingRef}
           groupsRef={groupsButtonRef}
           onComplete={handleOnboardingComplete}
-        />
-      )}
-      {showGroupsIntroCard && userId && (
-        <GroupsIntroCard
-          groupsButtonRef={groupsButtonRef}
-          supabase={supabase}
-          userId={userId}
-          onDismiss={() => setShowGroupsIntroCard(false)}
         />
       )}
 
