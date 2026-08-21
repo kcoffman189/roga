@@ -261,7 +261,6 @@ export default function Home() {
           ref={groupsButtonRef}
           onClick={() => router.push('/groups')}
           className="sidebar-cta-secondary"
-          style={showGroupsIntroCard ? { outline: '2px solid #c8a96e', outlineOffset: '2px' } : undefined}
         >
           Groups
         </button>
