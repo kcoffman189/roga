@@ -315,6 +315,7 @@ export default function Home() {
           libraryRef={libraryRef}
           digInRef={digInRef}
           interestingRef={interestingRef}
+          groupsRef={groupsButtonRef}
           onComplete={handleOnboardingComplete}
         />
       )}
