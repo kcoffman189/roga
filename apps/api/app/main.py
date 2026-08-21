@@ -945,6 +945,13 @@ def continue_conversation(req: ContinueConversationRequest):
     library_context = get_library_context(req.user_id)
     conv_meta = supabase.from_("conversations").select("session_books").eq("id", req.conversation_id).single().execute()
     session_books = conv_meta.data.get("session_books") if conv_meta.data else None
+    if isinstance(session_books, str):
+        try:
+            session_books = json.loads(session_books)
+        except Exception:
+            session_books = None
+    if not isinstance(session_books, list):
+        session_books = None
     if session_books:
         books_override = [{"title": b["title"], "author": b.get("author")} for b in session_books]
         system_prompt = build_system_prompt(library_context, books_override=books_override)
@@ -1141,6 +1148,13 @@ def continue_conversation_stream(req: ContinueConversationRequest, background_ta
     library_context = get_library_context(req.user_id)
     conv_meta = supabase.from_("conversations").select("session_books").eq("id", req.conversation_id).single().execute()
     session_books = conv_meta.data.get("session_books") if conv_meta.data else None
+    if isinstance(session_books, str):
+        try:
+            session_books = json.loads(session_books)
+        except Exception:
+            session_books = None
+    if not isinstance(session_books, list):
+        session_books = None
     if session_books:
         books_override = [{"title": b["title"], "author": b.get("author")} for b in session_books]
         system_prompt = build_system_prompt(library_context, books_override=books_override)
@@ -1327,7 +1341,7 @@ def prefetch_tmsi(user_id: str):
         supabase.from_("tmsi_prefetch").upsert({
             "user_id": user_id,
             "content": content,
-            "books_used": json.dumps([{"id": b["id"], "title": b["title"]} for b in tmsi_pool]),
+            "books_used": [{"id": b["id"], "title": b["title"]} for b in tmsi_pool],
             "generated_at": datetime.now(timezone.utc).isoformat()
         }, on_conflict="user_id").execute()
 
