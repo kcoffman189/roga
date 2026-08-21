@@ -132,6 +132,21 @@ export default function OnboardingBubbles({ userId, supabase, libraryRef, digInR
     advancingRef.current = false
   }
 
+  const goBack = async () => {
+    if (advancingRef.current) return
+    advancingRef.current = true
+    const idx = STEP_ORDER.indexOf(step!)
+    if (idx > 0) {
+      const prev = STEP_ORDER[idx - 1]
+      await supabase
+        .from('user_profiles')
+        .update({ onboarding_step: prev })
+        .eq('id', userId)
+      setStep(prev)
+    }
+    advancingRef.current = false
+  }
+
   if (complete || step === null || !targetRect) return null
 
   const stepIndex = STEP_ORDER.indexOf(step)
@@ -209,11 +224,28 @@ export default function OnboardingBubbles({ userId, supabase, libraryRef, digInR
           <div style={{ fontSize: '13px', color: '#3a3028', lineHeight: '1.65' }}>
             {STEP_COPY[step]}
           </div>
-          {showNext && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+            {stepIndex > 0 ? (
+              <button
+                onClick={goBack}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '12px',
+                  fontWeight: '400',
+                  color: '#6B6B6B',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Previous
+              </button>
+            ) : <span />}
             <button
               onClick={() => advance(step)}
               style={{
-                marginTop: '12px',
                 background: 'transparent',
                 border: 'none',
                 padding: 0,
@@ -227,7 +259,7 @@ export default function OnboardingBubbles({ userId, supabase, libraryRef, digInR
             >
               {stepIndex === total - 1 ? 'Done' : 'Next'}
             </button>
-          )}
+          </div>
         </div>
       </div>
     </>
