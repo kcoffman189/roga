@@ -44,20 +44,20 @@ FEEDBACK_EMAIL = os.environ.get("FEEDBACK_EMAIL", "kcoffman189@gmail.com")
 
 # --- FAMILIARITY BASE SCORES ---
 # Peaks at Level 3. Intentional - deeply familiar books have diminishing connection value.
-TMSI_FAMILIARITY_L1 = 25
-TMSI_FAMILIARITY_L2 = 32
-TMSI_FAMILIARITY_L3 = 40
-TMSI_FAMILIARITY_L4 = 35
-TMSI_FAMILIARITY_L5 = 28
+TMSI_FAMILIARITY_L1 = 34
+TMSI_FAMILIARITY_L2 = 36
+TMSI_FAMILIARITY_L3 = 38
+TMSI_FAMILIARITY_L4 = 36
+TMSI_FAMILIARITY_L5 = 34
 
 # --- RECENCY PENALTIES / BONUS ---
 TMSI_RECENCY_PENALTY_2  = -35   # Used in last 2 conversations
 TMSI_RECENCY_PENALTY_6  = -15   # Used in last 3-6 conversations
 TMSI_RECENCY_PENALTY_12 = -5    # Used in last 7-12 conversations
-TMSI_RECENCY_BONUS      = 100    # Not used in last 12+ conversations
+TMSI_RECENCY_BONUS      = 10    # Not used in last 12+ conversations
 
 # --- UNREAD BOOK BONUS ---
-TMSI_UNREAD_BONUS = 12
+TMSI_UNREAD_BONUS = 30
 
 # --- STALENESS BONUS ---
 TMSI_STALENESS_2WK  = 5
