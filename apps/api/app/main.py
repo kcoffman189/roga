@@ -1340,6 +1340,21 @@ def prefetch_tmsi(user_id: str):
             recent_titles = [r["title"] for r in title_result.data if r.get("title")]
             recent_context = "Recent past conversations: " + ", ".join(recent_titles) if recent_titles else ""
 
+        # Log surfaced books at generation time so recency and staleness signals work
+        try:
+            import uuid as _uuid
+            surfaced_at = datetime.now(timezone.utc).isoformat()
+            pseudo_conv_id = str(_uuid.uuid4())
+            supabase.from_("book_conversation_log").insert([
+                {"user_id": user_id, "library_entry_id": e["id"], "conversation_id": pseudo_conv_id, "surfaced_at": surfaced_at}
+                for e in tmsi_pool
+            ]).execute()
+            for e in tmsi_pool:
+                supabase.from_("library_entries").update({"last_tmsi_surfaced_at": surfaced_at}).eq("id", e["id"]).execute()
+            print(f"[prefetch] logged {len(tmsi_pool)} surfaced books", flush=True)
+        except Exception as log_err:
+            print(f"[prefetch] logging error: {log_err}", flush=True)
+
         system_prompt = build_system_prompt("", books_override=tmsi_pool, recent_context=recent_context)
         user_message = "Surface something interesting from my library - an unexpected connection or a thread worth pulling on."
 
