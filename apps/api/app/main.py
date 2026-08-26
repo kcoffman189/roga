@@ -1102,7 +1102,7 @@ def start_conversation_stream(req: StartConversationRequest, background_tasks: B
 
         # Stream Claude response
         with anthropic_client.messages.stream(
-            model="claude-sonnet-4-5",
+            model="claude-opus-5",
             max_tokens=1000,
             system=system_prompt,
             messages=[{"role": "user", "content": user_message}]
@@ -1187,7 +1187,7 @@ def continue_conversation_stream(req: ContinueConversationRequest, background_ta
     def generate():
         full_response = ""
         with anthropic_client.messages.stream(
-            model="claude-sonnet-4-5",
+            model="claude-opus-5",
             max_tokens=1000,
             system=system_prompt,
             messages=history
@@ -1344,7 +1344,7 @@ def prefetch_tmsi(user_id: str):
         user_message = "Surface something interesting from my library - an unexpected connection or a thread worth pulling on."
 
         response = anthropic_client.messages.create(
-            model="claude-sonnet-4-5",
+            model="claude-opus-5",
             max_tokens=1000,
             system=system_prompt,
             messages=[{"role": "user", "content": user_message}]
@@ -1767,7 +1767,7 @@ def start_group_conversation_stream(req: StartGroupConversationRequest, backgrou
         yield f"data: {json.dumps({'type': 'conversation_id', 'conversation_id': conversation_id})}\n\n"
 
         with anthropic_client.messages.stream(
-            model="claude-sonnet-4-5",
+            model="claude-opus-5",
             max_tokens=1000,
             system=system_prompt,
             messages=[{"role": "user", "content": user_message}]
@@ -1830,7 +1830,7 @@ def continue_group_conversation_stream(req: ContinueGroupConversationRequest, ba
     def generate():
         full_response = ""
         with anthropic_client.messages.stream(
-            model="claude-sonnet-4-5",
+            model="claude-opus-5",
             max_tokens=1000,
             system=system_prompt,
             messages=history
