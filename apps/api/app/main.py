@@ -1130,7 +1130,7 @@ def start_conversation_stream(req: StartConversationRequest, background_tasks: B
         # Stream Claude response
         with anthropic_client.messages.stream(
             model="claude-opus-5",
-            max_tokens=1000,
+            max_tokens=2000,
             system=system_prompt,
             messages=[{"role": "user", "content": user_message}]
         ) as stream:
@@ -1215,7 +1215,7 @@ def continue_conversation_stream(req: ContinueConversationRequest, background_ta
         full_response = ""
         with anthropic_client.messages.stream(
             model="claude-opus-5",
-            max_tokens=1000,
+            max_tokens=2000,
             system=system_prompt,
             messages=history
         ) as stream:
@@ -1387,7 +1387,7 @@ def prefetch_tmsi(user_id: str):
 
         response = anthropic_client.messages.create(
             model="claude-opus-5",
-            max_tokens=1000,
+            max_tokens=2000,
             system=system_prompt,
             messages=[{"role": "user", "content": user_message}]
         )
@@ -1810,7 +1810,7 @@ def start_group_conversation_stream(req: StartGroupConversationRequest, backgrou
 
         with anthropic_client.messages.stream(
             model="claude-opus-5",
-            max_tokens=1000,
+            max_tokens=2000,
             system=system_prompt,
             messages=[{"role": "user", "content": user_message}]
         ) as stream:
@@ -1873,7 +1873,7 @@ def continue_group_conversation_stream(req: ContinueGroupConversationRequest, ba
         full_response = ""
         with anthropic_client.messages.stream(
             model="claude-opus-5",
-            max_tokens=1000,
+            max_tokens=2000,
             system=system_prompt,
             messages=history
         ) as stream:
