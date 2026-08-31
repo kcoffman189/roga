@@ -1245,7 +1245,6 @@ def continue_conversation_stream(req: ContinueConversationRequest, background_ta
         yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
     background_tasks.add_task(run_summarisation_job, req.conversation_id, False)
-    background_tasks.add_task(prefetch_tmsi, req.user_id)
     return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"})
 
 
@@ -1425,7 +1424,7 @@ class SavePrefetchRequest(BaseModel):
     books_used: str = None
 
 @app.post("/conversation/save-prefetch")
-def save_prefetch_conversation(req: SavePrefetchRequest):
+def save_prefetch_conversation(req: SavePrefetchRequest, background_tasks: BackgroundTasks):
     try:
         user_message = "Surface something interesting from my library - an unexpected connection or a thread worth pulling on."
         
@@ -1450,6 +1449,9 @@ def save_prefetch_conversation(req: SavePrefetchRequest):
 
         title = generate_conversation_title(user_message, req.content)
         supabase.from_("conversations").update({"title": title}).eq("id", conversation_id).execute()
+
+        # Regenerate the prefetch now that this one has been consumed
+        background_tasks.add_task(prefetch_tmsi, req.user_id)
 
         return {"conversation_id": conversation_id, "title": title}
     except Exception as e:
@@ -1844,7 +1846,6 @@ def start_group_conversation_stream(req: StartGroupConversationRequest, backgrou
 
         yield f"data: {json.dumps({'type': 'done', 'conversation_id': conversation_id, 'title': title})}\n\n"
 
-    background_tasks.add_task(prefetch_tmsi, req.user_id)
     return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"})
 
 
@@ -1897,7 +1898,6 @@ def continue_group_conversation_stream(req: ContinueGroupConversationRequest, ba
         yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
     background_tasks.add_task(run_summarisation_job, req.conversation_id, True)
-    background_tasks.add_task(prefetch_tmsi, req.user_id)
     return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"})
 
 
