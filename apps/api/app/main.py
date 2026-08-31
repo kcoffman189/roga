@@ -118,6 +118,15 @@ def _familiarity_label(entry: dict) -> str:
         return "barely familiar - reference sparingly, ask what user remembers"
     return "familiarity unknown"
 
+def _first_text(response) -> str:
+    """Return the first text block from an Anthropic response.
+    Opus returns ThinkingBlock objects before TextBlock, so indexing
+    content[0] is not safe across models."""
+    for block in response.content:
+        if getattr(block, "type", None) == "text":
+            return block.text
+    return ""
+
 def get_library_context(user_id: str) -> str:
     result = supabase.from_("library_entries").select("title, familiarity_score, is_unread, notes").eq("user_id", user_id).execute()
     entries = result.data
@@ -696,7 +705,7 @@ Output only the memory context block. No explanation or preamble."""
             max_tokens=300,
             messages=[{"role": "user", "content": prompt}]
         )
-        return response.content[0].text.strip()
+        return _first_text(response).strip()
     except Exception as e:
         print(f"[memory] extract_memory_context failed for user {user_id}: {e!r}", flush=True)
         return ""
@@ -712,7 +721,7 @@ def generate_title(messages: list) -> str:
             "content": f"Generate a short, evocative title (4-6 words) for this conversation that captures its intellectual territory. Return only the title, nothing else.\n\n{conversation_text}"
         }]
     )
-    return response.content[0].text.strip()
+    return _first_text(response).strip()
 
 SUMMARY_SYSTEM_PROMPT = """You are summarising a conversation from Cephos - an AI thinking partner that helps users explore their personal book library.
 
@@ -793,7 +802,7 @@ def generate_conversation_summary(conversation_id: str, messages: list, is_group
             system=SUMMARY_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": f"Here is the conversation transcript:\n\n{transcript}"}]
         )
-        return response.content[0].text.strip()
+        return _first_text(response).strip()
     except Exception as e:
         print(f"[summary] EXCEPTION for conversation {conversation_id}: {e!r}", flush=True)
         return None
@@ -842,8 +851,8 @@ def generate_conversation_title(user_message: str, assistant_response: str) -> s
                 "content": f"User said: {user_message}\n\nCephos responded: {assistant_response[:500]}\n\nGenerate a title for this conversation."
             }]
         )
-        print(f"[title] raw API response: {response.content[0].text!r}", flush=True)
-        title = response.content[0].text.strip()
+        print(f"[title] raw API response: {_first_text(response)!r}", flush=True)
+        title = _first_text(response).strip()
         print(f"[title] returning: {title!r}", flush=True)
         return title
     except Exception as e:
@@ -950,7 +959,7 @@ def start_conversation(req: StartConversationRequest):
         messages=messages
     )
 
-    assistant_message = response.content[0].text
+    assistant_message = _first_text(response)
 
     # Store conversation
     conv_result = supabase.from_("conversations").insert({
@@ -1008,7 +1017,7 @@ def continue_conversation(req: ContinueConversationRequest):
         messages=history
     )
 
-    assistant_message = response.content[0].text
+    assistant_message = _first_text(response)
 
     # Store new messages
     supabase.from_("messages").insert([
@@ -1303,7 +1312,7 @@ Return ONLY a JSON array with no other text:
             messages=[{"role": "user", "content": prompt}]
         )
 
-        text = response.content[0].text.strip()
+        text = _first_text(response).strip()
         if text.startswith("```"):
             text = text.split("```")[1]
             if text.startswith("json"):
@@ -1366,21 +1375,6 @@ def prefetch_tmsi(user_id: str):
             recent_titles = [r["title"] for r in title_result.data if r.get("title")]
             recent_context = "Recent past conversations: " + ", ".join(recent_titles) if recent_titles else ""
 
-        # Log surfaced books at generation time so recency and staleness signals work
-        try:
-            import uuid as _uuid
-            surfaced_at = datetime.now(timezone.utc).isoformat()
-            pseudo_conv_id = str(_uuid.uuid4())
-            supabase.from_("book_conversation_log").insert([
-                {"user_id": user_id, "library_entry_id": e["id"], "conversation_id": pseudo_conv_id, "surfaced_at": surfaced_at}
-                for e in tmsi_pool
-            ]).execute()
-            for e in tmsi_pool:
-                supabase.from_("library_entries").update({"last_tmsi_surfaced_at": surfaced_at}).eq("id", e["id"]).execute()
-            print(f"[prefetch] logged {len(tmsi_pool)} surfaced books", flush=True)
-        except Exception as log_err:
-            print(f"[prefetch] logging error: {log_err}", flush=True)
-
         system_prompt = build_system_prompt("", books_override=tmsi_pool, recent_context=recent_context)
         user_message = "Surface something interesting from my library - an unexpected connection or a thread worth pulling on."
 
@@ -1391,7 +1385,11 @@ def prefetch_tmsi(user_id: str):
             messages=[{"role": "user", "content": user_message}]
         )
 
-        content = response.content[0].text.strip()
+        content = _first_text(response).strip()
+
+        if not content:
+            print(f"[prefetch] empty content for user {user_id} - skipping cache write", flush=True)
+            return
 
         supabase.from_("tmsi_prefetch").upsert({
             "user_id": user_id,
@@ -1434,6 +1432,21 @@ def save_prefetch_conversation(req: SavePrefetchRequest, background_tasks: Backg
             "session_books": json.loads(req.books_used) if req.books_used else None
         }).execute()
         conversation_id = conv_result.data[0]["id"]
+
+        # Log surfaced books so recency and staleness signals have data
+        try:
+            pool = json.loads(req.books_used) if req.books_used else []
+            if pool:
+                surfaced_at = datetime.now(timezone.utc).isoformat()
+                supabase.from_("book_conversation_log").insert([
+                    {"user_id": req.user_id, "library_entry_id": b["id"], "conversation_id": conversation_id, "surfaced_at": surfaced_at}
+                    for b in pool
+                ]).execute()
+                for b in pool:
+                    supabase.from_("library_entries").update({"last_tmsi_surfaced_at": surfaced_at}).eq("id", b["id"]).execute()
+                print(f"[save-prefetch] logged {len(pool)} surfaced books", flush=True)
+        except Exception as log_err:
+            print(f"[save-prefetch] logging error: {log_err}", flush=True)
 
         supabase.from_("messages").insert({
             "conversation_id": conversation_id,
@@ -1497,7 +1510,7 @@ If no appropriate quote exists: {{"quote": null, "author": null}}"""
     )
 
     try:
-        text = response.content[0].text.strip()
+        text = _first_text(response).strip()
         if text.startswith("```"):
             text = text.split("```")[1]
             if text.startswith("json"):
@@ -1574,7 +1587,7 @@ Respond with ONLY a JSON object in this exact format, no other text:
 If no appropriate quote exists, respond with ONLY: {{"quote": null, "author": null}}"""
             }]
         )
-        text = response.content[0].text.strip()
+        text = _first_text(response).strip()
         data = json.loads(text)
         return {"quote": data["quote"], "author": data["author"], "empty_library": False}
     except:
