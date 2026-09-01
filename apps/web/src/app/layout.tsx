@@ -1,4 +1,4 @@
-// apps/web/src/app/layout.tsx
+﻿// apps/web/src/app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
 import { inter, poppins, merriweather, lora } from "@/lib/fonts";
@@ -10,7 +10,7 @@ export const revalidate = 0
 export const metadata: Metadata = {
   title: "Cephos — Many books. One mind.",
   description: "Cephos finds unexpected connections between the books you've read. Add your library and discover what your books have been saying to each other.",
-  icons: { icon: [{ url: "/favicon.svg", type: "image/svg+xml" }] },
+  icons: { icon: [{ url: "/favicon.svg", type: "image/svg+xml" }], apple: [{ url: "/brand/icon-180.png", sizes: "180x180", type: "image/png" }] },
   openGraph: {
     title: "Cephos — Many books. One mind.",
     description: "You've read a lot. Cephos finds what your books have been saying to each other. Add your personal book library and let Cephos surface the connections you didn't know were there.",
