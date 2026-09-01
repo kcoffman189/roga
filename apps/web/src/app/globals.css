@@ -1,4 +1,4 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -101,7 +101,7 @@ a:hover {
   color: white;
 }
 
-/* ── Sidebar shell ────────────────────────────────── */
+/* â”€â”€ Sidebar shell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .sidebar-panel {
   background: var(--color-bg-sidebar);
   position: relative;
@@ -116,7 +116,7 @@ a:hover {
   background: var(--color-accent);
 }
 
-/* ── CTA buttons ──────────────────────────────────── */
+/* â”€â”€ CTA buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .sidebar-cta-primary {
   background: transparent;
   border: none;
@@ -159,7 +159,7 @@ a:hover {
   border-left-color: var(--color-accent);
 }
 
-/* ── Nav links ────────────────────────────────────── */
+/* â”€â”€ Nav links â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .sidebar-nav-link {
   display: block;
   font-family: Inter, sans-serif;
@@ -174,7 +174,7 @@ a:hover {
   text-decoration: none;
 }
 
-/* ── Section label ────────────────────────────────── */
+/* â”€â”€ Section label â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .sidebar-section-label {
   font-family: Inter, sans-serif;
   font-size: 12px;
@@ -187,7 +187,7 @@ a:hover {
   padding-top: 13px;
 }
 
-/* ── Conversation list scroll ─────────────────────── */
+/* â”€â”€ Conversation list scroll â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .conv-list-scroll {
   scrollbar-width: thin;
   scrollbar-color: #343C44 transparent;
@@ -206,7 +206,7 @@ a:hover {
   background: #4E5660;
 }
 
-/* ── Conversation items ───────────────────────────── */
+/* â”€â”€ Conversation items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .conv-item {
   display: flex;
   align-items: center;
@@ -252,7 +252,18 @@ a:hover {
   color: var(--color-accent);
 }
 
-/* ── Logout button ────────────────────────────────── */
+@media (hover: none) {
+  .conv-item-delete {
+    opacity: 1;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* â”€â”€ Logout button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .sidebar-logout {
   font-family: Inter, sans-serif;
   font-size: 16.5px;
@@ -271,7 +282,7 @@ a:hover {
   color: var(--color-text-muted-dark);
 }
 
-/* ── Library page ─────────────────────────────────── */
+/* â”€â”€ Library page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .lib-card {
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border-light);
@@ -398,7 +409,7 @@ a:hover {
   cursor: pointer;
 }
 
-/* ── Sidebar account link ─────────────────────────── */
+/* â”€â”€ Sidebar account link â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .sidebar-account-link {
   font-family: Inter, sans-serif;
   font-size: 16.5px;
@@ -414,7 +425,7 @@ a:hover {
   text-decoration: none;
 }
 
-/* ── Account settings rows ────────────────────────── */
+/* â”€â”€ Account settings rows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .account-section-label {
   font-family: Inter, sans-serif;
   font-size: 10px;
