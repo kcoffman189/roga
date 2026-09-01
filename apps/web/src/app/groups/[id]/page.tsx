@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,8 +13,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
 const FAMILIARITY_LABELS: Record<string, string> = {
   currently_reading: 'Currently reading',
-  read_recently: 'Read it — recently',
-  read_long_ago: 'Read it — a while ago',
+  read_recently: 'Read it â€” recently',
+  read_long_ago: 'Read it â€” a while ago',
   partially_read: 'Partially read / dipped in',
   want_to_read: 'Want to read',
 }
@@ -176,7 +176,7 @@ export default function GroupViewPage() {
           onClick={() => router.push(`/groups/${groupId}/edit`)}
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--color-text-tertiary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          ✎
+          âœŽ
         </button>
       </div>
 
@@ -214,7 +214,7 @@ export default function GroupViewPage() {
           <span style={{ fontSize: '15px', fontWeight: '500', color: 'var(--color-text-on-dark)', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
             {group?.name ?? 'Group'}
           </span>
-          <span style={{ fontSize: '12px', color: 'var(--color-text-muted-dark)' }}>✎</span>
+          <span style={{ fontSize: '12px', color: 'var(--color-text-muted-dark)' }}>âœŽ</span>
         </div>
 
         {paused && (
@@ -224,7 +224,7 @@ export default function GroupViewPage() {
         )}
 
         <button
-          onClick={() => { if (!paused) router.push(`/groups/${groupId}/conversation/new?mode=intentional`) }}
+          onClick={() => { if (!paused) router.push(`/groups/${groupId}/conversation/new?mode=open`) }}
           disabled={paused}
           style={{
             display: 'block', width: '100%', textAlign: 'left',
@@ -236,11 +236,11 @@ export default function GroupViewPage() {
             cursor: paused ? 'not-allowed' : 'pointer', minHeight: '44px',
           }}
         >
-          Let&apos;s dig into something
+          Tell me something interesting
         </button>
 
         <button
-          onClick={() => { if (!paused) router.push(`/groups/${groupId}/conversation/new?mode=open`) }}
+          onClick={() => { if (!paused) router.push(`/groups/${groupId}/conversation/new?mode=intentional`) }}
           disabled={paused}
           style={{
             display: 'block', width: '100%', textAlign: 'left',
@@ -252,7 +252,7 @@ export default function GroupViewPage() {
             cursor: paused ? 'not-allowed' : 'pointer', minHeight: '44px',
           }}
         >
-          Tell me something interesting
+          Let&apos;s dig into something
         </button>
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
@@ -331,7 +331,7 @@ export default function GroupViewPage() {
           )}
 
           <button
-            onClick={() => { if (!paused) router.push(`/groups/${groupId}/conversation/new?mode=intentional`) }}
+            onClick={() => { if (!paused) router.push(`/groups/${groupId}/conversation/new?mode=open`) }}
             disabled={paused}
             style={{
               display: 'block', width: '100%', textAlign: 'left',
@@ -343,11 +343,11 @@ export default function GroupViewPage() {
               cursor: paused ? 'not-allowed' : 'pointer', minHeight: '44px',
             }}
           >
-            Let&apos;s dig into something
+            Tell me something interesting
           </button>
 
           <button
-            onClick={() => { if (!paused) router.push(`/groups/${groupId}/conversation/new?mode=open`) }}
+            onClick={() => { if (!paused) router.push(`/groups/${groupId}/conversation/new?mode=intentional`) }}
             disabled={paused}
             style={{
               display: 'block', width: '100%', textAlign: 'left',
@@ -359,7 +359,7 @@ export default function GroupViewPage() {
               cursor: paused ? 'not-allowed' : 'pointer', minHeight: '44px',
             }}
           >
-            Tell me something interesting
+            Let&apos;s dig into something
           </button>
 
           <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,7 +58,7 @@ export default function GroupsPage() {
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'Inter, sans-serif', background: 'var(--color-bg-canvas)' }}>
 
-      {/* Mobile Header — hidden on desktop */}
+      {/* Mobile Header â€” hidden on desktop */}
       <div
         style={{
           display: isMobile ? 'flex' : 'none',
@@ -82,7 +82,7 @@ export default function GroupsPage() {
         <div style={{ fontWeight: '600', fontSize: '17px', color: 'var(--color-text-primary)' }}>Groups</div>
       </div>
 
-      {/* Left Panel — desktop only */}
+      {/* Left Panel â€” desktop only */}
       <div
         style={{
           display: isMobile ? 'none' : 'flex',
@@ -130,7 +130,7 @@ export default function GroupsPage() {
             cursor: 'pointer', minHeight: '44px',
           }}
         >
-          Let&apos;s dig into something
+          Tell me something interesting
         </button>
 
         <button
@@ -145,7 +145,7 @@ export default function GroupsPage() {
             cursor: 'pointer', minHeight: '44px',
           }}
         >
-          Tell me something interesting
+          Let&apos;s dig into something
         </button>
 
         <a href="/groups" style={{
@@ -247,7 +247,7 @@ export default function GroupsPage() {
                     <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'var(--color-text-tertiary)' }}>
                       {group.book_count} {group.book_count === 1 ? 'book' : 'books'}
                     </span>
-                    <span style={{ color: 'var(--color-border-light)', fontSize: '12px' }}>·</span>
+                    <span style={{ color: 'var(--color-border-light)', fontSize: '12px' }}>Â·</span>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: 'var(--color-text-tertiary)' }}>
                       {group.last_conversation_at
                         ? formatRelativeDate(group.last_conversation_at)

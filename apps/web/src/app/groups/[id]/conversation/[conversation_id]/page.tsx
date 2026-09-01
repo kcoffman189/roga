@@ -202,7 +202,7 @@ const renderContent = (text: string) => {
         </a>
 
         <button
-          onClick={() => router.push(`/groups/${groupId}/conversation/new?mode=intentional`)}
+          onClick={() => router.push(`/groups/${groupId}/conversation/new?mode=open`)}
           style={{
             display: 'block', width: '100%', textAlign: 'left',
             padding: '9px 14px', marginBottom: '9px',
@@ -213,11 +213,11 @@ const renderContent = (text: string) => {
             cursor: 'pointer', minHeight: '44px',
           }}
         >
-          Let&apos;s dig into something
+          Tell me something interesting
         </button>
 
         <button
-          onClick={() => router.push(`/groups/${groupId}/conversation/new?mode=open`)}
+          onClick={() => router.push(`/groups/${groupId}/conversation/new?mode=intentional`)}
           style={{
             display: 'block', width: '100%', textAlign: 'left',
             padding: '9px 14px', marginBottom: '24px',
@@ -228,7 +228,7 @@ const renderContent = (text: string) => {
             cursor: 'pointer', minHeight: '44px',
           }}
         >
-          Tell me something interesting
+          Let&apos;s dig into something
         </button>
 
         <div style={{ flex: 1 }} />
