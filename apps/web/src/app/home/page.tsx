@@ -1,4 +1,4 @@
-﻿// force redeploy
+// force redeploy
 'use client'
 
 export const dynamic = 'force-dynamic'
@@ -338,7 +338,7 @@ export default function Home() {
 
             {feedbackStatus === 'success' ? (
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#6B6B6B', textAlign: 'center', padding: '24px 0' }}>
-                Thanks â€” feedback sent.
+                Thanks — feedback sent.
               </p>
             ) : (
               <>

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,8 +13,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
 const FAMILIARITY_LABELS: Record<string, string> = {
   currently_reading: 'Currently reading',
-  read_recently: 'Read it â€” recently',
-  read_long_ago: 'Read it â€” a while ago',
+  read_recently: 'Read it - recently',
+  read_long_ago: 'Read it - a while ago',
   partially_read: 'Partially read / dipped in',
   want_to_read: 'Want to read',
 }
@@ -176,7 +176,7 @@ export default function GroupViewPage() {
           onClick={() => router.push(`/groups/${groupId}/edit`)}
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--color-text-tertiary)', padding: '4px', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          âœŽ
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
         </button>
       </div>
 
@@ -214,7 +214,7 @@ export default function GroupViewPage() {
           <span style={{ fontSize: '15px', fontWeight: '500', color: 'var(--color-text-on-dark)', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
             {group?.name ?? 'Group'}
           </span>
-          <span style={{ fontSize: '12px', color: 'var(--color-text-muted-dark)' }}>âœŽ</span>
+          <span style={{ fontSize: '12px', color: 'var(--color-text-muted-dark)' }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg></span>
         </div>
 
         {paused && (
