@@ -1,4 +1,4 @@
-"""Central model configuration for Cephos.
+﻿"""Central model configuration for Cephos.
 
 Every Anthropic call site reads its model ID, effort level and token ceiling
 from here. Nothing else in the codebase should name a model.
@@ -44,7 +44,7 @@ MODEL_UTILITY = "claude-sonnet-5-5"
 # Once prompt caching is live, changing effort between requests invalidates
 # the cache. Freeze this value before adding cache_control breakpoints.
 
-EFFORT_CONVERSATION = "high"
+EFFORT_CONVERSATION = "medium"
 EFFORT_UTILITY = "low"
 
 
