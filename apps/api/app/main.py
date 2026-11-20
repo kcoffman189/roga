@@ -10,6 +10,11 @@ import json
 import resend
 from supabase import create_client, Client
 
+try:
+    from app.model_config import conversation_kwargs, utility_kwargs
+except ImportError:  # when the working directory is apps/api/app
+    from model_config import conversation_kwargs, utility_kwargs
+
 app = FastAPI()
 
 app.add_middleware(
@@ -703,8 +708,7 @@ NEVER: Include anything that would feel surveillance-like if the user knew it wa
 Output only the memory context block. No explanation or preamble."""
 
         response = anthropic_client.messages.create(
-            model="claude-sonnet-4-5",
-            max_tokens=300,
+            **utility_kwargs(300),
             messages=[{"role": "user", "content": prompt}]
         )
         return _first_text(response).strip()
@@ -716,8 +720,7 @@ Output only the memory context block. No explanation or preamble."""
 def generate_title(messages: list) -> str:
     conversation_text = "\n".join([f"{m['role']}: {m['content']}" for m in messages[:4]])
     response = anthropic_client.messages.create(
-        model="claude-sonnet-4-5",
-        max_tokens=20,
+        **utility_kwargs(20),
         messages=[{
             "role": "user",
             "content": f"Generate a short, evocative title (4-6 words) for this conversation that captures its intellectual territory. Return only the title, nothing else.\n\n{conversation_text}"
@@ -799,8 +802,7 @@ def generate_conversation_summary(conversation_id: str, messages: list, is_group
 
     try:
         response = anthropic_client.messages.create(
-            model="claude-sonnet-4-5",
-            max_tokens=500,
+            **utility_kwargs(500),
             system=SUMMARY_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": f"Here is the conversation transcript:\n\n{transcript}"}]
         )
@@ -845,8 +847,7 @@ def generate_conversation_title(user_message: str, assistant_response: str) -> s
     print(f"[title] assistant_response[:100]: {assistant_response[:100]!r}", flush=True)
     try:
         response = anthropic_client.messages.create(
-            model="claude-sonnet-4-5",
-            max_tokens=20,
+            **utility_kwargs(20),
             system="You generate short, descriptive titles for intellectual conversations. Return only the title - no quotes, no punctuation at the end, no explanation. 3-6 words. Make it specific to the actual topic, not generic.",
             messages=[{
                 "role": "user",
@@ -955,8 +956,7 @@ def start_conversation(req: StartConversationRequest):
     messages = [{"role": "user", "content": user_message}]
 
     response = anthropic_client.messages.create(
-        model="claude-sonnet-4-5",
-        max_tokens=1000,
+        **utility_kwargs(1000),
         system=system_prompt,
         messages=messages
     )
@@ -1013,8 +1013,7 @@ def continue_conversation(req: ContinueConversationRequest):
     history.append({"role": "user", "content": req.message})
 
     response = anthropic_client.messages.create(
-        model="claude-sonnet-4-5",
-        max_tokens=1000,
+        **utility_kwargs(1000),
         system=system_prompt,
         messages=history
     )
@@ -1140,8 +1139,7 @@ def start_conversation_stream(req: StartConversationRequest, background_tasks: B
 
         # Stream Claude response
         with anthropic_client.messages.stream(
-            model="claude-opus-5",
-            max_tokens=2000,
+            **conversation_kwargs(),
             system=system_prompt,
             messages=[{"role": "user", "content": user_message}]
         ) as stream:
@@ -1225,8 +1223,7 @@ def continue_conversation_stream(req: ContinueConversationRequest, background_ta
     def generate():
         full_response = ""
         with anthropic_client.messages.stream(
-            model="claude-opus-5",
-            max_tokens=2000,
+            **conversation_kwargs(),
             system=system_prompt,
             messages=history
         ) as stream:
@@ -1309,8 +1306,7 @@ Return ONLY a JSON array with no other text:
 [{{"quote": "quote text", "author": "{author_str or "the author"}"}}, ...]"""
 
         response = anthropic_client.messages.create(
-            model="claude-sonnet-4-5",
-            max_tokens=800,
+            **utility_kwargs(800),
             messages=[{"role": "user", "content": prompt}]
         )
 
@@ -1381,8 +1377,7 @@ def prefetch_tmsi(user_id: str):
         user_message = "Surface something interesting from my library - an unexpected connection or a thread worth pulling on."
 
         response = anthropic_client.messages.create(
-            model="claude-opus-5",
-            max_tokens=2000,
+            **conversation_kwargs(),
             system=system_prompt,
             messages=[{"role": "user", "content": user_message}]
         )
@@ -1506,8 +1501,7 @@ Respond with ONLY: {{"quote": "quote text", "author": "Author Name"}}
 If no appropriate quote exists: {{"quote": null, "author": null}}"""
 
     response = anthropic_client.messages.create(
-        model="claude-sonnet-4-5",
-        max_tokens=200,
+        **utility_kwargs(200),
         messages=[{"role": "user", "content": prompt}]
     )
 
@@ -1546,8 +1540,7 @@ def get_group_welcome_quote(group_id: str):
 
     try:
         response = anthropic_client.messages.create(
-            model="claude-sonnet-4-5",
-            max_tokens=200,
+            **utility_kwargs(200),
             messages=[{
                 "role": "user",
                 "content": f"""You are selecting a quote to display on the Cephos group welcome screen. This quote is the first thing a user sees when they open a group. It may also be visible to anyone nearby who glances at their screen.
@@ -1826,8 +1819,7 @@ def start_group_conversation_stream(req: StartGroupConversationRequest, backgrou
         yield f"data: {json.dumps({'type': 'conversation_id', 'conversation_id': conversation_id})}\n\n"
 
         with anthropic_client.messages.stream(
-            model="claude-opus-5",
-            max_tokens=2000,
+            **conversation_kwargs(),
             system=system_prompt,
             messages=[{"role": "user", "content": user_message}]
         ) as stream:
@@ -1888,8 +1880,7 @@ def continue_group_conversation_stream(req: ContinueGroupConversationRequest, ba
     def generate():
         full_response = ""
         with anthropic_client.messages.stream(
-            model="claude-opus-5",
-            max_tokens=2000,
+            **conversation_kwargs(),
             system=system_prompt,
             messages=history
         ) as stream:
