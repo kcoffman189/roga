@@ -1,6 +1,6 @@
-﻿'use client'
+'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseClient } from '@/lib/supabase/client'
 
@@ -16,6 +16,31 @@ export default function LandingPage() {
   const [forgotLoading, setForgotLoading] = useState(false)
   const router = useRouter()
   const supabase = useRef(createSupabaseClient()).current
+
+  const [checkingSession, setCheckingSession] = useState(true)
+
+  // The PWA's start_url is "/", which is this page. middleware.ts cannot see
+  // the session because it reads cookies while the browser client stores the
+  // session in localStorage, so without this check an already-signed-in user
+  // is shown a login form on every launch of the home-screen app.
+  //
+  // getUser() validates against Supabase rather than trusting local storage.
+  // That costs one round trip, but a stale session then lands on the login
+  // form instead of being sent to /home, which would bounce back here.
+  useEffect(() => {
+    let cancelled = false
+    supabase.auth.getUser()
+      .then(({ data: { user } }) => {
+        if (cancelled) return
+        if (user) { router.replace('/home') } else { setCheckingSession(false) }
+      })
+      .catch(() => { if (!cancelled) setCheckingSession(false) })
+    return () => { cancelled = true }
+  }, [supabase, router])
+
+  if (checkingSession) {
+    return <div style={{ minHeight: '100vh', background: '#FAF8F4' }} />
+  }
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
